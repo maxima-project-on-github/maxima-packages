@@ -22,6 +22,7 @@ CONTRIBUTION POLICY
  * Project administrators will accept almost any contribution made in good faith,
    although they reserve the right to reject any contribution.
  * The following are encouraged, but not required:
+  - Contributors are encouraged to contribute under their real name, not a pseudonym
   - Contributors are encouraged to write documentation, preferably in Texinfo format
   - Contributors are encouraged to include a test script
   - Contributors are encouraged to keep the size of packages relatively small
@@ -50,6 +51,9 @@ In more detail:
   * Copy the content of the text box "git clone ..."
   * Paste "git clone ..." to a command line and execute it
  4. The contributor creates new files and folder, or makes any other changes in their working copy.
+  * Create a top-level folder with the same name as your Github user name
+  * Create a folder under the user name folder for each package you create
+  * Create files and folders under the package folder as appropriate
   * Use whatever text editor or other means to create and modify files
  5. The contributor commits their changes and pushes them to their branch of maxima-packages.
   * Execute git commands such as "git add" and "git commit"
@@ -61,3 +65,5 @@ In more detail:
   * Click the "Pull Request" button
  7. Project administrators review the pull request and accept or reject it,
    according to the criteria discussed above.
+  * If your pull request is accepted, delete your fork of maxima-packages
+    (you will create a new fork each time you want to make a pull request)
