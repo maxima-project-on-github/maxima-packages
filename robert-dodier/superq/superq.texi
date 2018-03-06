@@ -96,6 +96,19 @@ Comparison of TeX output for quoted and superquoted expressions.
 (%o10)                "@{@{d@}\over@{d\,x@}@}\,x"
 @end example
 
+Single quote prevents evaluation but not simplification.
+Superquote prevents simplification as well as evaluation.
+
+@example
+(%i1) load ("superq.lisp") $
+(%i2) x : 111 $
+(%i3) x + x;
+(%o3)                          222
+(%i4) '(x + x);
+(%o4)                          2 x
+(%i5) superq (x + x);
+(%o5)                     superq(x + x)
+@end example
 @end deffn
 
 @node Function and variable index,  , Definitions for package superq, Top
