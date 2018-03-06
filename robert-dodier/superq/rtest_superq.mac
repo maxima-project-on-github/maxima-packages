@@ -41,3 +41,11 @@ tex1 ('('diff (x, x, 1)));
 "1";
 tex1 (superq('diff (x, x, 1)));
 "{{d}\\over{d\\,x}}\\,x";
+
+block ([x:111],
+       string ('(x + x)));
+"2*x";
+
+block ([x:111],
+       string (superq (x + x)));
+"superq(x+x)";
