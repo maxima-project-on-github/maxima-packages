@@ -1,0 +1,106 @@
+\input texinfo
+
+@setfilename superq.info
+@settitle Package superq
+
+@ifinfo 
+@macro var {expr}
+<\expr\>
+@end macro
+@end ifinfo
+
+@dircategory Mathematics/Maxima
+@direntry
+* Package superq: (maxima-packages/robert-dodier/superq). Maxima package for "super" quoting
+@end direntry
+
+@node Top, Introduction to package superq, (dir), (dir)
+@top
+@menu
+* Introduction to package superq::
+* Definitions for package superq::
+* Function and variable index::
+@end menu
+@chapter Package superq
+
+@node Introduction to package superq, Definitions for package superq, Top, Top
+@section Introduction to package superq
+
+@code{superq} is a Maxima package for "super" quoting:
+@code{superq} prevents simplification as well as evaluation.
+
+It is anticipated that @code{superq} may have some use for problems
+which require working with unsimplified expressions.
+
+@node Definitions for package superq, Function and variable index, Introduction to package superq, Top
+@section Definitions for package superq
+
+@deffn {Function} superq (@var{expr})
+
+@code{superq} ("superquote") protects @var{expr} against evaluation and simplification.
+
+In contrast, single quote @code{'} protects against evaluation,
+but not simplification;
+expressions quoted by single quote are simplified but not evaluated.
+
+@code{load(superq)} loads this function.
+
+Examples:
+
+Comparison of quoted and superquoted expressions.
+
+@example
+(%i1) load ("superq.lisp"); 
+(%o1)                      superq.lisp
+(%i2) '(1 + 1);
+(%o2)                           2
+(%i3) superq (1 + 1);
+(%o3)                     superq(1 + 1)
+(%i4) '(5!);
+(%o4)                          120
+(%i5) superq (5!);
+(%o5)                      superq(5!)
+(%i6) '(sin (0));
+(%o6)                           0
+(%i7) superq (sin (0));
+(%o7)                    superq(sin(0))
+(%i8) '('diff (x, x, 1));
+(%o8)                           1
+(%i9) superq('diff (x, x, 1));
+                                  dx
+(%o9)                      superq(--)
+                                  dx
+@end example
+
+Comparison of TeX output for quoted and superquoted expressions.
+
+@example
+(%i1) load ("superq.lisp"); 
+(%o1)                      superq.lisp
+(%i2) stringdisp : true $
+(%i3) tex1 ('(1 + 1));
+(%o3)                          "2"
+(%i4) tex1 (superq (1 + 1));
+(%o4)                         "1+1"
+(%i5) tex1 ('(5!));
+(%o5)                         "120"
+(%i6) tex1 (superq (5!));
+(%o6)                         "5!"
+(%i7) tex1 ('(sin (0)));
+(%o7)                          "0"
+(%i8) tex1 (superq (sin (0)));
+(%o8)                       "\sin 0"
+(%i9) tex1 ('('diff (x, x, 1)));
+(%o9)                          "1"
+(%i10) tex1 (superq('diff (x, x, 1)));
+(%o10)                "@{@{d@}\over@{d\,x@}@}\,x"
+@end example
+
+@end deffn
+
+@node Function and variable index,  , Definitions for package superq, Top
+@appendix Function and variable index
+@printindex fn
+@printindex vr
+
+@bye
