@@ -1,0 +1,43 @@
+/* a standard mechanism to determine whether a package is loaded would be terrific */
+(if ?get ('superq, '?operators) = false
+  then load ("superq.lisp"),
+ 0);
+0;
+
+/* BATCH-EQUAL-CHECK applies simplification (via SIMPLE-EQUAL-P)
+ * so compare strings instead of expressions.
+ */
+
+string ('(1 + 1));
+"2";
+string (superq (1 + 1));
+"superq(1+1)";
+string ('(5!));
+"120";
+string (superq (5!));
+"superq(5!)";
+string ('(sin (0)));
+"0";
+string (superq (sin (0)));
+"superq(sin(0))";
+string ('('diff (x, x, 1)));
+"1";
+string (superq('diff (x, x, 1)));
+"superq('diff(x,x,1))";
+
+tex1 ('(1 + 1));
+"2";
+tex1 (superq (1 + 1));
+"1+1";
+tex1 ('(5!));
+"120";
+tex1 (superq (5!));
+"5!";
+tex1 ('(sin (0)));
+"0";
+tex1 (superq (sin (0)));
+"\\sin 0";
+tex1 ('('diff (x, x, 1)));
+"1";
+tex1 (superq('diff (x, x, 1)));
+"{{d}\\over{d\\,x}}\\,x";
