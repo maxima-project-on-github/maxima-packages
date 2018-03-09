@@ -1,5 +1,14 @@
 # maxima-packages
 
+PREFACE
+
+maxima-packages is an experimental system for developing and distributing
+packages for Maxima. At this time (March 2018), there are still some issues to be
+resolved, and it is possible that maxima-packages might change very substantially
+or even might be discontinued in favor of some other system.
+
+OVERVIEW
+
 maxima-packages is a collection of packages for the Maxima computer algebra system
 which have been contributed by users.
 
