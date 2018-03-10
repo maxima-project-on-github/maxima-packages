@@ -1,0 +1,56 @@
+load(draw);
+
+diophantine_make_points_data(diophantine_points_result):=block(
+  map(lambda([p],[rhs(p[1]),rhs(p[2])]), diophantine_points_result));
+
+diophantine_make_points_labels(point_data, dx, dy):=block(
+  apply(label,map(lambda([p],[string(p), p[1]+dx, p[2]+dy]), point_data)));
+
+diophantine_draw_data(eq, xmin, xmax, ymin, ymax, label_dx, label_dy, point_data, label_data):=block([],
+    wxdraw2d(font="Helvetica", font_size=20, yrange=[ymin, ymax], title=string(eq), xaxis=true, yaxis=true, ip_grid=[200,200],ip_grid_in=[10,10],
+    implicit(eq, listofvars(eq)[1], xmin, xmax, listofvars(eq)[2], ymin, ymax),
+    point_size=5, color=red, point_type=circle, points(point_data),
+    point_size=2, color=green, point_type=filled_circle, points(point_data),
+    color=black, label_data));
+
+diophantine_draw_finite(eq, xmin, xmax, ymin, ymax, label_dx, label_dy):=block([solutions, point_data, label_data],
+  solutions:diophantine_solve(eq),
+  point_data:diophantine_make_points_data(solutions),
+  label_data:diophantine_make_points_labels(point_data, label_dx, label_dy),
+  diophantine_draw_data(eq, xmin, xmax, ymin, ymax, label_dx, label_dy, point_data, label_data));
+
+diophantine_draw_infinite(eq, nmin, nmax, label_dx, label_dy, border):=block([solutions, point_data, label_data, point_ranges],
+  solutions:diophantine_solve(eq),
+  point_data:diophantine_make_points_data(diophantine_instantiate_solutions(solutions, nmin, nmax,integer)),
+  label_data:diophantine_make_points_labels(point_data, label_dx, label_dy),
+  point_ranges:[-border,border,-border,border]+diophantine_point_ranges(point_data),
+  diophantine_draw_data(eq, point_ranges[1], point_ranges[2], point_ranges[3], point_ranges[4], label_dx, label_dy, point_data, label_data));
+
+diophantine_scale_range(range,scale):=block([xsize:range[2]-range[1],ysize:range[4]-range[3],xmid,ymid],
+  xmid:range[1]+xsize/2,
+  ymid:range[3]+ysize/2,
+  [xmid - xsize/2*scale, xmid + xsize/2*scale, ymid - ysize/2*scale, ymid + ysize/2*scale]);
+diophantine_draw(eq,[rest]):=block([sols:diophantine_solve(eq)],
+  if not diophantine_infinite_solutions(sols) then block([point_ranges:diophantine_point_ranges(diophantine_make_points_data(sols)),new_range],
+    new_range:diophantine_scale_range(point_ranges,1.2),
+    diophantine_draw_finite(eq,new_range[1],new_range[2],new_range[3],new_range[4],(new_range[2]-new_range[1])/30,(new_range[4]-new_range[3])/25))
+  else block([limits:if length(rest)=2 then rest else [-1,1],pts,range,new_range],
+    pts:diophantine_instantiate_solutions(sols,limits[1],limits[2],integer),
+    range:diophantine_point_ranges(diophantine_make_points_data(pts)),
+    diophantine_draw_infinite(eq,limits[1],limits[2],(range[2]-range[1])/30,(range[4]-range[3])/25,(range[2]-range[1])/10)));
+
+diophantine_draw_example():=diophantine_draw(2*x*y+56*y+5*x+7=0);
+
+diophantine_draw_example2():=diophantine_draw_finite(42*x*x+8*x*y+15*y*y+23*x+17*y-4915=0, -12, 12, -20, 20,  1, 2);
+
+diophantine_draw_example3():=diophantine_draw_finite(-2*y^2-5*x*y+3*x^2-6=0, -4, 4, -4, 4, 1/2, 1/2);
+
+diophantine_draw_example4():=diophantine_draw_infinite(18*y^2-24*x*y+7*y+8*x^2+5*x+16=0, -3, 3, 150, 10, 100);
+
+diophantine_draw_example5():=diophantine_draw_infinite(x^2-5*y^2=-1,-2,1,1,1,10);
+
+diophantine_draw_example6():=diophantine_draw_infinite(x^2-5*y^2=1,-1,1,1,1,10);
+
+diophantine_draw_example7():=diophantine_draw(13*y^2+16*x*y-306*y+5*x^2-190*x+1214);
+
+diophantine_draw_example8():=diophantine_draw((-11*y^2)+6*x*y-70*y-x^2+24*x+169);

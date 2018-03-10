@@ -1,0 +1,539 @@
+/*
+solves linear and quadratic diophantine equations with constant integer coefficients:
+a*x^2 + b*x*y + c*y^2 + d*x + e*y + f = 0
+with variables x and y taking only integer values
+
+depending on the coefficients, different solution techniques are used:
+  * dario alpern's solution, see https://www.alpertron.com.ar/QUAD.HTM is used for the following cases:
+    - linear case: a=b=c=0
+    - simple hyperbolic case: a=c=0, b#0
+    - elliptic case: b^2 - 4*a*c < 0
+    - parabolic case: b^2 - 4*ac = 0
+  * John P. Robertson's paper "Solving the equation  a*x^2 + b*x*y + c*y^2 + d*x + e*y + f = 0", available at http://www.jpr2718.org/ax2p.pdf
+    - hyperbolic case: b^2 - 4*a*c > 0
+
+usage:
+  load(diophantine);
+  diophantine_solve(equation);
+
+
+*/
+
+diophantine_error_2_vars:"Can only solve equations in 2 unknowns, found";
+diophantine_error_integer_coeffs:"All coefficients should be integers";
+diophantine_error_hi_pow:"Can only solve equations of degree 2 or less";
+diophantine_error_no_unknowns:"No unknowns to solve for";
+diophantine_error_not_implemented:"Can't solve this type of diophantine equation (yet?)";
+
+/* a*x^2 + b*x*y + c*y^2 + d*x + e*y + f */
+
+load(to_poly_solve);
+if is(using_asdf_loading='using_asdf_loading) then load(diophantine_lisp_helpers);
+load(functs);
+
+diophantine_gensym():=if is(diophantine_solution_parameter='diophantine_solution_parameter) then (
+  diophantine_solution_parameter:new_variable('integer),diophantine_solution_parameter)
+else diophantine_solution_parameter;
+diophantine_gensym_pos():=if is(diophantine_pos_solution_parameter='diophantine_pos_solution_parameter) then (
+  diophantine_pos_solution_parameter:new_variable('natural_number),diophantine_pos_solution_parameter)
+else diophantine_pos_solution_parameter;
+
+/* solve an equation with only one unknown */
+diophantine_solve_single_var(dio_eq):=block([sols:solve(dio_eq),result:[]],
+  for sol in sols do if integerp(rhs(sol)) then push([sol],result),
+  result);
+
+diophantine_gen_euclid(d,e):=block([v:[0,1,e],u:[1,0,d],t:0,q:0],
+  for t:0 while v[3] # 0 do block([],
+    q:floor(u[3]/v[3]),
+    t:u-q*v,
+    u:v,
+    v:t),
+  [u,v]);
+
+/* solves a linear diophantine equation, of the form d*x+e*y+f=0 */
+diophantine_solve_linear(x,y,d,e,f):=block(
+  if (d = 0 and e # 0) then
+    block(if (integerp(f/e)) then [[y=-f/e]])
+  elseif (d # 0 and e = 0) then
+    block(if (integerp(f/d)) then [[x=-f/d]])
+  else block([g:gcd(d,e)],
+    if (mod(f,g) # 0) then []
+    else
+    block([uv:diophantine_gen_euclid(d,e),n:diophantine_gensym()],
+      block([xi:-uv[1][1]*f/uv[1][3], xl:e,
+             yi:-uv[1][2]*f/uv[1][3], yl:-d, tx:0],
+        uv[2][1]:d*d+e*e,
+        tx:floor(((d*yi-e*xi)+uv[2][1]/2)/uv[2][1]),
+        xi:xi+e*tx,
+        yi:yi-d*tx,
+        if (xl<0 and yl<0) then block(xl:-xl,yl:-yl),
+        [[x=xi+n*xl,y=yi+n*yl]]))));
+
+/* search through vals, finding values which make xexpr and yexpr integer.
+  xepxr and yexpr are equations with lhs a variable, rhs an expression with parameter p.
+  vals is a list whose first element is p, second element a list of candidate values for p. */
+diophantine_integer_expressions(xexpr, yexpr, vals):=block([_e, result:[]],
+  for _e in first(rest(vals)) do block([sx:subst(first(vals)=_e, xexpr), sy:subst(first(vals)=_e, yexpr)],
+    if integerp(rhs(sx)) and integerp(rhs(sy)) then
+    push([sx, sy], result)),
+  reverse(result));
+
+/* solves the simple hyperbolic case: b*x*y + d*x + e*y + f = 0.
+   it is named simple because there is no x^2 or y^2 component */
+diophantine_solve_simple_hyperbolic(x, y, b, d, e, f):=block([result:[]],
+  if (d*e-b*f=0) then block(
+    if integerp(e/b) then push([x = -e/b, y = diophantine_gensym()],result),
+    if integerp(d/b) then push([x = diophantine_gensym(), y = -d/b],result),
+    result)
+  else block([divs: listify(divisors(d*e-b*f)), v],
+    append(
+      diophantine_integer_expressions(x = (v-e)/b, y = ((d*e-b*f)/v-d)/b, [v, divs]),
+      diophantine_integer_expressions(x = (-v-e)/b, y = ((-d*e+b*f)/v-d)/b, [v, divs]))));
+
+diophantine_solve_elliptic(x, y, a, b, c, d, e, f):=block([tr:diophantine_transform_to_pell(a*x*x+b*x*y+c*y*y+d*x+e*y+f)],
+  block([coeffs:diophantine_coeffs(tr[2]),vars:listofvars(tr[2]),trsols],
+    trsols:diophantine_solve_homogenous_elliptic(vars[1],vars[2],rhs(coeffs[3]),-rhs(coeffs[6])),
+    trsols:remove_duplicates(append(trsols,map(lambda([s],[lhs(s[1])=-rhs(s[1]),s[2]]), trsols))),
+    remove_if_not(integer_solution_p,diophantine_subst(trsols,tr[1]))));
+
+/* solves the elliptic case: b^2-4*a*c < 0 */
+diophantine_solve_elliptic_slow(x, y, a, b, c, d, e, f):=block([roots:solve((b^2-4*a*c)*x^2+2*(b*e-2*c*d)*x+(e^2-4*c*f),x), iroots],
+  if length(roots) = 0 then return([])
+  else block([roots:if length(roots)=1 then [roots[1],roots[1]] else roots],
+    iroots:map(rhs,roots),
+    if not (isreal_p(iroots[1]) and isreal_p(iroots[2])) then return([]),
+    iroots:map(truncate,iroots),
+    if iroots[1] > iroots[2] then iroots:[iroots[2],iroots[1]],
+    block([roots:makelist(i,i,iroots[1],iroots[2]), v],
+      if iroots[1]=iroots[2] then
+      diophantine_integer_expressions(x = v, y = (-(b*v+e)+sqrt((b*v+e)^2-4*c*(a*v^2+d*v+f)))/(2*c), [v, roots])
+      else
+      remove_duplicates(append(
+        diophantine_integer_expressions(x = v, y = (-(b*v+e)+sqrt((b*v+e)^2-4*c*(a*v^2+d*v+f)))/(2*c), [v, roots]),
+        diophantine_integer_expressions(x = v, y = (-(b*v+e)-sqrt((b*v+e)^2-4*c*(a*v^2+d*v+f)))/(2*c), [v, roots]))))));
+
+/* special case elliptic with b and e = 0, c=-1, used when solving homogenous elliptic */
+diophantine_solve_elliptic_special(x, y, a, d, f):=block([roots:solve(a*x^2+d*x+f,x), iroots, det:d^2-4*a*f],
+  if length(roots) = 0 then return([])
+  else block([roots:if det=0 then [roots[1],roots[1]] else roots],
+    iroots:map(rhs,roots),
+    if det < 0 then return([]),
+    iroots:map(truncate,iroots),
+    if iroots[1] > iroots[2] then iroots:[iroots[2],iroots[1]],
+    block([roots:makelist(i,i,iroots[1],iroots[2]), v],
+      if det=0 then
+      diophantine_integer_expressions(x = v, y = -sqrt(4*(a*v^2+d*v+f))/2, [v, roots])
+      else
+      remove_duplicates(append(
+        diophantine_integer_expressions(x = v, y = -(sqrt(4*(a*v^2+d*v+f)))/2, [v, roots]),
+        diophantine_integer_expressions(x = v, y = sqrt(4*(a*v^2+d*v+f))/2, [v, roots]))))));
+
+/* solve x^2 + dy^2 = n */
+diophantine_solve_homogenous_elliptic(x,y,d,n):=
+if d < 0 then (
+  diophantine_solve_homogenous_elliptic(x,y,-d,-n))
+else block([roots:zn_nth_root(n,2,d),results:[],root,k,sols,t],
+  if roots#false then (sols:makelist([root,diophantine_solve_elliptic_special(k,t,-d,-2*root,(n-root^2)/d)], root, roots),
+    for sol in sols do (
+      for s in sol[2] do (
+        results:cons(subst(s,[x=sol[1]+k*d,y=t]),results)))),
+  results);
+
+/* solves the parabolic case: b^2-4*a*c=0 */
+diophantine_solve_parabolic(x, y, a, b, c, d, e, f):=block([g:gcd(a,c),ag,bg,cg,qa,qc,qcdqae],
+  if a=0 then return(diophantine_solve_parabolic(y,x,c,b,a,e,d,f)),
+  g:g*signum(a),
+  ag:a/g,
+  bg:b/g,
+  cg:c/g,
+  qa:sqrt(ag),
+  qc:sqrt(cg)*signum(b/a),
+  qcdqae:qc*d-qa*e,
+  if qcdqae = 0 then block([u,usols], /* two parallel lines */
+    usols:solve(qa*g*u^2+d*u+qa*f,u),
+    block([result:[]],
+      for us in usols do block([u:-rhs(us)],
+        if integerp(u) then block([ps:diophantine_solve_linear(x,y,qa,qc,u)],
+          if not emptyp(ps) then push(ps[1], result))),
+      result))
+  else block([un:abs(qcdqae) - 1,ui,result:[]], /* a parabola */
+    for ui:0 thru un do block(
+      if mod(qa*g*ui^2+d*ui+qa*f,qcdqae) = 0 and mod(qc*g*ui^2+e*ui+qc*f,qcdqae) = 0 then block([
+        xv:-1*qc*g*qcdqae*diophantine_gensym()^2-(e+2*qc*g*ui)*diophantine_gensym()-(qc*g*ui^2+e*ui+qc*f)/qcdqae,
+        yv:qa*g*qcdqae*diophantine_gensym()^2+(d+2*qa*g*ui)*diophantine_gensym()+(qa*g*ui^2+d*ui+qa*f)/qcdqae],
+        push([x = xv, y = yv], result))),
+    reverse(result)));
+
+/* solves the hyperbolic homogenous case: b^2-4*a*c>0 and d=e=0 */
+diophantine_solve_hyperbolic_homogenous(x, y, a, b, c, f):=block([],
+  if a = 0 then
+  diophantine_solve_hyperbolic_homogenous(y,x,c,b,a,f)
+  else block([b2m4ac:b^2-4*a*c,isq],
+  isq:isqrt(b2m4ac),
+  if isq^2 = b2m4ac then block(
+    if (f = 0) then block([gcd1:gcd(2*a,(b+isq)),gcd2:gcd(2*a,b-isq)],
+    append(diophantine_solve_linear(x,y,2*a/gcd1,(b + isq)/gcd1,0), diophantine_solve_linear(x,y,2*a/gcd2,(b - isq)/gcd2,0)))
+    else block([divs:listify(divisors(-4*a*f))],
+      diophantine_integer_expressions(x = (u-(b+isq)*(u+4*a*f/u)/2/isq)/2/a, y = (u + 4*a*f/u)/2/isq, [u, append(divs, -1*divs)])))
+  else block([g:gcd(gcd(a,b),c)],
+    if integerp(f/g) then  block([a:a/g,b:b/g,c:c/g,f:f/g],
+      if (b = 0) then block([],
+        if ((f = 1) or (f = -1) or (f = 4) or (f = -4)) then block([],
+          if (c < 0) and (a = 1) then
+          ratsimp(diophantine_all_pell_solutions(x,y,-c,-f))
+          elseif (a < 0) and (c = 1) then
+          ratsimp(diophantine_all_pell_solutions(y,x,-a,-f))
+          elseif a=-1 then diophantine_solve_hyperbolic_homogenous(x,y,-a,0,-c,-f)
+          else diophantine_solve_with_transform(x,y,a,0,c,0,0,f,diophantine_make_a_one_transform))
+        elseif (a = 1 and c < 0) or (c = 1 and a < 0) then
+        block([r,s,t,u,fundamental_solutions,pell_1_solutions,D: if a = 1 then -c else -a],
+          fundamental_solutions: diophantine_lmm(r,s,D,-f),
+          pell_1_solutions: diophantine_all_pell_solutions(t, u, D, 1),
+          block([eq:if a = 1 then [x=r*t+s*u*D, y=r*u+s*t] else [y=r*t+s*u*D, x=r*u+s*t],result:[]],
+            for pell_1_solution in pell_1_solutions do
+            for fundamental_solution in fundamental_solutions do
+            push(subst(append(fundamental_solution, pell_1_solution),eq),result),
+            result))
+        elseif (a=-1 or c=-1) then diophantine_solve_hyperbolic_homogenous(x,y,-a,0,-c,-f)
+        else diophantine_solve_with_transform(x,y,a,0,c,0,0,f,diophantine_make_a_one_transform))
+      else diophantine_solve_with_transform(x,y,a,b,c,0,0,f,diophantine_make_b_zero_transform))
+    else [])));
+
+diophantine_infinite_solutions(sol):=not freeof(diophantine_gensym(),sol) or not freeof(diophantine_gensym_pos(), sol);
+
+/* remove elements from a list, based on a predicate */
+remove_if(pred, list, [key]):=block([result:[],e],
+  for e in list do block([ne:if emptyp(key) then e else key[1](e)],
+    if not pred(ne) then push(e,result)),
+  reverse(result));
+
+/* remove elements from a list, based on a predicate */
+remove_if_not(pred, list):=block([result:[],e],
+  for e in list do if pred(e) then push(e,result),
+  reverse(result));
+
+/* remove duplicates from a list */
+remove_duplicates(l):=listify(setify(l));
+
+/* check if a solution is integer */
+integer_solution_p(s):=integerp(rhs(s[1])) and integerp(rhs(s[2]));
+
+/* check if a solution is positive (both values are > 0 */
+positive_solution_p(s):=integer_solution_p(s) and rhs(s[1])>0  and rhs(s[2])>0;
+
+/* removes rational solutions from a list of solutions */
+remove_rat_sols(s):=remove_if_not(integer_solution_p, s);
+
+/* substitute a solution into an equation. */
+diophantine_subst(sols,eq):=map(lambda([s],subst(s,eq)),sols);
+
+/* computes the a,b,c,d,e,f coefficients of an equation of the form a*x^2 + b*x*y + c*y^2 + d*x + e*y + f = 0 */
+diophantine_coeffs(eq):=block([vars:listofvars(eq)],
+  if length(vars)=1 then vars:[vars[1],'dummyvar],
+  if op(eq)="=" then eq:lhs(eq)-rhs(eq),
+  ['a=coeff(eq,vars[1],2),'b=coeff(coeff(eq,vars[2]),vars[1]),'c=coeff(eq,vars[2],2),'d=coeff(coeff(eq,vars[1]),vars[2],0),'e=coeff(coeff(eq,vars[2]),vars[1],0),'f=coeff(coeff(eq,vars[1],0),vars[2],0)]);
+
+/* solves the equation by using a transform */
+diophantine_solve_with_transform(x,y,a,b,c,d,e,f,trfunc):=block([tr_eq,tr_eq_sol,tr,result],
+  tr:trfunc(x,y,a,b,c,d,e,f),
+  tr_eq:expand(subst(tr,a*x*x+b*x*y+c*y*y+d*x+e*y+f)),
+  tr_eq:tr_eq*lcm(map(denom,map(rhs,diophantine_coeffs(tr_eq)))),
+  tr_eq_sol:diophantine_solve(expand(tr_eq)),
+  result:map(lambda([s],subst(s,tr)),tr_eq_sol),
+  ratsimp(diophantine_filter_rat_solutions(result,tr)));
+
+diophantine_make_b_zero_transform(x,y,a,b,c,d,e,f):=if a=0 then diophantine_make_b_zero_transform(y,x,c,b,a,e,d,f) else
+block([B,C,e1,X:'Xb,Y:'Yb],
+  e1:2*a/b, B:ratnum(e1), C:denom(e1),
+  [x=1/B*X-C/B*Y,y=Y]);
+diophantine_make_d_zero_transform(x,y,a,b,c,d,e,f):=block([B,C,e1,X:'Xd,Y:'Yd],
+  e1:2*a/d, B:ratnum(e1), C:denom(e1),
+  [x=1/B*X-C/B,y=Y]);
+/*diophantine_make_d_zero_transform(y,x,c,b,a,e,d,f);*/
+diophantine_make_e_zero_transform(x,y,a,b,c,d,e,f):=block([B,C,e1,X:'Xe,Y:'Ye],
+  e1:2*c/e, B:ratnum(e1), C:denom(e1),
+  [y=1/B*X-C/B,x=Y]);
+diophantine_make_a_one_transform(x,y,a,b,c,d,e,f):=block([X:'Xa,Y:'Ya],
+  [x=X/a,y=Y]);
+diophantine_apply_transform(eq,transform_name):=block([vars:listofvars(eq),coeffs:map(rhs,diophantine_coeffs(eq)),new_eq,transform],
+  transform:apply(transform_name,append(vars,coeffs)),
+  new_eq:expand(subst(transform,eq)));  /*,
+  expand(apply(lcm,map(rhs,diophantine_coeffs(new_eq))))*/
+
+diophantine_filter_rat_solutions(solutions, final_transform):=if not diophantine_infinite_solutions(solutions) then remove_rat_sols(solutions) else
+block([sol,result:[],limit,param:diophantine_gensym()],
+  limit:apply(lcm,map(denom,map(rhs,final_transform))), /* lcm of denominators of terms of the transforms */
+  for sol in solutions do block([first:false, second:false,n],
+    for n:0 while n < limit and not integerp(second) do (
+      if integer_solution_p(ratsimp(subst(param=n,sol))) then (
+        if not integerp(first) then first:n elseif not integerp(second) then second:n)),
+    if integerp(first) then (
+      if not integerp(second) then push(sol,result) /* error(I_didnt_think_this_could_happen) */
+      else
+      push(subst(param=(second-first)*param+first,sol),result))),
+  result);
+diophantine_solve_hyperbolic(x, y, a, b, c, d, e, f):=block(
+  if d = 0 and e = 0 then (
+    diophantine_solve_hyperbolic_homogenous(x, y, a, b, c, f))
+  else block([eq:a*x*x+b*x*y+c*y*y+d*x+e*y+f,dtp],
+    dtp:diophantine_transform_to_pell(eq),
+    if perfect_squarep(abs(coeff(dtp[2],listofvars(dtp[2])[2],2))) then block([s:diophantine_solve(dtp[2])],
+      remove_if_not(integer_solution_p, diophantine_subst(s,dtp[1]))
+      ) else block([],
+      if length(diophantine_solve(dtp[2])) # 0 then diophantine_solve_difficult_hyperbolic(eq) else [])));
+
+diophantine_gen_complex_sols(transform, vars, min_pell, fund_sols, q, int_power_exprs):=
+block([ppq:subst(min_pell,vars[1]+sqrt(q)*vars[2])^diophantine_gensym_pos(),
+  pmq:subst(min_pell,vars[1]-sqrt(q)*vars[2])^diophantine_gensym_pos(),
+  result:[],pp_int_power_exprs,pm_int_power_exprs,mp_int_power_exprs,mm_int_power_exprs],
+  [pp_int_power_exprs,pm_int_power_exprs,mp_int_power_exprs,mm_int_power_exprs]:int_power_exprs,
+  for fund_sol in fund_sols do
+  block([lpq:subst(fund_sol, vars[1]+sqrt(q)*vars[2]),
+         lmq:subst(fund_sol, vars[1]-sqrt(q)*vars[2]),
+         pp_pow_exprs:pop(pp_int_power_exprs),
+         pm_pow_exprs:pop(pm_int_power_exprs),
+         mp_pow_exprs:pop(mp_int_power_exprs),
+         mm_pow_exprs:pop(mm_int_power_exprs)],
+      for pow_expr in pp_pow_exprs do block([m,p,v1,v2],
+        [m,p]:pow_expr,
+        v1:subst(diophantine_gensym_pos()=m*diophantine_gensym_pos()+p,(ppq*lpq+pmq*lmq)/2),
+        v2:subst(diophantine_gensym_pos()=m*diophantine_gensym_pos()+p,(ppq*lpq-pmq*lmq)/2/sqrt(q)),
+        push(subst([vars[1]=v1, vars[2]=v2], transform), result)),
+      for pow_expr in pm_pow_exprs do block([m,p,v1,v2],
+        [m,p]:pow_expr,
+        v1:subst(diophantine_gensym_pos()=m*diophantine_gensym_pos()+p,(ppq*lpq+pmq*lmq)/2),
+        v2:subst(diophantine_gensym_pos()=m*diophantine_gensym_pos()+p,(ppq*lpq-pmq*lmq)/2/sqrt(q)),
+        push(subst([vars[1]=v1, vars[2]=-v2], transform), result)),
+      for pow_expr in mp_pow_exprs do block([m,p,v1,v2],
+        [m,p]:pow_expr,
+        v1:subst(diophantine_gensym_pos()=m*diophantine_gensym_pos()+p,(ppq*lpq+pmq*lmq)/2),
+        v2:subst(diophantine_gensym_pos()=m*diophantine_gensym_pos()+p,(ppq*lpq-pmq*lmq)/2/sqrt(q)),
+        push(subst([vars[1]=-v1, vars[2]=v2], transform), result)),
+      for pow_expr in mm_pow_exprs do block([m,p,v1,v2],
+        [m,p]:pow_expr,
+        v1:subst(diophantine_gensym_pos()=m*diophantine_gensym_pos()+p,(ppq*lpq+pmq*lmq)/2),
+        v2:subst(diophantine_gensym_pos()=m*diophantine_gensym_pos()+p,(ppq*lpq-pmq*lmq)/2/sqrt(q)),
+        push(subst([vars[1]=-v1, vars[2]=-v2], transform), result))),
+    result);
+
+diophantine_basic_solution(eq):=block([pell_transform:diophantine_transform_to_pell(eq),vars,coeffs,pell_min_sol,fund_sol,k,f,L,result:[],q],
+  L:apply(lcm,map(denom, map(rhs, pell_transform[1]))),
+  vars:listofvars(pell_transform[2]),
+  coeffs:[coeff(pell_transform[2],vars[1],2),coeff(pell_transform[2],vars[2],2),subst([vars[1]=0,vars[2]=0],pell_transform[2])],
+  q:-coeffs[1]*coeffs[2],
+  pell_min_sol: if abs(coeffs[1]) = 1 then diophantine_min_pos_pell_solution(vars[1],vars[2],q,1) else diophantine_min_pos_pell_solution(vars[2],vars[1],q,1),
+  fund_sol: if abs(coeffs[1]) = 1 then diophantine_lmm(vars[1],vars[2],q,-coeffs[1]*coeffs[3]) else diophantine_lmm(vars[2],vars[1],q,-coeffs[2]*coeffs[3]),
+  k:if L=1 then 1 else diophantine_compute_k_power(rhs(pell_min_sol[1]),rhs(pell_min_sol[2]),q,L),
+  [pell_transform[1],vars,pell_min_sol,fund_sol,q,k,L]);
+
+
+find_int_powers_fast(transform, vars, min_pell, fund_sol, q, k, L, signs):=
+block([rtx: rat(rhs(transform[1])),
+  rty: rat(rhs(transform[2])),
+  txx, txy, txc, txd, tyx, tyy, tyc, tyd],
+  txd:denom(rtx),
+  tyd:denom(rty),
+  txx:coeff(rtx,vars[1],1)*txd,
+  txy:coeff(rtx,vars[2],1)*txd,
+  txc:subst([vars[1]=0,vars[2]=0],rtx)*txd,
+  tyx:coeff(rty,vars[1],1)*tyd,
+  tyy:coeff(rty,vars[2],1)*tyd,
+  tyc:subst([vars[1]=0,vars[2]=0],rty)*tyd,
+  ?$find_int_powers_lisp(txx, txy, txc, txd, tyx, tyy, tyc, tyd, rhs(min_pell[1]), rhs(min_pell[2]), rhs(fund_sol[1]), rhs(fund_sol[2]), q, k, L, signs[1], signs[2]));
+
+diophantine_solve_difficult_hyperbolic(eq):=block([transform, vars, min_pell, fund_sols, q, k, L, fund_sol, int_power_lists, int_powers, int_power_exprs, kdivs],
+  [transform, vars, min_pell, fund_sols, q, k, L]:diophantine_basic_solution(eq),
+  kdivs:listify(divisors(k)),
+  int_power_lists:makelist(makelist(find_int_powers_fast(transform, vars, min_pell, fund_sol, q, k, L, m), fund_sol, fund_sols), m, [[1,1],[1,-1],[-1,1],[-1,-1]]),
+  int_power_exprs:makelist(makelist(find_min_coverage(int_powers, k, kdivs), int_powers, int_power_list), int_power_list, int_power_lists),
+  diophantine_gen_complex_sols(transform, vars, min_pell, fund_sols, q, int_power_exprs));
+
+
+defstruct(pqa(pp,g,b,q));
+do_pqa(p,q,d):=block([result:diophantine_pqa(p,q,d)],
+  new(pqa(subst(result,'pp),
+      /* skip elements -2 and -1 in g and b */
+          rest(rest(subst(result,'g))),
+          rest(rest(subst(result,'b))),
+          subst(result,'q))));
+
+perfect_squarep(D):=block([iqd:isqrt(D)],is(D-iqd*iqd=0));
+
+diophantine_min_pos_pell_solution_1(x,y,D,rhs):=block([pqa:do_pqa(0,1,D),period_length],
+      period_length:length(pqa@pp),
+      if evenp(period_length) then block([],
+        if rhs=-1 then []
+        elseif rhs=1 then [x=pqa@g[period_length], y = pqa@b[period_length]])
+      else block([], /* period_length is odd */
+        if rhs=-1 then [x=pqa@g[period_length], y = pqa@b[period_length]]
+        elseif rhs=1 then block([x1:pqa@g[period_length],y1:pqa@b[period_length]], [x=D*y1^2+x1^2,y=2*x1*y1])));
+
+diophantine_min_pos_pell_solution_4(x,y,D,rhs):=block([],
+      if mod(D,4)=1 then block([pqa:do_pqa(1,2,D),period_length],
+        period_length:length(pqa@pp),
+        if evenp(period_length) then block([],
+          if rhs=-4 then []
+          elseif rhs=4 then [x=pqa@g[period_length], y = pqa@b[period_length]])
+        else block([], /* period_length is odd */
+          if rhs=-4 then [x=pqa@g[period_length], y = pqa@b[period_length]]
+          elseif rhs=4 then block([x1:pqa@g[period_length],y1:pqa@b[period_length]], [x=1/2*(D*y1^2+x1^2),y=x1*y1])))
+      elseif mod(D,4)=0 then block([sol1:diophantine_min_pos_pell_solution(x,y,D/4,rhs/4)],
+          if length(sol1)>0 then [x=rhs(sol1[1])*2,sol1[2]] else []
+          )
+        elseif mod(D,4)=2 or mod(D,4)=3 then block([sol1:diophantine_min_pos_pell_solution(x,y,D,rhs/4)],
+          if length(sol1)>0 then [x=rhs(sol1[1])*2,y=rhs(sol1[2])*2] else []));
+
+diophantine_min_pos_pell_solution(x,y,D,rhs):=
+    if perfect_squarep(D) then
+    [] /* can't use pqa to solve this type, should be handled in a different way */
+    elseif rhs=1 or rhs=-1 then diophantine_min_pos_pell_solution_1(x,y,D,rhs)
+    elseif rhs=4 or rhs=-4 then diophantine_min_pos_pell_solution_4(x,y,D,rhs);
+
+diophantine_all_pell_solutions(x,y,D,rhs):=block([min_sol:diophantine_min_pos_pell_solution(x,y,D,rhs)],
+  if length(min_sol) > 0 then block([t:subst(min_sol,x),u:subst(min_sol,y)],
+    if rhs=1 then block([t1:(t+u*sqrt(D))^diophantine_gensym(),t2:(t-u*sqrt(D))^diophantine_gensym()],
+      [[x=1/2*(t1+t2), y=1/2/sqrt(D)*(t1-t2)], [x=-1/2*(t1+t2), y=1/2/sqrt(D)*(t1-t2)]])
+    elseif rhs=-1 then block([t1:(t+u*sqrt(D))^(2*diophantine_gensym()+1), t2:(t-u*sqrt(D))^(2*diophantine_gensym()+1)],
+      [[x=1/2*(t1+t2), y=1/2/sqrt(D)*(t1-t2)], [x=1/2*(t1+t2), y=-1/2/sqrt(D)*(t1-t2)]])
+    elseif rhs=4 then block([t1:(t+u*sqrt(D))^diophantine_gensym()/(2^(diophantine_gensym()-1)), t2:(t-u*sqrt(D))^diophantine_gensym()/(2^(diophantine_gensym()-1))],
+      [[x=1/2*(t1+t2), y=1/2/sqrt(D)*(t1-t2)], [x=-1/2*(t1+t2), y=1/2/sqrt(D)*(t1-t2)]])
+    elseif rhs=-4 then block([t1:(t+u*sqrt(D))^(2*diophantine_gensym()+1)/(2^(2*diophantine_gensym())), t2:(t-u*sqrt(D))^(2*diophantine_gensym()+1)/(2^(2*diophantine_gensym()))],
+      [[x=1/2*(t1+t2), y=1/2/sqrt(D)*(t1-t2)], [x=-1/2*(t1+t2), y=-1/2/sqrt(D)*(t1-t2)]]))
+  else []);
+
+diophantine_solution_magnitude_less_p(s1,s2):=rhs(s1[1])^2+rhs(s1[2])^2 < rhs(s2[1])^2+rhs(s2[2])^2;
+
+diophantine_instantiate_solutions(parametrised_results, nmin, [rest]):=
+block([sym:if freeof(diophantine_gensym(), parametrised_results) then diophantine_gensym_pos() else diophantine_gensym(),
+  nmax:if rest#[] and numberp(rest[1]) then rest[1] else nmin],
+block([result_list:ratsimp(xreduce(append,map(lambda([param_result],makelist(subst(sym=i,param_result),i,nmin,nmax)), parametrised_results)))],
+  if member('sorted,rest) then
+    result_list:sort(result_list,diophantine_solution_magnitude_less_p),
+  if member('integer,rest) then
+    result_list:remove_rat_sols(result_list),
+  if member('no_eq,rest) then
+    result_list:map(lambda([s],[rhs(s[1]),rhs(s[2])]),result_list),
+  if member('positive,rest) then
+    result_list:remove_if_not(positive_solution_p, result_list),
+  result_list));
+
+diophantine_brute_force(eq,limit,[rest]):=block([coeffs:diophantine_coeffs(eq),vars:listofvars(eq),sln],
+  sln:map(lambda([s],[vars[1]=s[1],vars[2]=s[2]]),apply(diophantine_brute_force_lisp,append(map(rhs,coeffs),[limit], if member('positive,rest) then [true] else []))),
+  if member('sorted,rest) then sort(sln,diophantine_solution_magnitude_less_p) else sln);
+
+diophantine_compute_transform_if(eq,condition,transform):=block([vars:listofvars(eq),coeffs:diophantine_coeffs(eq),expr],
+  if is(subst(coeffs,condition)) then (
+    apply(transform,append(vars,map(rhs,coeffs))))
+  else
+    []);
+
+diophantine_make_coeffs_integer(eq):=expand(lcm(map(denom,map(rhs,diophantine_coeffs(eq))))*eq);
+/* I think this only works for hyperbolic case */
+diophantine_compute_transforms_to_pell(eq):=block([cur_eq:eq,transforms:[],transform:[]],
+  transform:diophantine_compute_transform_if(cur_eq,'b#0,diophantine_make_b_zero_transform), cur_eq:diophantine_make_coeffs_integer(expand(subst(transform, cur_eq))),
+  if not emptyp(transform) then push(transform, transforms),
+  transform:diophantine_compute_transform_if(cur_eq,'d#0,diophantine_make_d_zero_transform), cur_eq:diophantine_make_coeffs_integer(expand(subst(transform, cur_eq))),
+  if not emptyp(transform) then push(transform, transforms),
+  transform:diophantine_compute_transform_if(cur_eq,'e#0,diophantine_make_e_zero_transform), cur_eq:diophantine_make_coeffs_integer(expand(subst(transform, cur_eq))),
+  if not emptyp(transform) then push(transform, transforms),
+  transform:diophantine_compute_transform_if(cur_eq,'a#1,diophantine_make_a_one_transform), cur_eq:diophantine_make_coeffs_integer(expand(subst(transform, cur_eq))),
+  if not emptyp(transform) then push(transform, transforms),
+  reverse(transforms));
+diophantine_combine_transforms(transforms):=block([final,e],
+  if emptyp(transforms) then []
+  else (final:first(transforms),
+    for e in rest(transforms) do
+    final:subst(e,final),
+    final));
+/* transforms an hyperbolic equation into a pell equation x^2-D*y^2=N */
+diophantine_transform_to_pell(eq):=block([transforms, final_transform, transformed_eq, vars, up_vars, new_vars, to_new_vars, new_pell],
+  transforms:diophantine_compute_transforms_to_pell(eq),
+  final_transform:diophantine_combine_transforms(transforms),
+  transformed_eq:expand(subst(final_transform,eq)),
+  vars:listofvars(eq),
+  up_vars: map(lambda([v],parse_string(supcase(string(v),1,2))),vars),
+  if up_vars = vars then up_vars:map(lambda([v],parse_string(sdowncase(string(v),1,2))),vars),
+  new_vars:listofvars(transformed_eq),
+  to_new_vars: [new_vars[1]=up_vars[1], new_vars[2]=up_vars[2]],
+  new_pell:subst(to_new_vars, diophantine_make_coeffs_integer(transformed_eq)),
+  [if emptyp(final_transform) then to_new_vars else ratsimp(subst(to_new_vars,final_transform)), new_pell]);
+
+diophantine_all_pell_solutions2(x,y,D,N):=block([p:subst(diophantine_min_pos_pell_solution(x,y,D,1),[x+sqrt(D)*y,x-sqrt(D)*y]),lmm:diophantine_lmm(x,y,D,N),l],
+  map(lambda([s],[x=(s[1]+s[2])/2,y=(s[1]-s[2])/2/sqrt(D)]),makelist([p[1]^diophantine_gensym()*subst(l,x+sqrt(D)*y),p[2]^diophantine_gensym()*subst(l,x-sqrt(D)*y)],l,lmm)));
+
+diophantine_pell_int_solution_arrays(x,y,D,N,k,L):=block([p:map(rhs,diophantine_min_pos_pell_solution(x,y,D,1)),lmm:map(lambda([s],map(rhs,s)),diophantine_lmm(x,y,D,N)),l],
+  makelist(?diophantine_integer_pell_array(p[1],p[2],l[1],l[2],D,k,L),l,lmm));
+
+diophantine_swap_vars(eq):=block([vars:listofvars(eq)],
+  subst('tempvar=vars[2],subst(vars[2]=vars[1],subst(vars[1]='tempvar,eq))));
+
+/* sorts the solutions so that we have a fixed order for the solutions, even if we change (part of) the underlying algorithm */
+diophantine_solve(diophantine_eq) := nested_sort(diophantine_solve1(diophantine_eq));
+
+nested_sort (l) :=
+  if listp(l)
+    then sort (map (lambda ([l1], if listp(l1) then sort(l1) else l1), l))
+    else l;
+
+
+diophantine_is_product(expr):=
+not atom(expr)
+and (operatorp(expr,"*")
+  or (operatorp(expr,"-") and block([a:args(expr)], length(a) = 1 and diophantine_is_product(a[1]))));
+diophantine_remove_powers(expr):=if not atom(expr) and operatorp(expr,"^") then args(expr)[1] else expr;
+/* assumes diophantine_is_product(expr)*/
+diophantine_factors(expr):=if operatorp(expr,"*") then map(diophantine_remove_powers,args(expr)) else diophantine_factors(args(expr)[1]);
+diophantine_complete_partial_solution(solution, target_vars):=block([vars:listofvars(solution)],
+  if not member(target_vars[1], vars) then map(lambda([s],[target_vars[1] = diophantine_gensym(), s[1]]),solution)
+  elseif not member(target_vars[2], vars) then map(lambda([s],[target_vars[2] = diophantine_gensym(), s[1]]),solution)
+  else solution);
+
+diophantine_solve_factored(factored_eq):=block([individual_solutions:map(diophantine_solve,diophantine_factors(factored_eq)),
+                                         vars:listofvars(factored_eq)],
+  apply(append,makelist(diophantine_complete_partial_solution(solution,vars),solution, remove_if(emptyp,individual_solutions))));
+
+diophantine_solve1(diophantine_eq):=if not atom(diophantine_eq) and operatorp(diophantine_eq,"=") then diophantine_solve1(lhs(diophantine_eq)-rhs(diophantine_eq)) else
+block([vars:listofvars(diophantine_eq),factored_eq:factor(diophantine_eq)],
+  if length(vars) > 2 then error (diophantine_error_2_vars, vars)
+  elseif length(vars) = 1 then return(diophantine_solve_single_var(diophantine_eq))
+  elseif length(vars) = 0 then return([])
+  elseif diophantine_is_product(factored_eq) then return(diophantine_solve_factored(factored_eq)),
+  block([x:vars[1],y:vars[2]],
+    if (hipow(diophantine_eq, x)>2 or hipow(diophantine_eq, y)>2) then
+      error(diophantine_error_hi_pow)
+    else
+    block([a:coeff(diophantine_eq,x^2),
+      b:coeff(coeff(diophantine_eq,x),y),
+      c:coeff(diophantine_eq, y^2),
+      d:subst(y=0, coeff(diophantine_eq, x)),
+      e:subst(x=0,coeff(diophantine_eq,y)),
+      f:subst([x=0,y=0],diophantine_eq)],
+      if not every(integerp, {a,b,c,d,e,f}) then
+        error (diophantine_error_integer_coeffs)
+        else diophantine_solve_coeffs(x,y,a,b,c,d,e,f))));
+
+diophantine_classify(a,b,c,d,e,f):=
+  if (a = 0 and b = 0 and c = 0) then diophantine_linear
+  elseif (a = 0 and c = 0 and b # 0) then diophantine_simple_hyperbolic
+  elseif b^2-4*a*c < 0 then diophantine_elliptic
+  elseif b^2-4*a*c = 0 then diophantine_parabolic
+  else diophantine_hyperbolic;
+
+diophantine_solve_coeffs(x,y,a,b,c,d,e,f):=block([],
+  map(":",['a,'b,'c,'d,'e,'f],rest(ezgcd(a,b,c,d,e,f))),
+  equation_type:diophantine_classify(a,b,c,d,e,f),
+  if diophantine_verbose_type = true then print(equation_type),
+  if equation_type = diophantine_linear then diophantine_solve_linear(x, y, d, e, f)
+  elseif equation_type = diophantine_simple_hyperbolic then diophantine_solve_simple_hyperbolic(x, y, b, d, e, f)
+  elseif equation_type = diophantine_elliptic then diophantine_solve_elliptic(x, y, a, b, c, d, e, f)
+  elseif equation_type = diophantine_parabolic then diophantine_solve_parabolic(x, y, a, b, c, d, e, f)
+  else diophantine_solve_hyperbolic(x, y, a, b, c, d, e, f));
+
+find_elliptic():=
+block([r:[]],
+  for i thru 100000 do block([eq:diophantine_random_eq(100)],
+    the_eq:eq,
+    if apply(diophantine_classify,map(rhs,diophantine_coeffs(eq)))=diophantine_elliptic then block([sols:ds(eq)],
+      if length(sols)>0 then (print([eq,sols]),push([eq,sols],r)))),
+  r);
