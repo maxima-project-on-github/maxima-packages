@@ -1,11 +1,11 @@
 Maxima program to solve diophantine equations of the form ax^2+bxy+cy^2+dx+ey+f=0 with a,b,c,d,e,f constant integers.
 Based on Dario Alpern's solution/code found at https://www.alpertron.com.ar/QUAD.HTM
 
-[Installing](README.md#install)
-[Usage](README.md#usage)
-[Limitations](README.md#limitations)
-[Tests](README.md#tests)
-[Graphical examples](README.md#graphical-examples)
+1. [Installing](README.md#install)
+1. [Usage](README.md#usage)
+1. [Limitations](README.md#limitations)
+1. [Tests](README.md#tests)
+1. [Graphical examples](README.md#graphical-examples)
 
 ## Install
 Put the source in some folder, and in maxima do the following:
