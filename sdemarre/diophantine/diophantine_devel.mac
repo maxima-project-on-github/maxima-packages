@@ -1,0 +1,196 @@
+diophantine_trace():=trace(diophantine_all_pell_solutions,
+  diophantine_apply_transform,
+  diophantine_coeffs,
+  diophantine_combine_transforms,
+  diophantine_compute_transform_if,
+  diophantine_filter_rat_solutions,
+  diophantine_gen_euclid,
+  diophantine_infinite_solutions,
+  diophantine_integer_expressions,
+  diophantine_make_a_one_transform,
+  diophantine_make_b_zero_transform,
+  diophantine_make_coeffs_integer,
+  diophantine_make_d_zero_transform,
+  diophantine_make_e_zero_transform,
+  diophantine_min_pos_pell_solution,
+  diophantine_min_pos_pell_solution_1,
+  diophantine_min_pos_pell_solution_4,
+  diophantine_reset_vars,
+  diophantine_solution_magnitude_less_p,
+  diophantine_solve_with_transform,
+  diophantine_subst,
+  diophantine_solve_homogenous_elliptic,
+  diophantine_apply_transforms,
+  diophantine_compute_transforms_to_pell,
+  diophantine_instantiate_solutions,
+  diophantine_solve,
+  diophantine_solve1,
+  diophantine_solve_elliptic,
+  diophantine_solve_hyperbolic,
+  diophantine_solve_hyperbolic_homogenous,
+  diophantine_solve_annoying_hyperbolic,
+  diophantine_solve_linear,
+  diophantine_solve_parabolic,
+  diophantine_solve_simple_hyperbolic,
+  diophantine_solve_single_var,
+  diophantine_solve_elliptic_special,
+  do_pqa,
+  find_eq_with_powers,
+  make_a_one,
+  make_b_zero,
+  make_d_zero,
+  make_e_zero,
+  perfect_squarep,
+  remove_rat_sols);
+
+diophantine_rand(n):=random(n)-floor(n/2);
+
+diophantine_random_eq(n):=block([a,b,c,d,e,f],
+  map(":",[a,b,c,d,e,f],makelist(diophantine_rand(n),i,1,6)),
+  a*x^2+b*x*y+c*y^2+d*x+e*y+f);
+
+eqs_with_solutions(eqns,min_solutions):=block([result:[],eq],
+  for eq in eqns do block(
+    if not atom(eq[2]) and length(eq[2]) > min_solutions then
+    push(eq,result)),
+  reverse(result));
+
+find_interesting_equations(coeff_max, num_candidates, min_solutions):=
+block([candidates:makelist(diophantine_random_eq(2*coeff_max),i,1,num_candidates)],
+  sort(eqs_with_solutions(map(lambda([eq],[eq,diophantine_solve(eq)]),candidates),min_solutions),lambda([eq1,eq2],length(eq1[2])>length(eq2[2]))));
+
+diophantine_apply_transforms(transforms, eq):=block([transform,new_eq:eq],
+  for transform in transforms do
+  new_eq:subst(transform,new_eq),
+  new_eq);
+
+diophantine_reset_vars(eq):=block([vars:listofvars(eq)],
+  subst([vars[1]='x,vars[2]='y],eq));
+
+make_b_zero(eq):=block([t:diophantine_compute_transform_if(eq, 'b#0, diophantine_make_b_zero_transform)],  [t,diophantine_reset_vars(expand(subst(t,eq)))]);
+make_d_zero(eq):=block([t:diophantine_compute_transform_if(eq, 'd#0, diophantine_make_d_zero_transform)],  [t,diophantine_reset_vars(expand(subst(t,eq)))]);
+make_e_zero(eq):=block([t:diophantine_compute_transform_if(eq, 'e#0, diophantine_make_e_zero_transform)],  [t,diophantine_reset_vars(expand(subst(t,eq)))]);
+make_a_one(eq):=block([t:diophantine_compute_transform_if(eq, 'a#1, diophantine_make_a_one_transform)],  [t,diophantine_reset_vars(expand(subst(t,eq)))]);
+
+
+find_eq_with_powers():=block([eq:diophantine_random_eq(10),s,M],
+  global_eq:eq,
+  s:ratsimp(diophantine_solve(eq)),
+  if s#[] and diophantine_infinite_solutions(s) then block([tftable,counts],
+    tftable:map(lambda([sol],map(integer_solution_p,sol)),makelist(ratsimp(subst(%n=i,s)),i,0,20)),
+    counts:map(lambda([l],?count(true,l)),args(transpose(apply(matrix,tftable)))),
+    [eq,counts])
+  else [eq,not_interesting]);
+
+diophantine_test():=block([dt:display2d,result],display2d:false,result:batch(rtest_diophantine,test),display2d:dt,result);
+
+matchdeclare(aa,integerp,bb,integerp,ee,all);
+defmatch(zlin, ee^(aa*diophantine_gensym_pos()+bb));
+find_all_z_powers_h(expr):=if not atom(expr) then (if zlin(expr)#false then push([aa,bb],all_powers) else (for e in args(expr) do find_all_z_powers_h(e)));
+all_z_powers(top_expr):=(all_powers:[],find_all_z_powers_h(top_expr),listify(setify(all_powers)));
+has_high_z_power(expr):=some(lambda([zp],is(zp[1]>4)),all_z_powers(expr));
+
+diophantine_sol_matrix(solutions,zmin,zmax):=block([num_sol:makelist(ratsimp(subst(diophantine_gensym()=i,solutions)),i,zmin,zmax)],
+  apply(matrix,map(lambda([s],map(integer_solution_p,s)),num_sol)));
+
+
+diophantine_rat_solutions(pell_transform, vars, pell_min_sol, fund_sol, q, k, L):=block([result:[],t,u],
+  [t,u]:map(rhs,pell_min_sol),
+  for fs in fund_sol do block([fx,fy,ppq,fpq,pmq,fmq],
+    [fx,fy]:map(rhs,fs),
+    ppq:(t+sqrt(q)*u)^diophantine_gensym(),
+    pmq:(t-sqrt(q)*u)^diophantine_gensym(),
+    fpq:(fx+sqrt(q)*fy),
+    fmq:(fx-sqrt(q)*fy),
+    push([vars[1]=(ppq*fpq+pmq*fmq)/2, vars[2]=(ppq*fpq-pmq*fmq)/2/sqrt(q)],result),
+    push([vars[1]=-(ppq*fpq+pmq*fmq)/2, vars[2]=-(ppq*fpq-pmq*fmq)/2/sqrt(q)],result)),
+  diophantine_subst(result,pell_transform));
+
+diophantine_unfiltered_solutions(eq):=block([transform, vars, min_pell, fund_sols, q, k, L],
+  [transform, vars, min_pell, fund_sols, q, k, L]:diophantine_basic_solution(eq),
+  makelist(block([pp:subst(min_pell,(vars[1]+sqrt(q)*vars[2])^diophantine_gensym()),
+                  pm:subst(min_pell,(vars[1]-sqrt(q)*vars[2])^diophantine_gensym()),
+                  fp:subst(fund_sol,vars[1]+sqrt(q)*vars[2]),
+                  fm:subst(fund_sol,vars[1]-sqrt(q)*vars[2])],
+                  subst([vars[1]=(pp*fp+pm*fm)/2,vars[2]=(pp*fp-pm*fm)/2/sqrt(q)], transform)),fund_sol,fund_sols));
+
+diophantine_unique_columns(mat):=transpose(apply(matrix,listify(setify(args(transpose(mat))))));
+
+has_rat_solutions(sol):=block([],
+  diophantine_infinite_solutions(sol) and not every(lambda([s],every(integer_solution_p,s)), makelist(ratsimp(subst(%z1=i,sol)),i,-5,5)));
+diophantine_find_difficult_eq([rest]):=block([result:[],i,count:if is(length(rest)>=1) then rest[1] else 1000, limit: if is(length(rest)>=2) then rest[2] else 30],
+  for i:1 thru count do block([eq:diophantine_random_eq(limit)],
+    the_eq:eq,
+    print(['i=i,'eq=eq]),
+    block([sol:diophantine_solve(eq)],
+      if diophantine_infinite_solutions(sol) then (
+        if has_high_z_power(sol) then (print(['eq_with_high_power=eq,all_z_powers(sol)]),push(eq,result))))),
+  result);
+
+find_int_powers(transform, vars, min_pell, fund_sol, q, k, L, signs):=block([cx:rhs(fund_sol[1]),cy:rhs(fund_sol[2]),result:[],neg1:signs[1],neg2:signs[2]],
+  for pow:0 thru k-1 do block([actual:subst([vars[1]=neg1*cx,vars[2]=neg2*cy],transform)],
+    if integerp(rhs(actual[1])) and integerp(rhs(actual[2])) then (
+      push(pow,result)),
+    block([ncx:q*cy*rhs(min_pell[2]) + cx*rhs(min_pell[1]), ncy:cy*rhs(min_pell[1])+cx*rhs(min_pell[2])],
+      cx:mod(ncx,L),
+      cy:mod(ncy,L))),
+  reverse(result));
+
+make_int_power_tables(eq):=block([s:diophantine_basic_solution(eq)],
+  [makelist(find_int_powers(s[1],s[2], s[3], f, s[5], s[6], s[7], 1, 1),f,s[4]),
+  makelist(find_int_powers(s[1],s[2], s[3], f, s[5], s[6], s[7],-1),f,s[4])]);
+make_int_power_exprs(eq):=block([t:make_int_power_tables(eq), k:dbs(eq)[6]],
+  [makelist(find_min_coverage(i,k,listify(divisors(k))),i,t[1]),
+  makelist(find_min_coverage(i,k,listify(divisors(k))),i,t[2])]);
+
+gen_complex_sols(eq):=block([s:dbs(eq),transform, vars, min_pell, fund_sols, q, k, L, result:[], fund_sol],
+  [transform, vars, min_pell, fund_sols, q, k, L]:s,
+  for fund_sol in fund_sols do block([ppq, pmq, fpq, fmq],
+    ppq:subst(min_pell,(vars[1]+sqrt(q)*vars[2])^diophantine_gensym_pos()),
+    pmq:subst(min_pell,(vars[1]-sqrt(q)*vars[2])^diophantine_gensym_pos()),
+    fpq:subst(fund_sol,(vars[1]+sqrt(q)*vars[2])),
+    fmq:subst(fund_sol,(vars[1]-sqrt(q)*vars[2])),
+    push([vars[1]=(ppq*fpq+pmq*fmq)/2,vars[2]=(ppq*fpq-pmq*fmq)/2/sqrt(q)],result),
+    push([vars[1]=(ppq*fpq+pmq*fmq)/2,vars[2]=-(ppq*fpq-pmq*fmq)/2/sqrt(q)],result),
+    push([vars[1]=-(ppq*fpq+pmq*fmq)/2,vars[2]=(ppq*fpq-pmq*fmq)/2/sqrt(q)],result),
+    push([vars[1]=-(ppq*fpq+pmq*fmq)/2,vars[2]=-(ppq*fpq-pmq*fmq)/2/sqrt(q)],result)),
+  result
+  );
+
+
+/* solve all diophantine equations within limits */
+diophantine_solve_all(limit):=
+block([equations:[]],
+        for a:-limit thru limit do
+          for b:-limit thru limit do
+            for c:-limit thru limit do
+              for d:-limit thru limit do
+                for e:-limit thru limit do
+                  for f:-limit thru limit do
+                    block([eq:a*x*x+b*x*y+c*y*y+d*x+e*y+f],
+                       push(eq,equations)),
+                     map(lambda([eq],block([r:errcatch(ds(eq))], if r = [] then [eq,r] else [eq,first(r)])),equations));
+
+/* convenience: aliases */
+dsv(eq):=diophantine_swap_vars(eq);
+dtp(eq):=diophantine_transform_to_pell(eq);
+ds(eq):=diophantine_solve(eq);
+dis(sol,[rest]):=apply(diophantine_instantiate_solutions,cons(sol,rest));
+dsah(eq):=diophantine_solve_annoying_hyperbolic(eq);
+dbs(eq):=diophantine_basic_solution(eq);
+drs(eq):=apply(diophantine_rat_solutions, dus(eq));
+drv(eq):=diophantine_reset_vars(eq);
+dbf(eq,[rest]):=apply(diophantine_brute_force, cons(eq,rest));
+zdis(eq):=dis(eq,0,sorted);
+odis(eq):=dis(eq,1,sorted);
+modis(eq):=dis(eq,-1,sorted);
+/* sort a list of equations which have parametrised solutions according to the multiplier of the parameter in the solution */
+sortbyz(eqs):=map(first,sort(map(lambda([eq],all_z_powers(ds(eq))),eqs),lambda([eqd1,eqd2],eqd1[2][1][1]<eqd2[2][1][1])));
+di():=display2d:imaxima;
+df():=display2d:false;
+dc(eq):=diophantine_coeffs(eq);
+
+/* find equation with many solutions */
+prime_list(max):=block([r:[],p:2],for i thru max do (r:cons(p,r),p:next_prime(p)),r);
+ppow(num,current,primes,maxpow):=if num = 0 then current else block([m:mod(num,maxpow),nnum:floor(num/maxpow)],ppow(nnum,current * first(primes)^m,rest(primes),maxpow));
+find_interesting_eqs(value):=block([r:[0,0]],for i from 1 thru 6^8 do block([num:ppow(i,1,prime_list(10),6)], block([sol_len:length(dio_lmm(x,y,value,num))], if sol_len > r[1] then (r:[sol_len,num],print(['sol_len=sol_len,'N=num])))),r);

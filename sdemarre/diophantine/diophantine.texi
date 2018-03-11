@@ -1,0 +1,88 @@
+
+@menu
+* Introduction to diophantine::
+* Functions and Variables for diophantine::
+@end menu
+
+@node Introduction to diophantine, Functions and Variables for diophantine, Top, Top
+@section Introduction to diophantine
+
+@code{diophantine} is package to solve diophantine equations of the form @math{ax^2+bxy+cy^2+dx+ey+f=0} with @math{a,b,c,d,e} and @math{f} integer coefficients, @math{x} and @math{y} the variables which can only take integer values.
+
+@node Functions and Variables for diophantine, Introduction to diophantine, Top
+@section Functions and Variables for diophantine
+
+@deffn {Function} diophantine_solve (@var{equation})
+
+Computes solutions for the @code{equation}, which has to be of the form @math{ax^2+bxy+cy^2+dx+ey+f=0} with @math{a,b,c,d,e} and @math{f} integer coefficients, @math{x} and @math{y} the variables which can only take integer values. The result is always a list. If an empty list is returned, it means no solutions exist. Sometimes, there are infinitely many solutions, but those infinite solutions can be described by a parametrized representation. The parameter is of the form @math{%zi} for an integer parameter or @math{%ni} for a natural (positive) parameter. Both are suitably declared with @code{new_variable('integer)} or @code{new_variable('natural)} from the @code{to_poly_solve} package.
+
+Examples:
+
+@c ===beg===
+@c load(diophantine)$
+@c diophantine_solve(2*x*y+5*x+56*y+7);
+@c diophantine_solve(14*y^2+90*x*y-82*y+3*x^2-25*x-26);
+@c diophantine_solve(-p^2+2*q^2+4);
+@c ===end===
+@example
+(%i1) load(diophantine)$
+@group
+(%i2) diophantine_solve(2*x*y+5*x+56*y+7);
+(%o2) [[x = - 161, y = - 3], [x = - 47, y = - 6],
+[x = - 35, y = - 12], [x = - 29, y = - 69], [x = - 27, y = 64],
+[x = - 21, y = 7], [x = - 9, y = 1], [x = 105, y = - 2]]
+@end group
+@group
+(%i3) diophantine_solve(14*y^2+90*x*y-82*y+3*x^2-25*x-26);
+(%o3)                          []
+@end group
+(%i4) diophantine_solve(-p^2+2*q^2+4);
+                5/2     %z1         5/2 %z1
+              (2    + 6)    + (6 - 2   )
+(%o4) [[p = - -----------------------------,
+                           %z1
+                          2
+       5/2     %z1         5/2 %z1   (- %z1) - 1/2
+q = ((2    + 6)    - (6 - 2   )   ) 2             ],
+       5/2     %z1         5/2 %z1
+     (2    + 6)    + (6 - 2   )
+[p = -----------------------------,
+                  %z1
+                 2
+       5/2     %z1         5/2 %z1   (- %z1) - 1/2
+q = ((2    + 6)    - (6 - 2   )   ) 2             ]]
+@end example
+
+@end deffn
+
+@deffn {Function} diophantine_instantiate_solutions (@var{solution}, @var{param_first}, [@var{param_last}, @var{option}])
+
+Given a parametrized @code{solution} from @code{diophantine_solve}, will compute all the actual solutions, with the parameter varying from @code{param_first} to @code{param_last} (which defaults to @code{param_first}). If @code{option} is @code{'sorted}, the list of solutions will be sorted by increasing (sum of the squares of the values).
+
+Examples:
+
+@c ===beg===
+@c load(diophantine)$
+@c sol:diophantine_solve(x**2 - 2*x*y + y**2 + 2*x + 2*y + 1);
+@c diophantine_instantiate_solutions(sol,-3,3,sorted);
+@c ===end===
+@example
+(%i1) load(diophantine)$
+@group
+(%i2) sol:diophantine_solve(x**2 - 2*x*y + y**2 + 2*x + 2*y + 1);
+                    2                           2
+(%o2) [[x = (- 4 %z1 ) + 4 %z1 - 1, y = (- 4 %z1 ) + 8 %z1 - 4],
+                                  2              2
+                      [x = - 4 %z1 , y = (- 4 %z1 ) + 4 %z1 - 1]]
+@end group
+@group
+(%i3) diophantine_instantiate_solutions(sol,-3,3,sorted);
+(%o3) [[x = - 1, y = 0], [x = 0, y = - 1], [x = - 1, y = - 4],
+[x = - 4, y = - 1], [x = - 9, y = - 4], [x = - 4, y = - 9],
+[x = - 9, y = - 16], [x = - 16, y = - 9], [x = - 25, y = - 16],
+[x = - 16, y = - 25], [x = - 25, y = - 36],
+[x = - 36, y = - 25], [x = - 36, y = - 49], [x = - 49, y = - 64]]
+@end group
+@end example
+
+@end deffn
