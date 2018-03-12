@@ -1,16 +1,35 @@
+\input texinfo
 
+@setfilename diophantine.info
+@settitle Package diophantine
+
+@ifinfo
+@macro var {expr}
+<\expr\>
+@end macro
+@end ifinfo
+
+@dircategory Mathematics/Maxima
+@direntry
+* Package diophantine: (maxima-packages/sdemarre)Maxima package for solving Diophantine equations
+@end direntry
+
+@node Top, Introduction to package diophantine, (dir), (dir)
+@top
 @menu
-* Introduction to diophantine::
-* Functions and Variables for diophantine::
+* Introduction to package diophantine::
+* Functions and Variables for package diophantine::
+* Function and variable index::
 @end menu
+@chapter Package diophantine
 
-@node Introduction to diophantine, Functions and Variables for diophantine, Top, Top
-@section Introduction to diophantine
+@node Introduction to package diophantine, Functions and Variables for package diophantine, Top, Top
+@section Introduction to package diophantine
 
 @code{diophantine} is package to solve diophantine equations of the form @math{ax^2+bxy+cy^2+dx+ey+f=0} with @math{a,b,c,d,e} and @math{f} integer coefficients, @math{x} and @math{y} the variables which can only take integer values.
 
-@node Functions and Variables for diophantine, Introduction to diophantine, Top
-@section Functions and Variables for diophantine
+@node Functions and Variables for package diophantine, Introduction to package diophantine, Top
+@section Functions and Variables for package diophantine
 
 @deffn {Function} diophantine_solve (@var{equation})
 
@@ -86,3 +105,10 @@ Examples:
 @end example
 
 @end deffn
+
+@node Function and variable index,  , Functions and Variables for package diophantine, Top
+@appendix Function and variable index
+@printindex fn
+@printindex vr
+
+@bye
