@@ -26,7 +26,7 @@
 @node Introduction to package diophantine, Functions and Variables for package diophantine, Top, Top
 @section Introduction to package diophantine
 
-@code{diophantine} is package to solve diophantine equations of the form @math{ax^2+bxy+cy^2+dx+ey+f=0} with @math{a,b,c,d,e} and @math{f} integer coefficients, @math{x} and @math{y} the variables which can only take integer values.
+@code{diophantine} is a package to solve Diophantine equations of the form @math{ax^2+bxy+cy^2+dx+ey+f=0} in which @math{a,b,c,d,e} and @math{f} are integer coefficients, and @math{x} and @math{y} are variables which can only take integer values.
 
 @node Functions and Variables for package diophantine, Introduction to package diophantine, Top
 @section Functions and Variables for package diophantine
@@ -76,7 +76,7 @@ q = ((2    + 6)    - (6 - 2   )   ) 2             ]]
 
 @deffn {Function} diophantine_instantiate_solutions (@var{solution}, @var{param_first}, [@var{param_last}, @var{option}])
 
-Given a parametrized @code{solution} from @code{diophantine_solve}, will compute all the actual solutions, with the parameter varying from @code{param_first} to @code{param_last} (which defaults to @code{param_first}). If @code{option} is @code{'sorted}, the list of solutions will be sorted by increasing (sum of the squares of the values).
+Given a parametrized @code{solution} from @code{diophantine_solve}, this function computes all the actual solutions, with the parameter varying from @code{param_first} to @code{param_last} (which defaults to @code{param_first}). If @code{option} is @code{'sorted}, the list of solutions will be sorted by increasing sum of the squares of the values.
 
 Examples:
 
