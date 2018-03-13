@@ -33,6 +33,7 @@ CONTRIBUTION POLICY
  * The following are encouraged, but not required:
   - Contributors are encouraged to contribute under their real name, not a pseudonym
   - Contributors are encouraged to write documentation, preferably in Texinfo format
+   * Contributors can adapt MYPACKAGE.texi for their own package
   - Contributors are encouraged to include a test script
   - Contributors are encouraged to keep the size of packages relatively small
 
