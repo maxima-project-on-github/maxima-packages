@@ -10,6 +10,7 @@ Based on Dario Alpern's solution/code found at https://www.alpertron.com.ar/QUAD
 
 	   :components
 	   ((:file "diophantine_lisp_helpers")
+	    (:file "diophantine-index")
 	    (:maxima-file "diophantine")
 	    (:maxima-file "diophantine_devel")
 	    (:maxima-file "diophantine_draw")))
