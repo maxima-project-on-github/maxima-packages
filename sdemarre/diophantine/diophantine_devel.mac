@@ -1,3 +1,7 @@
+/* This file is not part of the actual solver, but contains functions that were used during development of the solver,
+ to enable tracing, find special equations with interesting properties (or difficult to solve equations), or just aliases to reduce typing.
+
+This file is kept here in the hope of being useful when new development will happen */
 diophantine_trace():=trace(diophantine_all_pell_solutions,
   diophantine_apply_transform,
   diophantine_coeffs,
@@ -126,22 +130,6 @@ diophantine_find_difficult_eq([rest]):=block([result:[],i,count:if is(length(res
       if diophantine_infinite_solutions(sol) then (
         if has_high_z_power(sol) then (print(['eq_with_high_power=eq,all_z_powers(sol)]),push(eq,result))))),
   result);
-
-find_int_powers(transform, vars, min_pell, fund_sol, q, k, L, signs):=block([cx:rhs(fund_sol[1]),cy:rhs(fund_sol[2]),result:[],neg1:signs[1],neg2:signs[2]],
-  for pow:0 thru k-1 do block([actual:subst([vars[1]=neg1*cx,vars[2]=neg2*cy],transform)],
-    if integerp(rhs(actual[1])) and integerp(rhs(actual[2])) then (
-      push(pow,result)),
-    block([ncx:q*cy*rhs(min_pell[2]) + cx*rhs(min_pell[1]), ncy:cy*rhs(min_pell[1])+cx*rhs(min_pell[2])],
-      cx:mod(ncx,L),
-      cy:mod(ncy,L))),
-  reverse(result));
-
-make_int_power_tables(eq):=block([s:diophantine_basic_solution(eq)],
-  [makelist(find_int_powers(s[1],s[2], s[3], f, s[5], s[6], s[7], 1, 1),f,s[4]),
-  makelist(find_int_powers(s[1],s[2], s[3], f, s[5], s[6], s[7],-1),f,s[4])]);
-make_int_power_exprs(eq):=block([t:make_int_power_tables(eq), k:dbs(eq)[6]],
-  [makelist(find_min_coverage(i,k,listify(divisors(k))),i,t[1]),
-  makelist(find_min_coverage(i,k,listify(divisors(k))),i,t[2])]);
 
 gen_complex_sols(eq):=block([s:dbs(eq),transform, vars, min_pell, fund_sols, q, k, L, result:[], fund_sol],
   [transform, vars, min_pell, fund_sols, q, k, L]:s,
