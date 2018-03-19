@@ -28,7 +28,10 @@ diophantine_error_not_implemented:"Can't solve this type of diophantine equation
 /* a*x^2 + b*x*y + c*y^2 + d*x + e*y + f */
 
 load(to_poly_solve);
+/*
+ * let's disable this next line until we have a way to determine if ASDF is in use
 if is(using_asdf_loading='using_asdf_loading) then load(diophantine_lisp_helpers);
+ */
 load(functs);
 
 diophantine_gensym():=if is(diophantine_solution_parameter='diophantine_solution_parameter) then (
