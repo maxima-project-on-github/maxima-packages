@@ -1,5 +1,5 @@
 (defsystem diophantine
-	   :defsystem-depends-on ("maxima-file")
+	   :defsystem-depends-on ("maxima-file" "info-index")
 	   :name "diophantine"
 	   :maintainer "Serge De Marre"
 	   :author "Serge De Marre"
@@ -10,6 +10,6 @@ Based on Dario Alpern's solution/code found at https://www.alpertron.com.ar/QUAD
 
 	   :components
 	   ((:file "diophantine_lisp_helpers")
-	    (:file "diophantine-index")
+	    (:info-index "diophantine-index")
 	    (:maxima-file "diophantine")
 	    (:maxima-file "diophantine_draw")))
