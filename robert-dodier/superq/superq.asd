@@ -1,4 +1,5 @@
 (defsystem superq
+  :defsystem-depends-on ("info-index")
   :name "superq"
   :maintainer "Robert Dodier"
   :author "Robert Dodier"
@@ -8,4 +9,4 @@
   
   :components
   ((:file "superq")
-   (:file "superq-index")))
+   (:info-index "superq-index")))
