@@ -1,0 +1,30 @@
+/* adapted from mailing list 2015-06-10 "Help with huge calculation" */
+
+display2d : false $
+load("sum_kron_delta.mac")$
+
+ρ2:'sum('sum('sum('sum(sqrt(n)*h1*kron_delta(n-1,n_)*kron_delta(α-1,α_)
+*kron_delta(β+1,β_)*kron_delta(γ,γ_) *c[α,β,γ,n](t)
++h2*sqrt(n+1)*kron_delta(n+1,n_) *kron_delta(α+1,α_)*kron_delta(β-1,β_)
+*kron_delta(γ,γ_)*c[α,β,γ,n](t),γ,0,-β-α+N),β, -α,α),α,0,N),n,0,Nmax);
+
+declare(sum,additive)$
+Nmax:3$ N:3$
+h1:0.6$ h2:0.4$
+
+showtime:true $
+
+ev(ρ2), α_:1, β_:-1, γ_:0, n_:1,eval,numer;
+for i thru 1000 do ev(ρ2), α_:1, β_:-1, γ_:0, n_:1,eval,numer;
+
+ρ2_simp1 : ''ρ2;
+
+ev(ρ2_simp1), α_:1, β_:-1, γ_:0, n_:1, numer;
+for i thru 1000 do ev(ρ2_simp1), α_:1, β_:-1, γ_:0, n_:1, numer;
+
+declare ([α_, β_, γ_, n_], integer);
+
+ρ2_simp2 : ''ρ2;
+
+ev(ρ2_simp2), α_:1, β_:-1, γ_:0, n_:1, numer;
+for i thru 1000 do ev(ρ2_simp2), α_:1, β_:-1, γ_:0, n_:1, numer;

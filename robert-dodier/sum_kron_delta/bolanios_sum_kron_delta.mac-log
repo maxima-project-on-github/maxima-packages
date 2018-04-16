@@ -1,0 +1,107 @@
+$ sh /home/robert/maxima/maxima-code/maxima-local -l sbcl --batch=bolaños_sum_kron_delta.mac 
+Maxima branch_5_36_base_87_gfd1224a_dirty http://maxima.sourceforge.net
+using Lisp SBCL 1.1.14.debian
+Distributed under the GNU Public License. See the file COPYING.
+Dedicated to the memory of William Schelter.
+The function bug_report() provides bug reporting information.
+(%i1) batch("bolaños_sum_kron_delta.mac")
+
+read and interpret file: /home/robert/maxima/playpen/bolaños_sum_kron_delta.mac
+(%i2) display2d:false
+(%i3) load("sum_kron_delta.mac")
+(%i4) ρ2:'sum('sum('sum('sum(h2*sqrt(1+n)*kron_delta(1+n,n_)
+                               *kron_delta(1+α,α_)*kron_delta(β-1,β_)
+                               *kron_delta(γ,γ_)*(c[α,β,γ,n])(t)
+                              +sqrt(n)*h1*kron_delta(n-1,n_)
+                                      *kron_delta(α-1,α_)*kron_delta(1+β,β_)
+                                      *kron_delta(γ,γ_)*(c[α,β,γ,n])(t),γ,0,
+                             N-α-β),β,-α,α),α,0,N),n,0,Nmax)
+(%o4) 'sum('sum('sum('sum(h1*sqrt(n)*kron_delta(n-1,n_)*(c[α,β,γ,n])(t)
+                            *kron_delta(α-1,α_)*kron_delta(β+1,β_)
+                            *kron_delta(γ,γ_)
+                           +h2*sqrt(n+1)*kron_delta(n+1,n_)*(c[α,β,γ,n])(t)
+                              *kron_delta(α+1,α_)*kron_delta(β-1,β_)
+                              *kron_delta(γ,γ_),γ,0,(-β)-α+N),β,-α,α),α,0,N),
+           n,0,Nmax)
+(%i5) declare(sum,additive)
+(%i6) Nmax:3
+(%i7) N:3
+(%i8) h1:0.6
+(%i9) h2:0.4
+(%i10) showtime:true
+Evaluation took 0.0000 seconds (0.0000 elapsed) using 0 bytes.
+(%i11) ev(ev(ρ2),α_:1,β_:-1,γ_:0,n_:1,eval,numer)
+Evaluation took 0.0680 seconds (0.0700 elapsed) using 5.014 MB.
+(%o11) 0.848528137423857*(c[2,-2,0,2])(t)+0.4*(c[0,0,0,0])(t)
+(%i12) ev(for i thru 1000 do ev(ρ2),α_:1,β_:-1,γ_:0,n_:1,eval,numer)
+Evaluation took 86.1320 seconds (86.2150 elapsed) using 5019.096 MB.
+(%o12) done
+(%i13) ρ2_simp1:'sum('sum('sum('sum(h1*sqrt(n)*kron_delta(n-1,n_)
+                                      *(c[α,β,γ,n])(t)*kron_delta(α-1,α_)
+                                      *kron_delta(β+1,β_)*kron_delta(γ,γ_)
+                                     +h2*sqrt(n+1)*kron_delta(n+1,n_)
+                                        *(c[α,β,γ,n])(t)*kron_delta(α+1,α_)
+                                        *kron_delta(β-1,β_)*kron_delta(γ,γ_),
+                                    γ,0,(-β)-α+N),β,-α,α),α,0,N),n,0,Nmax)
+Evaluation took 0.1520 seconds (0.1540 elapsed) using 6.198 MB.
+(%o13) 0.6*(if 0 <= n_+1 and n_+1 <= 3 and %elementp(n_+1,integers)
+                then (if 0 <= α_+1 and α_+1 <= 3 and %elementp(α_+1,integers)
+                          then (if (-α_)-1 <= β_-1 and β_-1 <= α_+1
+                                                   and %elementp(
+                                                   β_-1,integers)
+                                    then (if 
+                                    0 <= γ_ and γ_ <= (-β_)-α_+3
+                                            and %elementp(γ_,integers)
+                                     then (c[α_+1,β_-1,γ_,n_+1])(t) else 0)
+                                    else 0) else 0)
+                *sqrt(n_+1) else 0)
+ +0.4*(if 0 <= n_-1 and n_-1 <= 3 and %elementp(n_-1,integers)
+           then (if 0 <= α_-1 and α_-1 <= 3 and %elementp(α_-1,integers)
+                     then (if 1-α_ <= β_+1 and β_+1 <= α_-1
+                                           and %elementp(β_+1,integers)
+                               then (if 
+                               0 <= γ_ and γ_ <= (-β_)-α_+3
+                                       and %elementp(γ_,integers)
+                                then (c[α_-1,β_+1,γ_,n_-1])(t) else 0) else 0)
+                     else 0)
+           *sqrt(n_) else 0)
+(%i14) ev(ev(ρ2_simp1),α_:1,β_:-1,γ_:0,n_:1,numer)
+Evaluation took 0.0000 seconds (0.0000 elapsed) using 8.000 KB.
+(%o14) 0.848528137423857*(c[2,-2,0,2])(t)+0.4*(c[0,0,0,0])(t)
+(%i15) ev(for i thru 1000 do ev(ρ2_simp1),α_:1,β_:-1,γ_:0,n_:1,numer)
+Evaluation took 0.2640 seconds (0.2630 elapsed) using 8.388 MB.
+(%o15) done
+(%i16) declare([α_,β_,γ_,n_],integer)
+Evaluation took 0.0000 seconds (0.0000 elapsed) using 8.000 KB.
+(%o16) done
+(%i17) ρ2_simp2:'sum('sum('sum('sum(h1*sqrt(n)*kron_delta(n-1,n_)
+                                      *(c[α,β,γ,n])(t)*kron_delta(α-1,α_)
+                                      *kron_delta(β+1,β_)*kron_delta(γ,γ_)
+                                     +h2*sqrt(n+1)*kron_delta(n+1,n_)
+                                        *(c[α,β,γ,n])(t)*kron_delta(α+1,α_)
+                                        *kron_delta(β-1,β_)*kron_delta(γ,γ_),
+                                    γ,0,(-β)-α+N),β,-α,α),α,0,N),n,0,Nmax)
+Evaluation took 0.1600 seconds (0.1590 elapsed) using 6.430 MB.
+(%o17) 0.6*(if 0 <= n_+1 and n_+1 <= 3
+                then (if 0 <= α_+1 and α_+1 <= 3
+                          then (if (-α_)-1 <= β_-1 and β_-1 <= α_+1
+                                    then (if 0 <= γ_ and γ_ <= (-β_)-α_+3
+                                              then (c[α_+1,β_-1,γ_,n_+1])(t)
+                                              else 0) else 0) else 0)
+                *sqrt(n_+1) else 0)
+ +0.4*(if 0 <= n_-1 and n_-1 <= 3
+           then (if 0 <= α_-1 and α_-1 <= 3
+                     then (if 1-α_ <= β_+1 and β_+1 <= α_-1
+                               then (if 0 <= γ_ and γ_ <= (-β_)-α_+3
+                                         then (c[α_-1,β_+1,γ_,n_-1])(t)
+                                         else 0) else 0) else 0)
+           *sqrt(n_) else 0)
+(%i18) ev(ev(ρ2_simp2),α_:1,β_:-1,γ_:0,n_:1,numer)
+Evaluation took 0.0000 seconds (0.0000 elapsed) using 8.000 KB.
+(%o18) 0.848528137423857*(c[2,-2,0,2])(t)+0.4*(c[0,0,0,0])(t)
+(%i19) ev(for i thru 1000 do ev(ρ2_simp2),α_:1,β_:-1,γ_:0,n_:1,numer)
+Evaluation took 0.1200 seconds (0.1190 elapsed) using 5.729 MB.
+(%o19) done
+Evaluation took 87.2400 seconds (87.3420 elapsed) using 5073.262 MB.
+(%o19) "/home/robert/maxima/playpen/bolaños_sum_kron_delta.mac"
+

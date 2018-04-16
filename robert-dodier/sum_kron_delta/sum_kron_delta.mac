@@ -1,0 +1,49 @@
+/* sum_kron_delta.mac -- simplify 'sum(f(i)*kron_delta(i, j), i, ...)
+ * copyright 2013 by Robert Dodier
+ * I release this work under terms of the GNU General Public License
+ */
+
+put ('sum_kron_delta, true, 'present);
+
+matchdeclare (kk, kron_delta_p);
+kron_delta_p (e) := not atom(e) and op(e) = 'kron_delta;
+matchdeclare (xx, lambda ([e], not kron_delta_p (e)));
+matchdeclare (ii, symbolp);
+matchdeclare ([ii1, iin], all);
+
+simp : false;
+tellsimpafter ('sum (kk, ii, ii1, iin), FOO (kk, 1, ii, ii1, iin));
+tellsimpafter ('sum (kk * xx, ii, ii1, iin), FOO (kk, xx, ii, ii1, iin));
+simp:true;
+
+FOO (kk, xx, ii, ii1, iin) := block ([ii_args],
+  kk : kron_delta_product (kk),
+  if atom(kk) or not (op(kk) = 'kron_delta)
+    then 'sum (kk*xx, ii, ii1, iin)
+    else
+     (ii_args : sublist (args (kk), lambda ([e], not freeof (ii, e))),
+      /* just take the first kron_delta variable other than ii -- this is not unique when there are 3 or more variables!! */
+      block ([a],
+        a : first (delete_all (ii_args, args (kk))),
+        /* oops -- what if ii_args has more (or less) than 1 element?? */
+        eq : solve (first (ii_args) = a, ii),
+        /* oops -- what if eq has more (or less) than 1 element?? */
+        buildq
+        ([eq,
+          S : index_set (ii1, iin),
+          kk_xx : subst (eq, kk * xx),
+          rhs_eq : rhs (first (eq))],
+          if %elementp (rhs_eq, S) then kk_xx else 0))));
+
+kron_delta_product (k) := if op(k) = "*" then apply (append, args (k)) else k;
+delete_all (L1, L2) := (for x in L1 do L2 : delete (x, L2), L2);
+index_set (i, j) := %intersection (%range (i, j), 'integers);
+
+matchdeclare (xx, all);
+matchdeclare (%ii, lambda ([e], not atom(e) and op(e) = '%intersection));
+tellsimp (%elementp (xx, %ii), apply ("and", map (lambda ([S], %elementp (xx, S)), args (%ii))));
+
+matchdeclare (ii, lambda ([e], integerp (e) or featurep (e, 'integer)));
+tellsimp (%elementp (ii, 'integers), true);
+matchdeclare ([aa, bb], all);
+tellsimp (%elementp (xx, %range (aa, bb)), aa <= xx and xx <= bb);
