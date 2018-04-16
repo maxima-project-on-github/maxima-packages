@@ -73,25 +73,25 @@ There is a file with tests available, run it like this:
 	(%i8) diophantine_draw_example();
 ```
 
-![Graphical example](diophantine_draw_example.png)
+![Graphical example](dio_draw_example.png)
 
 ```
 	(%i9) diophantine_draw_example2();
 ```
 
-![Graphical example 2](diophantine_draw_example2.png)
+![Graphical example 2](dio_draw_example2.png)
 
 ```
 	(%i10) diophantine_draw_example3();
 ```
 
-![Graphical example 3](diophantine_draw_example3.png)
+![Graphical example 3](dio_draw_example3.png)
 
 ```
 	(%i11) diophantine_draw_example4();
 ```
 
-![Graphical example 4](diophantine_draw_example4.png)
+![Graphical example 4](dio_draw_example4.png)
 
 In general, you can use diophantine_draw() to draw the equation with (some of) its solutions:
 
