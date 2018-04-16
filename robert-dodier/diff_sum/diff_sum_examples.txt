@@ -1,0 +1,168 @@
+From robert.dodier@gmail.com Sun Nov 24 10:53:42 2013
+Path: news.gmane.org!not-for-mail
+From: Robert Dodier <robert.dodier@gmail.com>
+Newsgroups: gmane.comp.mathematics.maxima.general
+Subject: Re: Understanding symbolic summation
+Date: Sat, 23 Nov 2013 01:42:39 +0000 (UTC)
+Lines: 83
+Approved: news@gmane.org
+Message-ID: <slrnl9020p.31r.robert.dodier@freekbox.fglan>
+References: <1385111937.518299931@f373.i.mail.ru>
+NNTP-Posting-Host: plane.gmane.org
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+X-Trace: ger.gmane.org 1385171044 5657 80.91.229.3 (23 Nov 2013 01:44:04 GMT)
+X-Complaints-To: usenet@ger.gmane.org
+NNTP-Posting-Date: Sat, 23 Nov 2013 01:44:04 +0000 (UTC)
+To: maxima@math.utexas.edu
+Original-X-From: maxima-bounces@math.utexas.edu Sat Nov 23 02:44:06 2013
+Return-path: <maxima-bounces@math.utexas.edu>
+Envelope-to: gcsm-maxima@gmane.org
+Original-Received: from ironclad.mail.utexas.edu ([146.6.25.7])
+	by plane.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <maxima-bounces@math.utexas.edu>)
+	id 1Vk2GU-0000PQ-D3
+	for gcsm-maxima@gmane.org; Sat, 23 Nov 2013 02:44:06 +0100
+X-Utexas-Sender-Group: RELAYLIST-THROTTLED
+X-IronPort-MID: 319533324
+X-IronPort-Anti-Spam-Filtered: true
+X-IronPort-Anti-Spam-Result: AqEEALoHkFKSBot8/2dsb2JhbABZDoMxvBqCA3SCJgEBBAEBATcMCgwSDgMBAgYBAQo2CAgDAR8EFhoZBYdpARIEAQiwZ4cuChmBGIdajGmBR3SEHQOZRJBigmk/gWk
+X-IPAS-Result: AqEEALoHkFKSBot8/2dsb2JhbABZDoMxvBqCA3SCJgEBBAEBATcMCgwSDgMBAgYBAQo2CAgDAR8EFhoZBYdpARIEAQiwZ4cuChmBGIdajGmBR3SEHQOZRJBigmk/gWk
+X-IronPort-AV: E=Sophos;i="4.93,756,1378875600"; 
+   d="scan'208";a="319533324"
+Original-Received: from dell3.ma.utexas.edu (HELO dell8.ma.utexas.edu) ([146.6.139.124])
+  by ironclad.mail.utexas.edu with ESMTP; 22 Nov 2013 19:44:05 -0600
+Original-Received: from dell8.ma.utexas.edu (localhost [127.0.0.1])
+	by dell8.ma.utexas.edu (Postfix) with ESMTP id DE6D12AF15;
+	Fri, 22 Nov 2013 19:43:06 -0600 (CST)
+X-Original-To: maxima@math.utexas.edu
+Delivered-To: maxima@math.utexas.edu
+Original-Received: from ironwood.mail.utexas.edu (ironwood.mail.utexas.edu [146.6.25.5])
+	by dell8.ma.utexas.edu (Postfix) with ESMTPS id 5DC4220EDB
+	for <maxima@math.utexas.edu>; Fri, 22 Nov 2013 19:43:04 -0600 (CST)
+X-IronPort-MID: 618458335
+X-SBRS: 5.3
+X-IronPort-Anti-Spam-Filtered: true
+X-IronPort-Anti-Spam-Result: AlgBALoHkFJQW+UDmWdsb2JhbABZDoMxvgcWDgEBAQEBCAsLBxQogiYBBVwtC0YjGhqIBwESBAEIsGeHLgoZgRiHWo4wdIQdA5lEkh6BLT+BaQ
+X-IPAS-Result: AlgBALoHkFJQW+UDmWdsb2JhbABZDoMxvgcWDgEBAQEBCAsLBxQogiYBBVwtC0YjGhqIBwESBAEIsGeHLgoZgRiHWo4wdIQdA5lEkh6BLT+BaQ
+X-IronPort-AV: E=Sophos;i="4.93,756,1378875600"; d="scan'208";a="618458335"
+X-Utexas-Seen-Inbound: true
+Original-Received: from plane.gmane.org ([80.91.229.3])
+	by ironwood.mail.utexas.edu with ESMTP/TLS/AES256-SHA;
+	22 Nov 2013 19:43:04 -0600
+Original-Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <gcsm-maxima@m.gmane.org>) id 1Vk2FQ-0008CI-ES
+	for maxima@math.utexas.edu; Sat, 23 Nov 2013 02:43:00 +0100
+Original-Received: from c-76-115-51-101.hsd1.or.comcast.net ([76.115.51.101])
+	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+	id 1AlnuQ-0007hv-00
+	for <maxima@math.utexas.edu>; Sat, 23 Nov 2013 02:43:00 +0100
+Original-Received: from robert.dodier by c-76-115-51-101.hsd1.or.comcast.net with local
+	(Gmexim 0.1 (Debian)) id 1AlnuQ-0007hv-00
+	for <maxima@math.utexas.edu>; Sat, 23 Nov 2013 02:43:00 +0100
+X-Injected-Via-Gmane: http://gmane.org/
+Original-Lines: 83
+Original-X-Complaints-To: usenet@ger.gmane.org
+X-Gmane-NNTP-Posting-Host: c-76-115-51-101.hsd1.or.comcast.net
+User-Agent: slrn/1.0.1 (Linux)
+X-BeenThere: maxima@math.utexas.edu
+X-Mailman-Version: 2.1.13
+Precedence: list
+List-Id: Maxima interest list <maxima.math.utexas.edu>
+List-Unsubscribe: <http://www.math.utexas.edu/mailman/options/maxima>,
+	<mailto:maxima-request@math.utexas.edu?subject=unsubscribe>
+List-Archive: <http://www.math.utexas.edu/pipermail/maxima>
+List-Post: <mailto:maxima@math.utexas.edu>
+List-Help: <mailto:maxima-request@math.utexas.edu?subject=help>
+List-Subscribe: <http://www.math.utexas.edu/mailman/listinfo/maxima>,
+	<mailto:maxima-request@math.utexas.edu?subject=subscribe>
+Original-Sender: maxima-bounces@math.utexas.edu
+Errors-To: maxima-bounces@math.utexas.edu
+Xref: news.gmane.org gmane.comp.mathematics.maxima.general:43944
+Archived-At: <http://permalink.gmane.org/gmane.comp.mathematics.maxima.general/43944>
+
+By default, Maxima doesn't recognize that such derivatives are nonzero
+(as pointed out elsewhere in this thread). I have worked on some
+simplification rules for this problem -- see this message & its attachments:
+http://permalink.gmane.org/gmane.comp.mathematics.maxima.general/42356
+
+Here's what I get after loading the scripts attached to that message.
+(If it seems suboptimal, please bear in mind it's a work in progress.)
+
+> #1
+> a(x):=sum(w[i]*x[i],i,0,inf);
+> diff(a(xx), xx[1]);
+
+    (%i4) a(x):=sum(w[i]*x[i],i,0,inf);
+    (%o4) a(x):=sum(w[i]*x[i],i,0,inf)
+    (%i5) diff(a(xx), xx[1]);
+    (%o5) 0
+    
+Oh -- the function diff got to the summation before the rule for 'diff
+(obscure and convoluted business about nouns and verbs, evaluation and
+simplification necessary here).
+    
+    (%i6) 'diff(a(xx), xx[1]);
+    (%o6) 'diff('sum(w[i]*xx[i],i,0,inf),xx[1],1)
+
+Hmm, it didn't simplify. Try resimplifying.
+
+    (%i7) ''%;
+    (%o7) 'diff('sum(w[i]*xx[i],i,0,inf),xx[1],1)
+
+Nope. Oh, I see the upper limit is inf -- diff_sum works only for
+finite summations (dunno if it really needs to be so conservative).
+Let's pretend the upper limit is N instead of inf.
+
+    (%i8) subst (inf=N, %);
+    (%o8) if 1 <= N then w[1] else 0
+
+Ta da!
+
+> #2
+> declare(layer_size, constant);
+> a(x):=sum(w[i]*x[i],i,0,layer_size);
+> diff(a(xx), xx[1]);
+
+Same deal here -- needs 'diff instead of diff, and resimplification.
+
+    (%i9) declare(layer_size, constant);
+    (%o9) done
+    (%i10) a(x):=sum(w[i]*x[i],i,0,layer_size);
+    (%o10) a(x):=sum(w[i]*x[i],i,0,layer_size)
+    (%i11) diff(a(xx), xx[1]);
+    (%o11) 0
+    (%i12) 'diff(a(xx), xx[1]);
+    (%o12) 'diff('sum(w[i]*xx[i],i,0,layer_size),xx[1],1)
+    (%i13) ''%;
+    (%o13) if 1 <= layer_size then w[1] else 0
+
+Ta da!
+
+> #3
+> a(x):=sum(w[i]*x[i],i,0,2);
+> diff(a(xx), xx[1]);
+
+    (%i14) a(x):=sum(w[i]*x[i],i,0,2);
+    (%o14) a(x):=sum(w[i]*x[i],i,0,2)
+    (%i15) diff(a(xx), xx[1]);
+    (%o15) w[1]
+
+OK, that's fine. Let's have some fun with simplification instead.
+
+    (%i16) 'sum(w[i]*x[i], i, 0, 2);
+    (%o16) 'sum(w[i]*x[i],i,0,2)
+    (%i17) 'diff (%, x[1]);
+    (%o17) 'diff('sum(w[i]*x[i],i,0,2),x[1],1)
+    (%i18) ''%;
+    (%o18) if true then w[1] else 0
+    (%i19) ''%;
+    (%o19) w[1]
+
+Ta da!
+
+HTH
+
+Robert Dodier
+

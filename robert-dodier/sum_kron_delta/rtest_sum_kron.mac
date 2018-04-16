@@ -1,0 +1,127 @@
+/* sum of kron_delta expressions gleaned from mailing list 2010--2013
+ * copyright 2013 by Robert Dodier
+ * I release this work under terms of the GNU General Public License
+ */
+
+(if get ('sum_kron_delta, 'present) = false then load ("sum_kron_delta.mac"), 0);
+0;
+
+(load (unwind_protect),
+ while_declaring (L, e) ::= buildq ([L, e], unwind_protect (block (apply (declare, L), e), apply (remove, L))),
+ while_assuming (L, e) ::= buildq ([L, e, ctxt : gensym ()], unwind_protect (block (supcontext (ctxt), apply (assume, L), e), killcontext (ctxt))),
+ 0);
+0;
+
+(load (boolsimp), 0);
+0;
+
+sum (kron_delta (i, j), i, 1, N), N=10, j=5;
+1;
+
+sum (kron_delta (i, j), i, 1, N), j = 5;
+if 5 <= N then 1 else 0;
+
+while_assuming ([5 <= N],
+  ev (sum (kron_delta (i, j), i, 1, N), j = 5));
+1;
+
+sum (kron_delta (i, j), i, 1, N);
+if 1 <= j and j <= N and %elementp(j,integers)
+           then 1 else 0;
+
+while_declaring ([j, integer],
+  sum (kron_delta (i, j), i, 1, N));
+if 1 <= j and j <= N then 1 else 0;
+
+while_assuming ([j >= 1, j <= N],
+  sum (kron_delta (i, j), i, 1, N));
+if %elementp(j, integers) then 1 else 0;
+
+while_assuming ([j >= 1, j <= N],
+  while_declaring ([j, integer],
+    sum (kron_delta (i, j), i, 1, N)));
+1;
+
+while_declaring ([j, integer],
+  sum (f (i) * kron_delta (i, j), i, 3, N));
+if 3 <= j and j <= N then f(j) else 0;
+
+while_declaring ([j, integer],
+  sum (i^2 * kron_delta (i, j), i, 3, N));
+if 3 <= j and j <= N then j^2 else 0;
+
+while_assuming ([N > 4, 4 < j, j < N],
+  while_declaring ([j, integer],
+    sum(i^2*kron_delta(i,j),i,3,N)));
+j^2;
+
+while_declaring ([[b, j], integer],
+  sum (f(i) * kron_delta (i, j), i, 3, N));
+if 3 <= j and j <= N then f(j) else 0;
+
+while_assuming ([3 <= j, j <= N],
+  while_declaring ([[b, j], integer],
+    sum (f(i) * kron_delta (i, j), i, 3, N)));
+f(j);
+
+while_assuming ([N > 1, b > 1, b < N],
+  while_declaring ([[b, j], integer],
+    sum (a^y * kron_delta (a, b), a, 1, N)));
+b^y;
+
+sum(a(k) * kron_delta(k,l),k,minf,inf);
+if %elementp(l,integers) then a(l) else 0;
+
+while_declaring ([l, integer],
+  sum(a(k) * kron_delta(k,l),k,minf,inf));
+a(l);
+
+sum(a(k)*kron_delta(k,l),k,0,inf) + sum(a(-k)*kron_delta(-k,l),k,1,inf);
+(if 1 <= -l and %elementp(-l,integers) then a(l) else 0)
+ +(if 0 <= l and %elementp(l,integers) then a(l) else 0);
+
+while_declaring ([nounify(sum), linear, [j, n], integer],
+  while_assuming ([j >= 1, j <= n],
+    'sum(kron_delta(i,j)*x[n-i+1]+x[i]*kron_delta(n-i+1,j),i,1,n)));
+2*x[n - j + 1];
+
+'sum (kron_delta (i, j) * kron_delta (i, k), i, 1, n);
+if (1 <= j) and (j <= n) and %elementp(j, integers) then kron_delta(j, k) else 0;
+
+'sum (kron_delta (i, j) * kron_delta (i, k), i, 1, n), j=1, k=2;
+0;
+
+sum('diff(p[i] * x[i]^2, x[i]) * kron_delta(i,k), i, 1, I);
+if 1 <= k and k <= I and %elementp(k,integers)
+  then 'diff(p[k]*x[k]^2,x[k],1) else 0$
+
+while_declaring ([k, integer],
+  sum('diff(p[i] * x[i]^2, x[i]) * kron_delta(i,k), i, 1, I));
+if 1 <= k and k <= I
+  then 'diff(p[k]*x[k]^2,x[k],1) else 0$
+
+while_declaring ([k, integer],
+  if 1 <= k and k <= I and %elementp(k,integers)
+    then 'diff(p[k]*x[k]^2,x[k],1) else 0)$
+if 1 <= k and k <= I 
+  then 'diff(p[k]*x[k]^2,x[k],1) else 0$
+
+while_declaring ([k, integer],
+  while_assuming ([k >= 1, k <= I],
+    sum('diff(p[i] * x[i]^2, x[i]) * kron_delta(i,k), i, 1, I)));
+'diff(p[k]*x[k]^2,x[k],1);
+
+while_declaring ([k, integer],
+  while_assuming ([k >= 1, k <= I],
+    if 1 <= k and k <= I and %elementp(k,integers)
+      then 'diff(p[k]*x[k]^2,x[k],1) else 0))$
+'diff(p[k]*x[k]^2,x[k],1);
+
+sum(diff(p[i] * x[i]^2, x[i]) * kron_delta(i,k), i, 1, I);
+2 * (if 1 <= k and k <= I and %elementp(k,integers) then p[k]*x[k] else 0)$
+
+sum (kron_delta (i, k) * kron_delta (j, k) * kron_delta (k, l, m, n) * A(k)^2, k, 0, inf);
+if 0 <= i and %elementp(i,integers) then A(i)^2*kron_delta(i,j,l,m,n) else 0;
+
+sum(kron_delta(i,3)*f(i),i,1,n);
+if 3 <= n then f(3) else 0;

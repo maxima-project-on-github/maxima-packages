@@ -1,0 +1,72 @@
+/* diff_sum.mac -- simplify 'diff('sum(f(x[i]), i,. ..), x[j])
+ * copyright 2013 by Robert Dodier
+ * I release this work under terms of the GNU General Public License
+ */
+
+put ('diff_sum, true, 'present);
+
+matchdeclare (mm, lambda ([e], not atom(e) and op(e)="*"));
+matchdeclare (xx, all);
+foo : 'diff(mm,xx);
+tellsimpafter (''foo,
+               block([aa:args(mm), nn:length(mm)],
+                     sum (product (if jj=ii then 'diff(aa[ii], xx) else aa[jj], jj, 1, nn), ii, 1, nn))) ;
+
+find_subscripts (x, e) := block ([L : []], find_subscripts1 (x, e), L);
+find_subscripts1 (x, e) := block ([L1 : match_subscript (e, x)],
+  if L1 = false
+    then
+      if not mapatom (e)
+        then map (lambda ([ee], find_subscripts1 (x, ee)),  e)
+        else e
+    else (push (rhs (first (L1)), L), e));
+matchdeclare (xx, symbolp);
+matchdeclare (bb, all);
+defmatch (match_subscript, xx[bb], xx);
+push (a, b) ::= buildq ([a, b], b : cons (a, b));
+
+matchdeclare (aa, all);
+matchdeclare (ii1, "<" (minf));
+matchdeclare (nn, ">" (inf));
+matchdeclare ([ii, xx], symbolp);
+matchdeclare (jj, all);
+
+simp : false $
+
+tellsimpafter ('diff ('sum (aa, ii, ii1, nn), xx[jj], 1),
+  block ([L, diff_summand],
+    L : find_subscripts (xx, aa),
+    /* diff_summand : apply ("+", makelist ('diff (aa, xx[j1], 1) * kron_delta (jj, j1), j1, L)), ?? */
+    diff_summand : apply ("+", makelist (diff (aa, xx[j1], 1) * kron_delta (jj, j1), j1, L)),
+    buildq ([diff_summand, ii, ii1, nn],
+      'sum (diff_summand, ii, ii1, nn))));
+
+simp : true $
+
+/* Find subscripts of expressions such as x[i](t).
+ * Dunno what to call it; "find_subscripts_with_function_calls" is clumsy and still not very precise.
+ * "find_subscripts_2" it is, then.
+ */
+find_subscripts_2 (x, t, e) := block ([L : []], find_subscripts1_2 (x, t, e), L);
+find_subscripts1_2 (x, t, e) := block ([L1 : match_subscript_2 (e, x, t)],
+  if L1 = false
+    then
+      if not mapatom (e)
+        then map (lambda ([ee], find_subscripts1_2 (x, t, ee)),  e)
+        else e
+    else (push (rhs (first (L1)), L), e));
+matchdeclare ([xx, tt], symbolp);
+matchdeclare (bb, all);
+defmatch (match_subscript_2, xx[bb](tt), xx, tt);
+
+simp : false $
+
+tellsimpafter ('diff ('sum (aa, ii, ii1, nn), xx[jj](tt), 1),
+  block ([L, diff_summand],
+    L : find_subscripts_2 (xx, tt, aa),
+    /* diff_summand : apply ("+", makelist ('diff (aa, xx[j1](tt), 1) * kron_delta (jj, j1), j1, L)), ?? */
+    diff_summand : apply ("+", makelist (diff (aa, xx[j1](tt), 1) * kron_delta (jj, j1), j1, L)),
+    buildq ([diff_summand, ii, ii1, nn],
+      'sum (diff_summand, ii, ii1, nn))));
+
+simp : true $

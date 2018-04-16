@@ -1,0 +1,50 @@
+(if not get ('diff_sum, 'present)
+   then load ("diff_sum.mac")
+   else print ("rtest_diff_sum: diff_sum already present."),
+ if not get ('sum_kron_delta, 'present)
+   then load ("sum_kron_delta/sum_kron_delta.mac")
+   else print ("rtest_diff_sum: sum_kron_delta already present."),
+ 0);
+0;
+
+'diff ('sum (a[i] * x[i]^2, i, 1, n), x[j]);
+2*a[j]*x[j];
+
+while_assuming ([j >= 1, j <= n],
+  while_declaring ([j, integer],
+    'diff ('sum (a[i] * x[i]^2, i, 1, n), x[j])));
+2*a[j]*x[j];
+    
+/* from the mailing list 2016-12-08: "Differentiation of indexed variables under sums" */
+
+(L:(m*'sum(xdot[i](t)^2,i,1,n))/2+e*'sum(A[i]*xdot[i](t),i,1,n)+Phi*e,
+ foo : 'diff (L, xdot[j](t)));
+'diff((m*'sum(xdot[i](t)^2,i,1,n))/2+e*'sum(A[i]*xdot[i](t),i,1,n)
+                                          +Phi*e,xdot[j](t),1);
+
+(declare ([m, e, Phi], constant),
+ ev (foo, simp));
+'diff((m*'sum(xdot[i](t)^2,i,1,n))/2+e*'sum(A[i]*xdot[i](t),i,1,n)
+                                          +Phi*e,xdot[j](t),1);
+
+(declare (nounify(sum), linear),
+ bar : ev (foo, simp));
+'diff((m*'sum(xdot[i](t)^2,i,1,n))/2+e*'sum(A[i]*xdot[i](t),i,1,n)
+                                           +Phi*e,xdot[j](t),1);
+
+ev (bar, nouns);
+0;
+
+(declare (nounify(diff), linear),
+ baz : ev (foo, simp));
+m*'sum(kron_delta(i,j)*xdot[i](t),i,1,n)+e*'sum(A[i]*kron_delta(i,j),i, 1,n);
+
+quux : ev (baz, simp);
+m*(if 1 <= j and j <= n and %elementp(j,integers) then xdot[j](t) else 0)
+ +e*(if 1 <= j and j <= n and %elementp(j,integers) then A[j] else 0);
+
+(declare (j, integer),
+ assume (j >= 1, j <= n),
+ ev (quux, simp));
+m*xdot[j](t)+e*A[j];
+

@@ -1,0 +1,45 @@
+/* diff_sum2.mac -- simplify 'diff('sum(sum(f(x[i, j]), i, ...), j, ...), x[i, j])
+ * copyright 2014 by Robert Dodier
+ * I release this work under terms of the GNU General Public License
+ */
+
+put ('diff_sum2, true, 'present);
+
+find_subscripts2 (x, e) := block ([L : []], find_subscripts21 (x, e), L);
+find_subscripts21 (x, e) := block ([L1 : match_subscript2 (e, x)],
+  if L1 = false
+    then
+      if not mapatom (e)
+        then map (lambda ([ee], find_subscripts21 (x, ee)),  e)
+        else e
+    else (push ([assoc ('bb, L1), assoc ('cc, L1)], L), e));
+matchdeclare (xx, symbolp);
+matchdeclare ([bb, cc], all);
+defmatch (match_subscript2, xx[bb, cc], xx);
+push (a, b) ::= buildq ([a, b], b : cons (a, b));
+
+matchdeclare (aa, all);
+matchdeclare ([ii1, jj1], "<" (minf));
+matchdeclare ([nn1, nn2], ">" (inf));
+matchdeclare ([ii, jj, xx], symbolp);
+matchdeclare ([ii0, jj0], all);
+
+simp : false $
+
+tellsimpafter ('diff ('sum ('sum (aa, ii, ii1, nn1), jj, jj1, nn2), xx[ii0, jj0], 1),
+  block ([L, diff_summand],
+    L : find_subscripts2 (xx, aa),
+    diff_summand : apply ("+", makelist (diff (aa, xx[j1[1], j1[2]], 1) * kron_delta (ii0, j1[1]) * kron_delta (jj0, j1[2]), j1, L)),
+    buildq ([diff_summand, ii, ii1, nn1, jj, jj1, nn2],
+      'sum ('sum (diff_summand, ii, ii1, nn1), jj, jj1, nn2))));
+
+/* STILL NEED **@#*#$@*! CHAIN RULE TO WORK ON 'diff(f('sum(w[i,j]*x0[i], i, 1, M)), w[1,1], 1); */
+
+tellsimpafter ('diff ('sum (aa, ii, ii1, nn1), xx[ii0, jj0], 1),
+  block ([L, diff_summand],
+    L : find_subscripts2 (xx, aa),
+    diff_summand : apply ("+", makelist (diff (aa, xx[j1[1], j1[2]], 1) * kron_delta (ii0, j1[1]) * kron_delta (jj0, j1[2]), j1, L)),
+    buildq ([diff_summand, ii, ii1, nn1],
+      'sum (diff_summand, ii, ii1, nn1))));
+
+simp : true $
