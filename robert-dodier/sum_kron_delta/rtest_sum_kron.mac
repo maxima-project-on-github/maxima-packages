@@ -6,12 +6,6 @@
 (if get ('sum_kron_delta, 'present) = false then load ("sum_kron_delta.mac"), 0);
 0;
 
-(load (unwind_protect),
- while_declaring (L, e) ::= buildq ([L, e], unwind_protect (block (apply (declare, L), e), apply (remove, L))),
- while_assuming (L, e) ::= buildq ([L, e, ctxt : gensym ()], unwind_protect (block (supcontext (ctxt), apply (assume, L), e), killcontext (ctxt))),
- 0);
-0;
-
 (load (boolsimp), 0);
 0;
 
