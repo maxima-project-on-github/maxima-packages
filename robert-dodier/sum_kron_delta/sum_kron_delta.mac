@@ -47,3 +47,11 @@ matchdeclare (ii, lambda ([e], integerp (e) or featurep (e, 'integer)));
 tellsimp (%elementp (ii, 'integers), true);
 matchdeclare ([aa, bb], all);
 tellsimp (%elementp (xx, %range (aa, bb)), aa <= xx and xx <= bb);
+
+/* a couple of macros which may be often helpful when working with kron_delta */
+
+load (unwind_protect);
+while_declaring (L, e) ::=
+  buildq ([L, e], unwind_protect (block (apply (declare, L), e), apply (remove, L)));
+while_assuming (L, e) ::=
+  buildq ([L, e, ctxt : gensym ()], unwind_protect (block (supcontext (ctxt), apply (assume, L), e), killcontext (ctxt)));
