@@ -1,5 +1,4 @@
 (defsystem texify
-  :defsystem-depends-on ("info-index")
   :name "texify"
   :maintainer "Tarn W. Burton"
   :author "Tarn W. Burton"
