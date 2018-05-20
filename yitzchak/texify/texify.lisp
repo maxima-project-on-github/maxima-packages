@@ -2,16 +2,19 @@
 
 (defvar $texify_styles '((mlist simp) $latex $tex_prefix_functions $tex))
 (defparameter texify-styles (make-hash-table :test 'equal))
+(defvar $texify_label t)
+(defvar $texify_eq_number nil)
 
 #|
   Modes
 
   a - Array row
-  m - Math mode
+  m - Display math mode
+  i - Inline math mode
   s - Superscript/Subscript
-  t - Text mode
+  t - mtext mode, strings are placed text boxes.
   u - ezunits
-  n - number
+  n - siunitx number
 |#
 (defparameter *texify-modes* '(#\m))
 
@@ -90,15 +93,25 @@ Normalization Functions
 
 ; Respect *display-labels-p*
 (defun texify-normalize-mlabel (expr)
-  (if *display-labels-p*
-    expr
-    `(,(first expr) nil ,(third expr))))
+  (cond
+    ($texify_eq_number
+      `((texify-math simp) ,(third expr)))
+    ((or (not *display-labels-p*) (not $texify_label))
+      `(,(first expr) nil ,(third expr)))
+    (t
+      expr)))
 
 (defun texify-mminusp (expr)
   (and expr
        (listp expr)
        (listp (car expr))
        (eql 'mminus (caar expr))))
+
+(defun texify-mlabelp (expr)
+  (and expr
+       (listp expr)
+       (listp (car expr))
+       (eql 'mlabel (caar expr))))
 
 ; Look for mminus unary operators that are not in the first slot and turn them
 ; into n-ary mminus to avoid results like z+x+-y.
@@ -272,8 +285,16 @@ Normalization Functions
           (when value
             (return value)))))))
 
+(defun mlabel-wrap (expr)
+  (if (texify-mlabelp expr)
+    expr
+    `((mlabel simp) nil ,expr)))
+
 (defun $texify (expr)
-  (texify expr))
+  (texify (mlabel-wrap expr)))
+
+(defun $texify_inline (expr)
+  (texify (mlabel-wrap expr) '(#\i #\m)))
 
 (defun $texify_available_styles ()
   (cons '(mlist)
@@ -505,7 +526,8 @@ the trig functions, sum, product, etc. as prefix operators.
                                       mfactorial ((#\m . "~*~/postfix/!"))
                                       mgeqp ((#\m . "~*~/postfix/ \\geq ~/prefix/"))
                                       mgreaterp ((#\m . "~*~/postfix/ > ~/prefix/"))
-                                      mlabel ((#\m . "~*~:[~;~:*\(~:/nullfix/\)\\;~]{~:/nullfix/}"))
+                                      mlabel ((#\m . "$$~*~:[~;~:*$~:/nullfix/$\\;~] ~:/nullfix/$$")
+                                              (#\i . "$~*~*~:/nullfix/$"))
                                       mleqp ((#\m . "~*~/postfix/ \\leq ~/prefix/"))
                                       mlessp ((#\m . "~*~/postfix/ < ~/prefix/"))
                                       mlist ((#\m . "~*\\left[~@{~:/nullfix/~^, ~}\\right]")
@@ -529,6 +551,8 @@ the trig functions, sum, product, etc. as prefix operators.
                                       mtimes ((#\m . "~*~/postfix/~@{~#[~; ~/prefix/~:; ~/perifix/~]~}"))
                                       spaceout ((#\m . "~*\\hspace{~:/nullfix/mm}"))
                                       (mcond %mcond) ((#\m . "~*\\mathop{\\bf if}\\;~:/nullfix/\\;\\mathop{\\bf then}\\;~:/nullfix/~@{\\;~:[\\mathop{\\bf else}~;~:*\\mathop{\\bf elseif}\\;~:/nullfix/\\;\\mathop{\\bf then}~]\\;~:/nullfix/~}"))
+                                      texify-math ((#\m . "$$~*~:/nullfix/\\eqnum$$")
+                                                   (#\i . "$~*~:/nullfix/$"))
                                       texify-float ((#\m . "~*~A \\times 10^{~A}"))
                                       texify-over ((#\m . "~*{\\buildrel{\\scriptscriptstyle~:/nullfix/}\\over{~:/nullfix/}}"))
                                       texify-root ((#\m . "~*\\sqrt[~:/nullfix/]{~:/nullfix/}"))
@@ -794,6 +818,10 @@ the trig functions, sum, product, etc. as prefix operators.
                                         (%mdo mdo) ((#\m . "~*\\mathop{\\mathbf{for}}\\;~:/nullfix/~@[\\;{\\mathbf{from}}\\;~:/nullfix/~]~@[{\\mathbf{step}}\]\\;~:/nullfix/~]~@[\\;{\\mathbf{next}}\\;~:/nullfix/~]~@[\\;{\\mathbf{thru}}\\;~:/nullfix/~]~@[\\;{\\mathbf{unless}}\\;~:/nullfix/~]\\;{\\mathbf{do}}\\;~/prefix/"))
                                         (%mdoin mdoin) ((#\m . "~*\\mathop{\\mathbf{for}}\\;~:/nullfix/\\;{\\mathbf{in}}\\;~:/nullfix/\\;~*~*~*~@[{\\mathbf{unless}}\\;~:/nullfix/\\;~]{\\mathbf{do}}\\;~/prefix/"))
                                         (mcond %mcond) ((#\m . "~*\\mathop{\\mathbf{if}}\\;~:/nullfix/\\;\\mathop{\\mathbf{then}}\\;~:/nullfix/~@{\\;~:[\\mathop{\\mathbf{else}}~;~:*\\mathop{\\mathbf{elseif}}\\;~:/nullfix/\\;\\mathop{\\mathbf{then}}~]\\;~:/nullfix/~}"))
+                                        mlabel ((#\m . "\\[~*~:[~;~:*\\(~:/nullfix/\\)\\;~] ~:/nullfix/\\]")
+                                                (#\i . "\\(~*~*~:/nullfix/\\)"))
+                                        texify-math ((#\m . "\\begin{equation}~%~*~:/nullfix/~%\\end{equation}")
+                                                     (#\i . "\\(~*~:/nullfix/\\)"))
                                         texify-over ((#\m . "~*\\overset{\\scriptscriptstyle~:/nullfix/}{~:/nullfix/}"))
                                         texify-triple-dot ((#\m . "~*{\\overset{\\cdots}{~:/nullfix/}}")))
                            :string-default '((#\m . "\\mbox{~*~A}")
@@ -930,7 +958,8 @@ the trig functions, sum, product, etc. as prefix operators.
                                           $binomial ((#\m . "~*\\binom{~:/nullfix/}{~/nullfix/}"))
                                           $matrix ((#\m . "~*\\begin{bmatrix}~%~@{  ~'a:/nullfix/~^\\\\~%~}~%\\end{bmatrix}"))
                                           mabs ((#\m . "~*\\lvert~:/nullfix/\\rvert"))
-                                          mlabel ((#\m . "~*~:[~;~:*\\tag{$~:/nullfix/$}~]~:/nullfix/"))
+                                          mlabel ((#\m . "~*~:[\\begin{equation*}~%~:/nullfix/~%\\end{equation*}~;~:*\\begin{equation}~%\\tag{\\(~:/nullfix/\\)}~:/nullfix/~%\\end{equation}~]")
+                                                  (#\i . "\\(~*~*~:/nullfix/\\)"))
                                           texify-triple-dot ((#\m . "~*\\dddot{~:/nullfix/}"))
                              :string-default '((#\m . "\\text{~*~A}")
                                                (#\t . "\\text{~A}"))))
@@ -939,9 +968,12 @@ the trig functions, sum, product, etc. as prefix operators.
 
 (make-texify-style '$breqn :functions '(mdefine ((#\m . "~*~/postfix/ \\hiderel{:=} ~/prefix/"))
                                         mdefmacro ((#\m . "~*~/postfix/ \\hiderel{::=} ~/prefix/"))
-                                        mlabel ((#\m . "~*\\begin{dmath}~:[~;~:*[number={\\(~:/nullfix/\\)}]~]~%~:/nullfix/~%\\end{dmath}"))
+                                        mlabel ((#\m . "~*~:[\\begin{dmath*}~%~:/nullfix/~%\\end{dmath*}~;~:*\\begin{dmath}[number={\\(~:/nullfix/\\)}]~%~:/nullfix/~%\\end{dmath}~]")
+                                                (#\i . "\\(~*~*~:/nullfix/\\)"))
                                         mset ((#\m . "~*~/postfix/ \\hiderel{::} ~/prefix/"))
-                                        msetq ((#\m . "~*~/postfix/ \\hiderel{:} ~/prefix/"))))
+                                        msetq ((#\m . "~*~/postfix/ \\hiderel{:} ~/prefix/"))
+                                        texify-math ((#\m . "~*\\begin{dmath}~%~:/nullfix/~%\\end{dmath)")
+                                                     (#\i . "\\(~*~:/nullfix/\\)"))))
 
 (make-texify-style '$mathtools :functions '(mdefine ((#\m . "~*~/postfix/ \\coloneqq ~/prefix/"))
                                             mdefmacro ((#\m . "~*~/postfix/ \\Coloneqq ~/prefix/"))
