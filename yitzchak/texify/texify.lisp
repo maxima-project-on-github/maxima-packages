@@ -53,7 +53,8 @@ Normalization Functions
 |#
 
 ; Make the limit direction an index so we can use a format conditional.
-(defun texify-normalize-limit (expr)
+(defun texify-normalize-limit (expr styles modes l-op r-op)
+  (declare (ignore styles modes l-op r-op))
   `(,(first expr)
     ,(second expr)
     ,(third expr)
@@ -65,8 +66,9 @@ Normalization Functions
 
 ; Look for roots and push the exponent into the function arguments for prefix
 ; functions.
-(defun texify-normalize-mexpt (expr)
-  (let* ((n `(,(first expr) ,(second expr) ,(texify-normalize (third expr) 'mparen 'mparen)))
+(defun texify-normalize-mexpt (expr styles modes l-op r-op)
+  (declare (ignore l-op r-op))
+  (let* ((n `(,(first expr) ,(second expr) ,(texify-normalize (third expr) styles modes 'mparen 'mparen)))
          (base (second n))
          (exponent (third n)))
     (cond
@@ -85,14 +87,16 @@ Normalization Functions
 
 ; Remove empty else clauses and set the test of else classes to nil to make
 ; using a format conditional possible.
-(defun texify-normalize-mcond (expr)
+(defun texify-normalize-mcond (expr styles modes l-op r-op)
+  (declare (ignore styles modes l-op r-op))
   (cons (first expr)
     (loop for test-body on (cdr expr) by #'cddr
           when (not (equalp '$false (second test-body)))
           append (list (if (equalp t (first test-body)) nil (first test-body)) (second test-body)))))
 
 ; Respect *display-labels-p*
-(defun texify-normalize-mlabel (expr)
+(defun texify-normalize-mlabel (expr styles modes l-op r-op)
+  (declare (ignore styles modes l-op r-op))
   (cond
     ($texify_eq_number
       `((texify-math simp) ,(third expr)))
@@ -115,7 +119,8 @@ Normalization Functions
 
 ; Look for mminus unary operators that are not in the first slot and turn them
 ; into n-ary mminus to avoid results like z+x+-y.
-(defun texify-normalize-mplus (expr)
+(defun texify-normalize-mplus (expr styles modes l-op r-op)
+  (declare (ignore styles modes l-op r-op))
   (loop with previous = nil
         for arg in (cdr expr)
         if (and previous (texify-mminusp arg)) do
@@ -135,7 +140,8 @@ Normalization Functions
 
 ; Look for an argument with a low right binding power that can avoid parenthesis
 ; by moving it to the end of the product. This will move roots to the end.
-(defun texify-normalize-mtimes (expr)
+(defun texify-normalize-mtimes (expr styles modes l-op r-op)
+  (declare (ignore styles modes l-op r-op))
   (let ((mtimes-rbp (texify-rbp 'mtimes))
         (min-rbp (texify-lbp 'mtimes))
         (min-pos nil))
@@ -174,56 +180,51 @@ Normalization Functions
                 x)))
           expr))
 
-; Dispatch based on function name
-(defun texify-normalize-function (expr)
-  (if (find 'array (car expr))
-    `((array simp) ,(caar expr) ,@(cdr expr))
-    (case (caar expr)
-      (mexpt
-        (texify-normalize-mexpt expr))
-      ((mcond %mcond)
-        (texify-normalize-mcond expr))
-      (%limit
-        (texify-normalize-limit expr))
-      (mlabel
-        (texify-normalize-mlabel expr))
-      (mplus
-        (texify-normalize-mplus expr))
-      (mtimes
-        (texify-normalize-mtimes expr))
-      (otherwise
-        expr))))
-
-; Wrap with parenthesis if needed. Otherwise call nformat then
-; texify-normalize-function.
-(defun texify-normalize (expr lop rop)
-  (if (and (listp expr)
-           (not (equalp (caar expr) 'mparen))
-           (or (< (texify-lbp (caar expr)) (texify-rbp lop))
-               (> (texify-lbp rop) (texify-rbp (caar expr)))))
-    `((mparen simp) ,expr)
-    (let ((n (nformat expr)))
-      (if (listp n)
-        (texify-normalize-function (texify-normalize-args n))
-        n))))
-
+; ; Dispatch based on function name
+; (defun texify-normalize-function (expr)
+;   (if (find 'array (car expr))
+;     `((array simp) ,(caar expr) ,@(cdr expr))
+;     (case (caar expr)
+;       (mexpt
+;         (texify-normalize-mexpt expr))
+;       ((mcond %mcond)
+;         (texify-normalize-mcond expr))
+;       (%limit
+;         (texify-normalize-limit expr))
+;       (mlabel
+;         (texify-normalize-mlabel expr))
+;       (mplus
+;         (texify-normalize-mplus expr))
+;       (mtimes
+;         (texify-normalize-mtimes expr))
+;       (otherwise
+;         expr))))
 
 (defclass texify-style ()
-  ((functions :initarg :functions
-              :initform (make-hash-table :test 'equal)
-              :reader texify-style-functions)
-   (function-default :initarg :function-default
-                     :initform nil
-                     :accessor texify-style-function-default)
-   (string-default :initarg :string-default
-                   :initform nil
-                   :accessor texify-style-string-default)
-   (symbols :initarg :symbols
-            :initform (make-hash-table :test 'equal)
-            :reader texify-style-symbols)
-   (symbol-default :initarg :symbol-default
-                   :initform nil
-                   :accessor texify-style-symbol-default)))
+  ((functions
+     :initarg :functions
+     :initform (make-hash-table :test 'equal)
+     :reader texify-style-functions)
+   (function-default
+     :initarg :function-default
+     :initform nil
+     :accessor texify-style-function-default)
+   (normalizers
+     :initarg :normalizers
+     :initform (make-hash-table :test 'equal)
+     :reader texify-style-normalizers)
+   (string-default
+     :initarg :string-default
+     :initform nil
+     :accessor texify-style-string-default)
+   (symbols
+     :initarg :symbols
+     :initform (make-hash-table :test 'equal)
+     :reader texify-style-symbols)
+   (symbol-default
+     :initarg :symbol-default
+     :initform nil
+     :accessor texify-style-symbol-default)))
 
 (defun initialize-hash (table source)
   (loop for keyval on source by #'cddr
@@ -234,6 +235,7 @@ Normalization Functions
 
 (defun make-texify-style (name &key (functions nil)
                                     (function-default nil)
+                                    (normalizers nil)
                                     (symbols nil)
                                     (string-default nil)
                                     (symbol-default nil))
@@ -242,6 +244,8 @@ Normalization Functions
                                             :symbol-default symbol-default)))
     (when functions
       (initialize-hash (texify-style-functions style) functions))
+    (when normalizers
+      (initialize-hash (texify-style-normalizers style) normalizers))
     (when symbols
       (initialize-hash (texify-style-symbols style) symbols))
     (setf (gethash name texify-styles) style)))
@@ -249,6 +253,27 @@ Normalization Functions
 (defun texify-mode-get (values modes)
   (some (lambda (mode) (cdr (assoc mode values)))
         modes))
+
+; Wrap with parenthesis if needed. Otherwise call nformat then
+; texify-normalize-function.
+(defun texify-normalize (expr styles modes lop rop)
+  (if (and (listp expr)
+           (not (equalp (caar expr) 'mparen))
+           (or (< (texify-lbp (caar expr)) (texify-rbp lop))
+               (> (texify-lbp rop) (texify-rbp (caar expr)))))
+    `((mparen simp) ,expr)
+    (let* ((n (nformat expr))
+           (m (if (and (listp n) (find 'array (car n)))
+                `((array simp) ,(caar n) ,@(cdr n))
+                n)))
+      (if (listp m)
+        (or
+          (dolist (style styles)
+            (let ((normalizer (texify-mode-get (gethash (caar m) (texify-style-normalizers style)) modes)))
+              (when normalizer
+                (return (funcall normalizer m styles modes lop rop)))))
+          m)
+        m))))
 
 (defun texify-quote (str &key (text nil))
   (apply #'concatenate 'string
@@ -273,15 +298,16 @@ Normalization Functions
 (defgeneric apply-default-style (expr style modes lop rop))
 
 (defun texify (expr &optional (modes '(#\m)) (lop 'mparen) (rop 'mparen))
-  (let ((styles (mapcar (lambda (x) (gethash x texify-styles))
-                        (cdr $texify_styles))))
+  (let* ((styles (mapcar (lambda (x) (gethash x texify-styles))
+                         (cdr $texify_styles)))
+         (nexpr (texify-normalize expr styles modes lop rop)))
     (or
       (dolist (style styles)
-        (let ((value (apply-style expr style modes lop rop)))
+        (let ((value (apply-style nexpr style modes lop rop)))
           (when value
             (return value))))
       (dolist (style styles)
-        (let ((value (apply-default-style expr style modes lop rop)))
+        (let ((value (apply-default-style nexpr style modes lop rop)))
           (when value
             (return value)))))))
 
@@ -345,8 +371,7 @@ Normalization Functions
                         (cdr expr))))))
 
 (defmethod apply-style ((expr list) style modes lop rop)
-  (let* ((expr (texify-normalize expr lop rop))
-         (op (caar expr)))
+  (let ((op (caar expr)))
     (texify-function (texify-mode-get (gethash op (texify-style-functions style)) modes)
                      op
                      expr style modes lop rop)))
@@ -563,6 +588,12 @@ the trig functions, sum, product, etc. as prefix operators.
                                       texify-double-prime ((#\m . "~*~:/nullfix/''"))
                                       texify-triple-prime ((#\m . "~*~:/nullfix/'''")))
                          :function-default '((#\m . "~A\\left(~@{~:/nullfix/~^, ~}\\right)"))
+                         :normalizers `(mexpt ((#\m . ,#'texify-normalize-mexpt))
+                                        (mcond %mcond) ((#\m . ,#'texify-normalize-mcond))
+                                        %limit ((#\m . ,#'texify-normalize-limit))
+                                        mlabel ((#\m . ,#'texify-normalize-mlabel))
+                                        mplus ((#\m . ,#'texify-normalize-mplus))
+                                        mtimes ((#\m . ,#'texify-normalize-mtimes)))
                          :string-default '((#\m . "\\hbox{\\rm ~*~A}")
                                            (#\t . "\\hbox{\\rm ~A}"))
                          :symbol-default '((#\m . "~[~;{~A}~:[~;~:*_{~{~A~^, ~}}~]~:;\\mathop{{\\rm ~A}~:[~;~:*_{~{~A~^, ~}}~]}~]")
