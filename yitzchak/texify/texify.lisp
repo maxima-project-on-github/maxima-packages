@@ -21,7 +21,7 @@
 (defparameter *texify-rop* 'mparen)
 (defparameter *texify-styles* nil)
 
-(defparameter +texify-prefix-functions+ '(%acos
+(defparameter +tex-prefix-functions+ '(%acos
                                           %asin
                                           %atan
                                           %cos
@@ -415,26 +415,28 @@ Normalization Functions
           when (not (equalp '$false (second test-body)))
           append (list (if (equalp t (first test-body)) nil (first test-body)) (second test-body)))))
 
-; Look for roots and push the exponent into the function arguments for prefix
-; functions.
+; Look for roots.
 (defun tex-normalize-mexpt (expr modes l-op r-op)
   (declare (ignore l-op r-op))
   (let* ((n `(,(first expr) ,(second expr) ,(texify-normalize (third expr) modes 'mparen 'mparen)))
          (base (second n))
          (exponent (third n)))
-    (cond
-      ((and (listp exponent)
-            (or (equalp 'rat (caar exponent))
-                (equalp 'mquotient (caar exponent)))
-            (= 1 (second exponent)))
-        `((texify-root simp) ,(third exponent) ,base))
-      ((and (listp base)
-            (or (not (numberp exponent))
-                (> exponent 0))
-            (find (caar base) +texify-prefix-functions+))
-        `(,(first base) ,exponent ,@(cdr base)))
-      (t
-        n))))
+    (when (and (listp exponent)
+             (or (equalp 'rat (caar exponent))
+                 (equalp 'mquotient (caar exponent)))
+             (= 1 (second exponent)))
+      `((texify-root simp) ,(third exponent) ,base))))
+
+; Push the exponent into the function arguments for prefix functions.
+(defun tex-prefix-functions-normalize-mexpt (expr modes l-op r-op)
+  (declare (ignore modes l-op r-op))
+  (let ((base (second expr))
+        (exponent (third expr)))
+    (when (and (listp base)
+               (or (not (numberp exponent))
+                   (> exponent 0))
+               (find (caar base) +tex-prefix-functions+))
+        `(,(first base) ,exponent ,@(cdr base)))))
 
 ; Respect *display-labels-p*
 (defun tex-normalize-mlabel (expr modes l-op r-op)
@@ -491,493 +493,515 @@ Normalization Functions
               (subseq expr min-pos (1+ min-pos)))
       expr)))
 
-(make-texify-style '$tex :functions '((%at $at) ((#\m . "~*\\left.~/postfix/\\right|_{~'s:/nullfix/}"))
-                                      %binomial ((#\m . "~*{{~:/nullfix/}\\choose{~:/nullfix/}}"))
-                                      texify-diff-euler ((#\m . "~2*~@{\\mathop{D}_~:/nullfix/~@[^{~:/nullfix/}~] ~}~1@*~/prefix/"))
-                                      texify-diff-lagrange ((#\m . "~*~:/nullfix/~@[~[~;'~;''~;'''~:;^{\\left(~:*~:/nullfix/\\right)}~]~]~@[^{\\left(~:/nullfix/\\right)}~]~#[~:;\\left(~@{~:/nullfix/~^, ~}\\right)~]"))
-                                      texify-diff-leibniz ((#\m . "~*~*{d~@[^{~:/nullfix/}~]~@[~:/nullfix/~]}\\over{~@{\\mathop{d~:/nullfix/}~@[^{~:/nullfix/}~]~}}~1@*~@[~/prefix/~]"))
-                                      texify-diff-newton ((#\m . "~2*{~@[~[~;\\dot~;\\ddot~;\\buildrel{\\cdots}\\over~:;\\buildrel{\\scriptscriptstyle\\left(~:*~'s:/nullfix/\\right)}\\over~]~]~@[\\buildrel{\\scriptscriptstyle\\left(~'s:/nullfix/\\right)}\\over~]{~1@*~:/nullfix/}}~2*~#[~:;\\left(~@{~:/nullfix/~^, ~}\\right)~]"))
-                                      %del ((#\m . "~*\\mathop{d~:/nullfix/}"))
-                                      (%integrate $integrate) ((#\m . "~*\\int~2*~#[~:;_{~'s:/nullfix/}^{~'s:/nullfix/}~]~1@*~:/nullfix/\\mathop{d~:/nullfix/}"))
-                                      %limit ((#\m . "~2*\\lim_{~:/nullfix/ \\rightarrow ~:/nullfix/~[^{-}~;^{+}~]} ~1@*~/prefix/"))
-                                      (%product $product) ((#\m . "~*\\prod~*_{~'s:/nullfix/=~'s:/nullfix/}^{~'s:/nullfix/}~1@*~/prefix/"))
-                                      %sqrt ((#\m . "~*\\sqrt{~:/nullfix/}"))
-                                      |$`| ((#\m . "~*~:/nullfix/\\,~'u:/nullfix/"))
-                                      $bern ((#\m . "~*B_{~'s:/nullfix/}"))
-                                      $matrix ((#\m . "~*\\left[\\matrix{~@{~'a:/nullfix/~^\\cr~%  ~}}\\right]"))
-                                      %sum ((#\m . "~*\\sum~*_{~'s:/nullfix/=~'s:/nullfix/}^{~'s:/nullfix/}~1@*~/prefix/"))
-                                      array ((#\m . "~*{~:/nullfix/}_{~@{~'s:/nullfix/~^,~}}"))
-                                      mabs ((#\m . "~*\\left|~:/nullfix/\\right|"))
-                                      mand ((#\m . "~*~/postfix/~@{~#[~; \\land ~/prefix/~:; \\land ~/perifix/~]~}"))
-                                      marrow ((#\m . "~*~/postfix/ \\rightarrow ~/prefix/"))
-                                      mdefine ((#\m . "~*~/postfix/ := ~/prefix/"))
-                                      mdefmacro ((#\m . "~*~/postfix/ ::= ~/prefix/"))
-                                      (%mdo mdo) ((#\m . "~*\\mathop{\\bf for}\\;~:/nullfix/~@[\\;{\\bf from}\\;~:/nullfix/~]~@[{\\bf step}\]\\;~:/nullfix/~]~@[\\;{\\bf next}\\;~:/nullfix/~]~@[\\;{\\bf thru}\\;~:/nullfix/~]~@[\\;{\\bf unless}\\;~:/nullfix/~]\\;{\\bf do}\\;~/prefix/"))
-                                      (%mdoin mdoin) ((#\m . "~*\\mathop{\\bf for}\\;~:/nullfix/\\;{\\bf in}\\;~:/nullfix/\\;~*~*~*~@[{\\bf unless}\\;~:/nullfix/\\;~]{\\bf do}\\;~/prefix/"))
-                                      mequal ((#\m . "~*~/postfix/ = ~/prefix/"))
-                                      mexpt ((#\m . "~*{~/postfix/}^{~'s:/nullfix/}"))
-                                      mfactorial ((#\m . "~*~/postfix/!"))
-                                      mgeqp ((#\m . "~*~/postfix/ \\geq ~/prefix/"))
-                                      mgreaterp ((#\m . "~*~/postfix/ > ~/prefix/"))
-                                      mlabel ((#\m . "$$~*~:[~;~:*$~:/nullfix/$\\;~] ~:/nullfix/$$")
-                                              (#\i . "$~*~*~:/nullfix/$"))
-                                      mleqp ((#\m . "~*~/postfix/ \\leq ~/prefix/"))
-                                      mlessp ((#\m . "~*~/postfix/ < ~/prefix/"))
-                                      mlist ((#\m . "~*\\left[~@{~:/nullfix/~^, ~}\\right]")
-                                             (#\s . "~*~@{~:/nullfix/~^,~}")
-                                             (#\a . "~*~@{~'m:/nullfix/~^ & ~}"))
-                                      mminus ((#\m . "~*~#[~;-~/prefix/~:;~/postfix/~@{~#[~;-~/prefix/~:;-~/perifix/~]~}~]"))
-                                      mnctimes ((#\m . "~*~/postfix/~@{~#[~;\\cdot ~/prefix/~:;\\cdot ~/perifix/~]~}"))
-                                      mnot ((#\m . "~*\\neg ~/prefix/"))
-                                      mnotequal ((#\m . "~*~/left \\neg ~/prefix/"))
-                                      mor ((#\m . "~*~/postfix/~@{~#[~; \\lor ~/prefix/~:; \\lor ~/perifix/~]~}"))
-                                      mparen ((#\m . "~*\\left(~:/nullfix/\\right)"))
-                                      mplus ((#\m . "~*~/postfix/~@{~#[~;+~/prefix/~:;+~/perifix/~]~}"))
-                                      ; mprog ((#\m . "\\eqalign{~A\\left(~@{&~:/nullfix/~^,\\cr~%  ~}\\right)}"))
-                                      mquote ((#\m . "~*'~/prefix/"))
-                                      (mquotient rat) ((#\m . "~*{{~:/nullfix/}\\over{~:/nullfix/}}")
-                                                       (#\s . "~*~/postfix//~/prefix/")
-                                                       (#\u . "~*~/postfix//~/prefix/"))
-                                      mset ((#\m . "~*~/postfix/ :: ~/prefix/"))
-                                      msetq ((#\m . "~*~/postfix/ : ~/prefix/"))
-                                      mtext ((#\m . "~*~@{~'t:/nullfix/~}"))
-                                      mtimes ((#\m . "~*~/postfix/~@{~#[~; ~/prefix/~:; ~/perifix/~]~}"))
-                                      spaceout ((#\m . "~*\\hspace{~:/nullfix/mm}"))
-                                      (mcond %mcond) ((#\m . "~*\\mathop{\\bf if}\\;~:/nullfix/\\;\\mathop{\\bf then}\\;~:/nullfix/~@{\\;~:[\\mathop{\\bf else}~;~:*\\mathop{\\bf elseif}\\;~:/nullfix/\\;\\mathop{\\bf then}~]\\;~:/nullfix/~}"))
-                                      texify-math ((#\m . "$$~*~:/nullfix/\\eqnum$$")
-                                                   (#\i . "$~*~:/nullfix/$"))
-                                      texify-float ((#\m . "~*~A \\times 10^{~A}"))
-                                      texify-root ((#\m . "~*\\sqrt[~:/nullfix/]{~:/nullfix/}")))
-                         :function-default '((#\m . "~:/nullfix/\\left(~@{~:/nullfix/~^, ~}\\right)"))
-                         :normalizers `(mexpt ((#\m . ,#'tex-normalize-mexpt))
-                                        (mcond %mcond) ((#\m . ,#'tex-normalize-mcond))
-                                        (%derivative $diff) ((#\m . ,#'tex-normalize-diff-leibniz))
-                                        %limit ((#\m . ,#'tex-normalize-limit))
-                                        mlabel ((#\m . ,#'tex-normalize-mlabel))
-                                        mplus ((#\m . ,#'tex-normalize-mplus))
-                                        mtimes ((#\m . ,#'tex-normalize-mtimes)))
-                         :string-default '((#\m . "\\hbox{\\rm ~*~A}")
-                                           (#\t . "\\hbox{\\rm ~A}"))
-                         :symbol-default '((#\m . "~[~;{~A}~:[~;~:*_{~{~A~^, ~}}~]~:;\\mathop{{\\rm ~A}~:[~;~:*_{~{~A~^, ~}}~]}~]")
-                                           (#\u . "~*\\mathop{{\\rm ~A}~:[~;~:*_{~@{~A~^, ~}}~]}"))
-                         :symbols '(| --> | ((#\m . "\\longrightarrow"))
-                                    %acos ((#\m . "\\arccos"))
-                                    %asin ((#\m . "\\arcsin"))
-                                    %atan ((#\m . "\\arctan"))
-                                    %cos ((#\m . "\\cos"))
-                                    %cosh ((#\m . "\\cosh"))
-                                    %cot ((#\m . "\\cot"))
-                                    %coth ((#\m . "\\coth"))
-                                    %csc ((#\m . "\\csc"))
-                                    %determinant ((#\m . "\\det"))
-                                    %dim ((#\m . "\\dim")) ; Not used?
-                                    %exp ((#\m . "\\exp"))
-                                    %gamma ((#\m . "\\gamma"))
-                                    %gamma_incomplete ((#\m . "\\Gamma"))
-                                    %gamma_incomplete_generalized ((#\m . "\\Gamma"))
-                                    %gamma_incomplete_regularized ((#\m . "Q"))
-                                    %gcd ((#\m . "\\gcd")) ; Not used?
-                                    %laplace ((#\m . "{\\rm L}"))
-                                    %log ((#\m . "\\ln"))
-                                    %max ((#\m . "\\max"))
-                                    %min ((#\m . "\\min"))
-                                    %sec ((#\m . "\\sec"))
-                                    %sin ((#\m . "\\sin"))
-                                    %sinh ((#\m . "\\sinh"))
-                                    %tan ((#\m . "\\tan"))
-                                    %tanh ((#\m . "\\tanh"))
-                                    |$Alpha| ((#\m . "{\\rm A}"))
-                                    |$Beta| ((#\m . "{\\rm B}"))
-                                    |$Chi| ((#\m . "{\\rm X}"))
-                                    |$Delta| ((#\m . "\\Delta"))
-                                    |$Epsilon| ((#\m . "{\\rm E}"))
-                                    |$Eta| ((#\m . "{\\rm H}"))
-                                    |$Gamma| ((#\m . "\\Gamma"))
-                                    |$Iota| ((#\m . "{\\rm I}"))
-                                    |$Kappa| ((#\m . "{\\rm K}"))
-                                    |$Lambda| ((#\m . "\\Lambda"))
-                                    |$Mu| ((#\m . "{\\rm M}"))
-                                    |$Nu| ((#\m . "{\\rm N}"))
-                                    |$Omega| ((#\m . "\\Omega"))
-                                    |$Omicron| ((#\m . "{\\rm O}"))
-                                    |$Phi| ((#\m . "\\Phi"))
-                                    |$Pi| ((#\m . "\\Pi"))
-                                    |$Psi| ((#\m . "\\Psi"))
-                                    |$Rho| ((#\m . "{\\rm P}"))
-                                    |$Sigma| ((#\m . "\\Sigma"))
-                                    |$Tau| ((#\m . "{\\rm T}"))
-                                    |$Theta| ((#\m . "\\Theta"))
-                                    |$Upsilon| ((#\m . "\\Upsilon"))
-                                    |$Xi| ((#\m . "\\Xi"))
-                                    |$Zeta| ((#\m . "{\\rm Z}"))
-                                    $%e ((#\m . "e"))
-                                    $%gamma ((#\m . "\\gamma"))
-                                    $%i ((#\m . "i"))
-                                    $%phi ((#\m . "\\varphi"))
-                                    $%pi ((#\m . "\\pi"))
-                                    $beta ((#\m . "\\beta"))
-                                    $chi ((#\m . "\\chi"))
-                                    $delta ((#\m . "\\delta"))
-                                    $done ((#\m . "\\mathop{\\bf done}"))
-                                    $epsilon ((#\m . "\\varepsilon"))
-                                    $eta ((#\m . "\\eta"))
-                                    ($false nil) ((#\m . "\\mathop{\\bf false}"))
-                                    $gamma ((#\m . "\\gamma"))
-                                    $gamma_incomplete_lower ((#\m . "\\gamma"))
-                                    $inf ((#\m . "\\infty"))
-                                    $iota ((#\m . "\\iota"))
-                                    $kappa ((#\m . "\\kappa"))
-                                    $lambda ((#\m . "\\lambda"))
-                                    $minf ((#\m . "-\\infty"))
-                                    $mu ((#\m . "\\mu"))
-                                    $nu ((#\m . "\\nu"))
-                                    $omega ((#\m . "\\omega"))
-                                    $omicron ((#\m . "o"))
-                                    $partial ((#\m . "\\partial"))
-                                    $phi ((#\m . "\\phi"))
-                                    $pi ((#\m . "\\pi"))
-                                    $psi ((#\m . "\\psi"))
-                                    $rho ((#\m . "\\rho"))
-                                    $sigma ((#\m . "\\sigma"))
-                                    $tau ((#\m . "\\tau"))
-                                    $theta ((#\m . "\\vartheta"))
-                                    ($true t)  ((#\m . "\\mathop{\\bf true}"))
-                                    $upsilon ((#\m . "\\upsilon"))
-                                    $xi ((#\m . "\\xi"))
-                                    $zeta ((#\m . "\\zeta"))
-                                    lambda ((#\m . "\\lambda"))
-                                    mprog ((#\m . "\\mathop{\\bf block}"))
-                                    ;; Ampere
-                                    ($ampere $amp) ((#\u . "\\mathop{\\rm A}"))
-                                    (|$microA| $microampere) ((#\u . "\\mathop{\\micro{\\rm A}}"))
-                                    ;; AU
-                                    $astronomical_unit ((#\u . "\\mathop{\\rm AU}"))
-                                    ;; becquerel
-                                    $becquerel ((#\u . "\\mathop{\\rm Bq}"))
-                                    ;; candela
-                                    $candela ((#\u . "\\mathop{\\rm cd}"))
-                                    ;; Coulomb
-                                    $coulomb ((#\u . "\\mathop{\\rm C}"))
-                                    (|$microC| $microcoulomb) ((#\u . "\\mathop{\\micro{\\rm C}}"))
-                                    ;; day
-                                    $day ((#\u . "\\mathop{\\rm d}"))
-                                    ;; degree
-                                    $degree ((#\u . "^{\\circ}"))
-                                    ;; Farad
-                                    $farad ((#\u . "\\mathop{\\rm F}"))
-                                    (|$microF| $microfarad) ((#\u . "\\mathop{\\micro{\\rm F}}"))
-                                    ;; feet
-                                    $feet ((#\u . "\\mathop{\\rm ft}"))
-                                    ;; Gram
-                                    $kilogram ((#\u . "\\mathop{\\rm kg}"))
-                                    ($microg $microgram) ((#\u . "\\mathop{\\micro{\\rm g}}"))
-                                    ;; Gray
-                                    $gray ((#\u . "\\mathop{\\rm Gy}"))
-                                    ;; Hectare
-                                    $hectare ((#\u . "\\mathop{\\rm Ha}"))
-                                    ;; Henry
-                                    $henry ((#\u . "\\mathop{\\rm H}"))
-                                    (|$microH| $microhenry) ((#\u . "\\mathop{\\micro{\\rm Hs}}"))
-                                    ;; Hertz
-                                    $hertz ((#\u . "\\mathop{\\rm Hz}"))
-                                    (|$microHz| $microhertz) ((#\u . "\\mathop{\\micro{\\rm Hz}}"))
-                                    ;; hour
-                                    $hour ((#\u . "\\mathop{\\rm hr}"))
-                                    ;; inch
-                                    $inch ((#\u . "\\mathop{\\rm in}"))
-                                    ;; Joule
-                                    ($joule |$j|) ((#\u . "\\mathop{\\rm J}"))
-                                    (|$microJ| $microjoule) ((#\u . "\\mathop{\\micro{\\rm J}}"))
-                                    ;; Katal
-                                    ($katal $kat) ((#\u . "\\mathop{\\rm kat}"))
-                                    ;; Kelvin
-                                    ('$kelvin |$k|) ((#\u . "\\mathop{\\rm K}"))
-                                    (|$microK| $microkelvin) ((#\u . "\\mathop{\\micro{\\rm K}}"))
-                                    ;; light year
-                                    $light_year ((#\u . "\\mathop{\\rm lyr}"))
-                                    ;; Liter
-                                    ($liter $l |$l|) ((#\u . "\\mathop{\\rm L}"))
-                                    ;; lumen
-                                    $lumen ((#\u . "\\mathop{\\rm lm}"))
-                                    ;; lux
-                                    $lux ((#\u . "\\mathop{\\rm lx}"))
-                                    ;; Meter
-                                    $kilometer ((#\u . "\\mathop{\\rm km}"))
-                                    $meter ((#\u . "\\mathop{\\rm m}"))
-                                    ($micrometer $micron $microm) ((#\u . "\\mathop{\\micro{\\rm m}}"))
-                                    ;; metric ton
-                                    $metric_ton ((#\u . "\\mathop{\\rm t}"))
-                                    ;; minute
-                                    $minute ((#\u . "\\mathop{\\rm min}"))
-                                    ;; Mole
-                                    $mole ((#\u . "\\mathop{\\rm mol}"))
-                                    ($micromole $micromol) ((#\u . "\\mathop{\\micro{\\rm mol}}"))
-                                    ;; Newton
-                                    $newton ((#\u . "\\mathop{\\rm N}"))
-                                    (|$microN| $micronewton) ((#\u . "\\mathop{\\micro{\\rm N}}"))
-                                    ;; Ohm
-                                    |$GOhm| ((#\u . "\\mathop{{\\rm G}\\Omega}"))
-                                    |$MOhm| ((#\u . "\\mathop{{\\rm M}\\Omega}"))
-                                    |$kOhm| ((#\u . "\\mathop{{\\rm k}\\Omega}"))
-                                    ($ohm |$Ohm|) ((#\u . "\\mathop{\\Omega}"))
-                                    |$mOhm| ((#\u . "\\mathop{{\\rm m}\\Omega}"))
-                                    $microOhm ((#\u . "\\mathop{\\micro\\Omega}"))
-                                    |$pOhm| ((#\u . "\\mathop{{\\rm p}\\Omega}"))
-                                    |$nOhm| ((#\u . "\\mathop{{\\rm n}\\Omega}"))
-                                    |$fOhm| ((#\u . "\\mathop{{\\rm f}\\Omega}"))
-                                    ;; Pascal
-                                    $pascal ((#\u . "\\mathop{\\rm Pa}"))
-                                    (|$microPa| $micropascal) ((#\u . "\\mathop{\\micro{\\rm Pa}}"))
-                                    ;; parsec
-                                    $parsec ((#\u . "\\mathop{\\rm pc}"))
-                                    ;; Second
-                                    $second ((#\u . "\\mathop{\\rm s}"))
-                                    ($micros $microsecond) ((#\u . "\\mathop{\\micro{\\rm s}}"))
-                                    ;; Siemens
-                                    $siemens ((#\u . "\\mathop{\\rm S}"))
-                                    (|$microS| $microsiemens) ((#\u . "\\mathop{\\micro{\\rm S}}"))
-                                    ;; Tesla
-                                    $tesla ((#\u . "\\mathop{\\rm T}"))
-                                    (|$microT| $microtesla) ((#\u . "\\mathop{\\micro{\\rm T}}"))
-                                    ;; Volt
-                                    $volt ((#\u . "\\mathop{\\rm V}"))
-                                    (|$microV| $microvolt) ((#\u . "\\mathop{\\micro{\\rm V}}"))
-                                    ;; Watt
-                                    $watt ((#\u . "\\mathop{\\rm W}"))
-                                    (|$microW| $microwatt) ((#\u . "\\mathop{\\micro{\\rm W}}"))
-                                    ;; Weber
-                                    $weber ((#\u . "\\mathop{\\rm Wb}"))
-                                    (|$microWb| $microweber) ((#\u . "\\mathop{\\micro{\\rm Wb}}"))
-                                    ;; yard
-                                    $yard ((#\u . "\\mathop{\\rm yd}"))
-                                    ;; physical_constants
-                                    $%c ((#\m . "c"))
-                                    $%mu_0 ((#\m . "\\mu_0"))
-                                    $%e_0 ((#\m . "\\varepsilon_0"))
-                                    $%Z_0 ((#\m . "Z_0"))
-                                    $%G ((#\m . "G"))
-                                    $%h ((#\m . "h"))
-                                    $%h_bar ((#\m . "\\hbar"))
-                                    $%m_P ((#\m . "m_P"))
-                                    $%%k ((#\m . "k"))
-                                    $%T_P ((#\m . "T_P"))
-                                    $%l_P ((#\m . "l_P"))
-                                    $%t_P ((#\m . "t_P"))
-                                    $%%e ((#\m . "e"))
-                                    $%Phi_0 ((#\m . "\\Phi_0"))
-                                    $%G_0 ((#\m . "G_0"))
-                                    $%R_K ((#\m . "R_K"))
-                                    $%mu_B ((#\m . "\\mu_B"))
-                                    $%mu_N ((#\m . "\\mu_N"))
-                                    $%alpha ((#\m . "\\alpha"))
-                                    $%R_inf ((#\m . "R_{\\infty}"))
-                                    $%a_0 ((#\m . "a_0"))
-                                    $%E_h ((#\m . "E_{\\rm h}"))
-                                    $%ratio_h_me ((#\m . "(h/m_{\\rm e})"))
-                                    $%m_e ((#\m . "m_{\\rm e}"))
-                                    $%N_A ((#\m . "N_A"))
-                                    $%m_u ((#\m . "\\mu_{\\rm u}"))
-                                    $%F ((#\m . "F"))
-                                    $%R ((#\m . "R"))
-                                    $%V_m ((#\m . "V_m"))
-                                    $%n_0 ((#\m . "n_0"))
-                                    $%ratio_S0_R ((#\m . "(S_0/R)"))
-                                    $%sigma ((#\m . "\\sigma"))
-                                    $%c_1 ((#\m . "c_1"))
-                                    $%c_1L ((#\m . "c_{\\rm 1L}"))
-                                    $%c_2 ((#\m . "c_2"))
-                                    $%b ((#\m . "b"))
-                                    $%b_prime ((#\m . "b'"))))
+(make-texify-style '$tex
+  :functions `((%at $at) ((#\m . "~*\\left.~/postfix/\\right|_{~'s:/nullfix/}"))
+               %binomial ((#\m . "~*{{~:/nullfix/}\\choose{~:/nullfix/}}"))
+               texify-diff-euler ((#\m . "~2*~@{\\mathop{D}_~:/nullfix/~@[^{~:/nullfix/}~] ~}~1@*~/prefix/"))
+               texify-diff-lagrange ((#\m . "~*~:/nullfix/~@[~[~;'~;''~;'''~:;^{\\left(~:*~:/nullfix/\\right)}~]~]~@[^{\\left(~:/nullfix/\\right)}~]~#[~:;\\left(~@{~:/nullfix/~^, ~}\\right)~]"))
+               texify-diff-leibniz ((#\m . "~*~*{d~@[^{~:/nullfix/}~]~@[~:/nullfix/~]}\\over{~@{\\mathop{d~:/nullfix/}~@[^{~:/nullfix/}~]~}}~1@*~@[~/prefix/~]"))
+               texify-diff-newton ((#\m . "~2*{~@[~[~;\\dot~;\\ddot~;\\buildrel{\\cdots}\\over~:;\\buildrel{\\scriptscriptstyle\\left(~:*~'s:/nullfix/\\right)}\\over~]~]~@[\\buildrel{\\scriptscriptstyle\\left(~'s:/nullfix/\\right)}\\over~]{~1@*~:/nullfix/}}~2*~#[~:;\\left(~@{~:/nullfix/~^, ~}\\right)~]"))
+               %del ((#\m . "~*\\mathop{d~:/nullfix/}"))
+               (%integrate $integrate) ((#\m . "~*\\int~2*~#[~:;_{~'s:/nullfix/}^{~'s:/nullfix/}~]~1@*~:/nullfix/\\mathop{d~:/nullfix/}"))
+               %limit ((#\m . "~2*\\lim_{~:/nullfix/ \\rightarrow ~:/nullfix/~[^{-}~;^{+}~]} ~1@*~/prefix/"))
+               (%product $product) ((#\m . "~*\\prod~*_{~'s:/nullfix/=~'s:/nullfix/}^{~'s:/nullfix/}~1@*~/prefix/"))
+               %sqrt ((#\m . "~*\\sqrt{~:/nullfix/}"))
+               |$`| ((#\m . "~*~:/nullfix/\\,~'u:/nullfix/"))
+               $bern ((#\m . "~*B_{~'s:/nullfix/}"))
+               $matrix ((#\m . "~*\\left[\\matrix{~@{~'a:/nullfix/~^\\cr~%  ~}}\\right]"))
+               %sum ((#\m . "~*\\sum~*_{~'s:/nullfix/=~'s:/nullfix/}^{~'s:/nullfix/}~1@*~/prefix/"))
+               array ((#\m . "~*{~:/nullfix/}_{~@{~'s:/nullfix/~^,~}}"))
+               mabs ((#\m . "~*\\left|~:/nullfix/\\right|"))
+               mand ((#\m . "~*~/postfix/~@{~#[~; \\land ~/prefix/~:; \\land ~/perifix/~]~}"))
+               marrow ((#\m . "~*~/postfix/ \\rightarrow ~/prefix/"))
+               mdefine ((#\m . "~*~/postfix/ := ~/prefix/"))
+               mdefmacro ((#\m . "~*~/postfix/ ::= ~/prefix/"))
+               (%mdo mdo) ((#\m . "~*\\mathop{\\bf for}\\;~:/nullfix/~@[\\;{\\bf from}\\;~:/nullfix/~]~@[{\\bf step}\]\\;~:/nullfix/~]~@[\\;{\\bf next}\\;~:/nullfix/~]~@[\\;{\\bf thru}\\;~:/nullfix/~]~@[\\;{\\bf unless}\\;~:/nullfix/~]\\;{\\bf do}\\;~/prefix/"))
+               (%mdoin mdoin) ((#\m . "~*\\mathop{\\bf for}\\;~:/nullfix/\\;{\\bf in}\\;~:/nullfix/\\;~*~*~*~@[{\\bf unless}\\;~:/nullfix/\\;~]{\\bf do}\\;~/prefix/"))
+               mequal ((#\m . "~*~/postfix/ = ~/prefix/"))
+               mexpt ((#\m . "~*{~/postfix/}^{~'s:/nullfix/}"))
+               mfactorial ((#\m . "~*~/postfix/!"))
+               mgeqp ((#\m . "~*~/postfix/ \\geq ~/prefix/"))
+               mgreaterp ((#\m . "~*~/postfix/ > ~/prefix/"))
+               mlabel ((#\m . "$$~*~:[~;~:*$~:/nullfix/$\\;~] ~:/nullfix/$$")
+                       (#\i . "$~*~*~:/nullfix/$"))
+               mleqp ((#\m . "~*~/postfix/ \\leq ~/prefix/"))
+               mlessp ((#\m . "~*~/postfix/ < ~/prefix/"))
+               mlist ((#\m . "~*\\left[~@{~:/nullfix/~^, ~}\\right]")
+                      (#\s . "~*~@{~:/nullfix/~^,~}")
+                      (#\a . "~*~@{~'m:/nullfix/~^ & ~}"))
+               mminus ((#\m . "~*~#[~;-~/prefix/~:;~/postfix/~@{~#[~;-~/prefix/~:;-~/perifix/~]~}~]"))
+               mnctimes ((#\m . "~*~/postfix/~@{~#[~;\\cdot ~/prefix/~:;\\cdot ~/perifix/~]~}"))
+               mnot ((#\m . "~*\\neg ~/prefix/"))
+               mnotequal ((#\m . "~*~/left \\neg ~/prefix/"))
+               mor ((#\m . "~*~/postfix/~@{~#[~; \\lor ~/prefix/~:; \\lor ~/perifix/~]~}"))
+               mparen ((#\m . "~*\\left(~:/nullfix/\\right)"))
+               mplus ((#\m . "~*~/postfix/~@{~#[~;+~/prefix/~:;+~/perifix/~]~}"))
+               ; mprog ((#\m . "\\eqalign{~A\\left(~@{&~:/nullfix/~^,\\cr~%  ~}\\right)}"))
+                mquote ((#\m . "~*'~/prefix/"))
+               (mquotient rat) ((#\m . "~*{{~:/nullfix/}\\over{~:/nullfix/}}")
+                                (#\s . "~*~/postfix//~/prefix/")
+                                (#\u . "~*~/postfix//~/prefix/"))
+               mset ((#\m . "~*~/postfix/ :: ~/prefix/"))
+               msetq ((#\m . "~*~/postfix/ : ~/prefix/"))
+               mtext ((#\m . "~*~@{~'t:/nullfix/~}"))
+               mtimes ((#\m . "~*~/postfix/~@{~#[~; ~/prefix/~:; ~/perifix/~]~}"))
+               spaceout ((#\m . "~*\\hspace{~:/nullfix/mm}"))
+               (mcond %mcond) ((#\m . "~*\\mathop{\\bf if}\\;~:/nullfix/\\;\\mathop{\\bf then}\\;~:/nullfix/~@{\\;~:[\\mathop{\\bf else}~;~:*\\mathop{\\bf elseif}\\;~:/nullfix/\\;\\mathop{\\bf then}~]\\;~:/nullfix/~}"))
+               texify-math ((#\m . "$$~*~:/nullfix/\\eqnum$$")
+                            (#\i . "$~*~:/nullfix/$"))
+               texify-float ((#\m . "~*~A \\times 10^{~A}"))
+               texify-root ((#\m . "~*\\sqrt[~:/nullfix/]{~:/nullfix/}")))
+  :function-default '((#\m . "~:/nullfix/\\left(~@{~:/nullfix/~^, ~}\\right)"))
+  :normalizers `(mexpt ((#\m . ,#'tex-normalize-mexpt))
+                 (mcond %mcond) ((#\m . ,#'tex-normalize-mcond))
+                 (%derivative $diff) ((#\m . ,#'tex-normalize-diff-leibniz))
+                 %limit ((#\m . ,#'tex-normalize-limit))
+                 mlabel ((#\m . ,#'tex-normalize-mlabel))
+                 mplus ((#\m . ,#'tex-normalize-mplus))
+                 mtimes ((#\m . ,#'tex-normalize-mtimes)))
+  :string-default '((#\m . "\\hbox{\\rm ~*~A}")
+                    (#\t . "\\hbox{\\rm ~A}"))
+  :symbol-default '((#\m . "~[~;{~A}~:[~;~:*_{~{~A~^, ~}}~]~:;\\mathop{{\\rm ~A}~:[~;~:*_{~{~A~^, ~}}~]}~]")
+                    (#\u . "~*\\mathop{{\\rm ~A}~:[~;~:*_{~@{~A~^, ~}}~]}"))
+  :symbols '(| --> | ((#\m . "\\longrightarrow"))
+             %acos ((#\m . "\\arccos"))
+             %asin ((#\m . "\\arcsin"))
+             %atan ((#\m . "\\arctan"))
+             %cos ((#\m . "\\cos"))
+             %cosh ((#\m . "\\cosh"))
+             %cot ((#\m . "\\cot"))
+             %coth ((#\m . "\\coth"))
+             %csc ((#\m . "\\csc"))
+             %determinant ((#\m . "\\det"))
+             %dim ((#\m . "\\dim")) ; Not used?
+             %exp ((#\m . "\\exp"))
+             %gamma ((#\m . "\\gamma"))
+             %gamma_incomplete ((#\m . "\\Gamma"))
+             %gamma_incomplete_generalized ((#\m . "\\Gamma"))
+             %gamma_incomplete_regularized ((#\m . "Q"))
+             %gcd ((#\m . "\\gcd")) ; Not used?
+             %laplace ((#\m . "{\\rm L}"))
+             %log ((#\m . "\\ln"))
+             %max ((#\m . "\\max"))
+             %min ((#\m . "\\min"))
+             %sec ((#\m . "\\sec"))
+             %sin ((#\m . "\\sin"))
+             %sinh ((#\m . "\\sinh"))
+             %tan ((#\m . "\\tan"))
+             %tanh ((#\m . "\\tanh"))
+             |$Alpha| ((#\m . "{\\rm A}"))
+             |$Beta| ((#\m . "{\\rm B}"))
+             |$Chi| ((#\m . "{\\rm X}"))
+             |$Delta| ((#\m . "\\Delta"))
+             |$Epsilon| ((#\m . "{\\rm E}"))
+             |$Eta| ((#\m . "{\\rm H}"))
+             |$Gamma| ((#\m . "\\Gamma"))
+             |$Iota| ((#\m . "{\\rm I}"))
+             |$Kappa| ((#\m . "{\\rm K}"))
+             |$Lambda| ((#\m . "\\Lambda"))
+             |$Mu| ((#\m . "{\\rm M}"))
+             |$Nu| ((#\m . "{\\rm N}"))
+             |$Omega| ((#\m . "\\Omega"))
+             |$Omicron| ((#\m . "{\\rm O}"))
+             |$Phi| ((#\m . "\\Phi"))
+             |$Pi| ((#\m . "\\Pi"))
+             |$Psi| ((#\m . "\\Psi"))
+             |$Rho| ((#\m . "{\\rm P}"))
+             |$Sigma| ((#\m . "\\Sigma"))
+             |$Tau| ((#\m . "{\\rm T}"))
+             |$Theta| ((#\m . "\\Theta"))
+             |$Upsilon| ((#\m . "\\Upsilon"))
+             |$Xi| ((#\m . "\\Xi"))
+             |$Zeta| ((#\m . "{\\rm Z}"))
+             $%e ((#\m . "e"))
+             $%gamma ((#\m . "\\gamma"))
+             $%i ((#\m . "i"))
+             $%phi ((#\m . "\\varphi"))
+             $%pi ((#\m . "\\pi"))
+             $beta ((#\m . "\\beta"))
+             $chi ((#\m . "\\chi"))
+             $delta ((#\m . "\\delta"))
+             $done ((#\m . "\\mathop{\\bf done}"))
+             $epsilon ((#\m . "\\varepsilon"))
+             $eta ((#\m . "\\eta"))
+             ($false nil) ((#\m . "\\mathop{\\bf false}"))
+             $gamma ((#\m . "\\gamma"))
+             $gamma_incomplete_lower ((#\m . "\\gamma"))
+             $inf ((#\m . "\\infty"))
+             $iota ((#\m . "\\iota"))
+             $kappa ((#\m . "\\kappa"))
+             $lambda ((#\m . "\\lambda"))
+             $minf ((#\m . "-\\infty"))
+             $mu ((#\m . "\\mu"))
+             $nu ((#\m . "\\nu"))
+             $omega ((#\m . "\\omega"))
+             $omicron ((#\m . "o"))
+             $partial ((#\m . "\\partial"))
+             $phi ((#\m . "\\phi"))
+             $pi ((#\m . "\\pi"))
+             $psi ((#\m . "\\psi"))
+             $rho ((#\m . "\\rho"))
+             $sigma ((#\m . "\\sigma"))
+             $tau ((#\m . "\\tau"))
+             $theta ((#\m . "\\vartheta"))
+             ($true t)  ((#\m . "\\mathop{\\bf true}"))
+             $upsilon ((#\m . "\\upsilon"))
+             $xi ((#\m . "\\xi"))
+             $zeta ((#\m . "\\zeta"))
+             lambda ((#\m . "\\lambda"))
+             mprog ((#\m . "\\mathop{\\bf block}"))
+             ;; Ampere
+             ($ampere $amp) ((#\u . "\\mathop{\\rm A}"))
+             (|$microA| $microampere) ((#\u . "\\mathop{\\micro{\\rm A}}"))
+             ;; AU
+             $astronomical_unit ((#\u . "\\mathop{\\rm AU}"))
+             ;; becquerel
+             $becquerel ((#\u . "\\mathop{\\rm Bq}"))
+             ;; candela
+             $candela ((#\u . "\\mathop{\\rm cd}"))
+             ;; Coulomb
+             $coulomb ((#\u . "\\mathop{\\rm C}"))
+             (|$microC| $microcoulomb) ((#\u . "\\mathop{\\micro{\\rm C}}"))
+             ;; day
+             $day ((#\u . "\\mathop{\\rm d}"))
+             ;; degree
+             $degree ((#\u . "^{\\circ}"))
+             ;; Farad
+             $farad ((#\u . "\\mathop{\\rm F}"))
+             (|$microF| $microfarad) ((#\u . "\\mathop{\\micro{\\rm F}}"))
+             ;; feet
+             $feet ((#\u . "\\mathop{\\rm ft}"))
+             ;; Gram
+             $kilogram ((#\u . "\\mathop{\\rm kg}"))
+             ($microg $microgram) ((#\u . "\\mathop{\\micro{\\rm g}}"))
+             ;; Gray
+             $gray ((#\u . "\\mathop{\\rm Gy}"))
+             ;; Hectare
+             $hectare ((#\u . "\\mathop{\\rm Ha}"))
+             ;; Henry
+             $henry ((#\u . "\\mathop{\\rm H}"))
+             (|$microH| $microhenry) ((#\u . "\\mathop{\\micro{\\rm Hs}}"))
+             ;; Hertz
+             $hertz ((#\u . "\\mathop{\\rm Hz}"))
+             (|$microHz| $microhertz) ((#\u . "\\mathop{\\micro{\\rm Hz}}"))
+             ;; hour
+             $hour ((#\u . "\\mathop{\\rm hr}"))
+             ;; inch
+             $inch ((#\u . "\\mathop{\\rm in}"))
+             ;; Joule
+             ($joule |$j|) ((#\u . "\\mathop{\\rm J}"))
+             (|$microJ| $microjoule) ((#\u . "\\mathop{\\micro{\\rm J}}"))
+             ;; Katal
+             ($katal $kat) ((#\u . "\\mathop{\\rm kat}"))
+             ;; Kelvin
+             ('$kelvin |$k|) ((#\u . "\\mathop{\\rm K}"))
+             (|$microK| $microkelvin) ((#\u . "\\mathop{\\micro{\\rm K}}"))
+             ;; light year
+             $light_year ((#\u . "\\mathop{\\rm lyr}"))
+             ;; Liter
+             ($liter $l |$l|) ((#\u . "\\mathop{\\rm L}"))
+             ;; lumen
+             $lumen ((#\u . "\\mathop{\\rm lm}"))
+             ;; lux
+             $lux ((#\u . "\\mathop{\\rm lx}"))
+             ;; Meter
+             $kilometer ((#\u . "\\mathop{\\rm km}"))
+             $meter ((#\u . "\\mathop{\\rm m}"))
+             ($micrometer $micron $microm) ((#\u . "\\mathop{\\micro{\\rm m}}"))
+             ;; metric ton
+             $metric_ton ((#\u . "\\mathop{\\rm t}"))
+             ;; minute
+             $minute ((#\u . "\\mathop{\\rm min}"))
+             ;; Mole
+             $mole ((#\u . "\\mathop{\\rm mol}"))
+             ($micromole $micromol) ((#\u . "\\mathop{\\micro{\\rm mol}}"))
+             ;; Newton
+             $newton ((#\u . "\\mathop{\\rm N}"))
+             (|$microN| $micronewton) ((#\u . "\\mathop{\\micro{\\rm N}}"))
+             ;; Ohm
+             |$GOhm| ((#\u . "\\mathop{{\\rm G}\\Omega}"))
+             |$MOhm| ((#\u . "\\mathop{{\\rm M}\\Omega}"))
+             |$kOhm| ((#\u . "\\mathop{{\\rm k}\\Omega}"))
+             ($ohm |$Ohm|) ((#\u . "\\mathop{\\Omega}"))
+             |$mOhm| ((#\u . "\\mathop{{\\rm m}\\Omega}"))
+             $microOhm ((#\u . "\\mathop{\\micro\\Omega}"))
+             |$pOhm| ((#\u . "\\mathop{{\\rm p}\\Omega}"))
+             |$nOhm| ((#\u . "\\mathop{{\\rm n}\\Omega}"))
+             |$fOhm| ((#\u . "\\mathop{{\\rm f}\\Omega}"))
+             ;; Pascal
+             $pascal ((#\u . "\\mathop{\\rm Pa}"))
+             (|$microPa| $micropascal) ((#\u . "\\mathop{\\micro{\\rm Pa}}"))
+             ;; parsec
+             $parsec ((#\u . "\\mathop{\\rm pc}"))
+             ;; Second
+             $second ((#\u . "\\mathop{\\rm s}"))
+             ($micros $microsecond) ((#\u . "\\mathop{\\micro{\\rm s}}"))
+             ;; Siemens
+             $siemens ((#\u . "\\mathop{\\rm S}"))
+             (|$microS| $microsiemens) ((#\u . "\\mathop{\\micro{\\rm S}}"))
+             ;; Tesla
+             $tesla ((#\u . "\\mathop{\\rm T}"))
+             (|$microT| $microtesla) ((#\u . "\\mathop{\\micro{\\rm T}}"))
+             ;; Volt
+             $volt ((#\u . "\\mathop{\\rm V}"))
+             (|$microV| $microvolt) ((#\u . "\\mathop{\\micro{\\rm V}}"))
+             ;; Watt
+             $watt ((#\u . "\\mathop{\\rm W}"))
+             (|$microW| $microwatt) ((#\u . "\\mathop{\\micro{\\rm W}}"))
+             ;; Weber
+             $weber ((#\u . "\\mathop{\\rm Wb}"))
+             (|$microWb| $microweber) ((#\u . "\\mathop{\\micro{\\rm Wb}}"))
+             ;; yard
+             $yard ((#\u . "\\mathop{\\rm yd}"))
+             ;; physical_constants
+             $%c ((#\m . "c"))
+             $%mu_0 ((#\m . "\\mu_0"))
+             $%e_0 ((#\m . "\\varepsilon_0"))
+             $%Z_0 ((#\m . "Z_0"))
+             $%G ((#\m . "G"))
+             $%h ((#\m . "h"))
+             $%h_bar ((#\m . "\\hbar"))
+             $%m_P ((#\m . "m_P"))
+             $%%k ((#\m . "k"))
+             $%T_P ((#\m . "T_P"))
+             $%l_P ((#\m . "l_P"))
+             $%t_P ((#\m . "t_P"))
+             $%%e ((#\m . "e"))
+             $%Phi_0 ((#\m . "\\Phi_0"))
+             $%G_0 ((#\m . "G_0"))
+             $%R_K ((#\m . "R_K"))
+             $%mu_B ((#\m . "\\mu_B"))
+             $%mu_N ((#\m . "\\mu_N"))
+             $%alpha ((#\m . "\\alpha"))
+             $%R_inf ((#\m . "R_{\\infty}"))
+             $%a_0 ((#\m . "a_0"))
+             $%E_h ((#\m . "E_{\\rm h}"))
+             $%ratio_h_me ((#\m . "(h/m_{\\rm e})"))
+             $%m_e ((#\m . "m_{\\rm e}"))
+             $%N_A ((#\m . "N_A"))
+             $%m_u ((#\m . "\\mu_{\\rm u}"))
+             $%F ((#\m . "F"))
+             $%R ((#\m . "R"))
+             $%V_m ((#\m . "V_m"))
+             $%n_0 ((#\m . "n_0"))
+             $%ratio_S0_R ((#\m . "(S_0/R)"))
+             $%sigma ((#\m . "\\sigma"))
+             $%c_1 ((#\m . "c_1"))
+             $%c_1L ((#\m . "c_{\\rm 1L}"))
+             $%c_2 ((#\m . "c_2"))
+             $%b ((#\m . "b"))
+             $%b_prime ((#\m . "b'"))))
 
-(make-texify-style '$tex_no_label :normalizers `(mlabel ((#\m . ,#'tex-no-label-normalize-mlabel))))
+(make-texify-style '$tex_inv_trig_herschel
+  :symbols '(%acos ((#\m . "\\cos^{-1}"))
+             %asin ((#\m . "\\sin^{-1}"))
+             %atan ((#\m . "\\tan^{-1}"))))
 
-(make-texify-style '$tex_eq_number :normalizers `(mlabel ((#\m . ,#'tex-eq-number-normalize-mlabel))))
+(make-texify-style '$tex_leibniz_upright_d
+  :functions '(texify-diff-leibniz ((#\m . "~*~*{{\\rm d}~@[^{~:/nullfix/}~]~@[~:/nullfix/~]}\\over{~@{\\mathop{{\\rm d}~:/nullfix/}~@[^{~:/nullfix/}~]~}}~1@*~@[~/prefix/~]"))
+               (%integrate $integrate) ((#\m . "~*\\int~2*~#[~:;_{~'s:/nullfix/}^{~'s:/nullfix/}~]~1@*~:/nullfix/\\mathop{{\\rm d}~:/nullfix/}"))))
 
-(let ((funs (texify-style-functions (gethash '$tex texify-styles))))
-  (dolist (fun +texify-prefix-functions+)
-    (setf (gethash fun funs) '((#\m . "~#[~;~;~:/nullfix/\\left(~:/nullfix/\\right)~;\\left(~:/nullfix/\\left(~*~:/nullfix/\\right)\\right)^{~:*~:*~'s:/nullfix/}~]")))))
+(make-texify-style '$tex_no_label
+  :normalizers `(mlabel ((#\m . ,#'tex-no-label-normalize-mlabel))))
 
-(make-texify-style '$tex_pmatrix :functions '($matrix ((#\m . "~*\\pmatrix{~@{~'a:/nullfix/~^ & ~}~}~^\\cr~%  ~}}"))))
+(make-texify-style '$tex_eq_number
+  :normalizers `(mlabel ((#\m . ,#'tex-eq-number-normalize-mlabel))))
 
-(make-texify-style '$tex_diff_lagrange :normalizers `((%derivative $diff) ((#\m . ,#'tex-normalize-diff-lagrange))))
+(make-texify-style '$tex_pmatrix
+  :functions '($matrix ((#\m . "~*\\pmatrix{~@{~'a:/nullfix/~^ & ~}~}~^\\cr~%  ~}}"))))
 
-(make-texify-style '$tex_diff_newton :normalizers `((%derivative $diff) ((#\m . ,#'tex-normalize-diff-newton))))
+(make-texify-style '$tex_diff_lagrange
+  :normalizers `((%derivative $diff) ((#\m . ,#'tex-normalize-diff-lagrange))))
 
-(make-texify-style '$tex_diff_euler :normalizers `((%derivative $diff) ((#\m . ,#'tex-normalize-diff-euler))))
+(make-texify-style '$tex_diff_newton
+  :normalizers `((%derivative $diff) ((#\m . ,#'tex-normalize-diff-newton))))
+
+(make-texify-style '$tex_diff_euler
+  :normalizers `((%derivative $diff) ((#\m . ,#'tex-normalize-diff-euler))))
 
 (make-texify-style '$tex_prefix_functions
-  :functions (mapcan (lambda (x) (list x '((#\m . "~:/nullfix/~#[~; ~/prefix/~;^{~'s:/nullfix/} ~/prefix/~]"))))
-                     +texify-prefix-functions+))
+  :functions `(,+tex-prefix-functions+ ((#\m . "~:/nullfix/~#[~; ~/prefix/~;^{~'s:/nullfix/} ~/prefix/~]")))
+  :normalizers `(mexpt ((#\m . ,#'tex-prefix-functions-normalize-mexpt))))
 
-(make-texify-style '$latex :functions '((mquotient rat) ((#\m . "~*\\frac{~:/nullfix/}{~:/nullfix/}")
-                                                         (#\s . "~*~/postfix//~/prefix/")
-                                                         (#\u . "~*~/postfix//~/prefix/"))
-                                        texify-diff-leibniz ((#\m . "~*~*\\frac{d~@[^{~:/nullfix/}~]~@[~:/nullfix/~]}{~@{\\mathop{d~:/nullfix/}~@[^{~:/nullfix/}~]~}}~1@*~@[~/prefix/~]"))
-                                        texify-diff-newton ((#\m . "~2*{~@[~[~;\\dot~;\\ddot~;\\overset{\\cdots}~:;\\overset{\\scriptscriptstyle\\left(~:*~'s:/nullfix/\\right)}~]~]~@[\\overset{\\scriptscriptstyle\\left(~'s:/nullfix/\\right)}~]{~1@*~:/nullfix/}}~2*~#[~:;\\left(~@{~:/nullfix/~^, ~}\\right)~]"))
-                                        (%mdo mdo) ((#\m . "~*\\mathop{\\mathbf{for}}\\;~:/nullfix/~@[\\;{\\mathbf{from}}\\;~:/nullfix/~]~@[{\\mathbf{step}}\]\\;~:/nullfix/~]~@[\\;{\\mathbf{next}}\\;~:/nullfix/~]~@[\\;{\\mathbf{thru}}\\;~:/nullfix/~]~@[\\;{\\mathbf{unless}}\\;~:/nullfix/~]\\;{\\mathbf{do}}\\;~/prefix/"))
-                                        (%mdoin mdoin) ((#\m . "~*\\mathop{\\mathbf{for}}\\;~:/nullfix/\\;{\\mathbf{in}}\\;~:/nullfix/\\;~*~*~*~@[{\\mathbf{unless}}\\;~:/nullfix/\\;~]{\\mathbf{do}}\\;~/prefix/"))
-                                        (mcond %mcond) ((#\m . "~*\\mathop{\\mathbf{if}}\\;~:/nullfix/\\;\\mathop{\\mathbf{then}}\\;~:/nullfix/~@{\\;~:[\\mathop{\\mathbf{else}}~;~:*\\mathop{\\mathbf{elseif}}\\;~:/nullfix/\\;\\mathop{\\mathbf{then}}~]\\;~:/nullfix/~}"))
-                                        mlabel ((#\m . "\\[~*~:[~;~:*\\(~:/nullfix/\\)\\;~] ~:/nullfix/\\]")
-                                                (#\i . "\\(~*~*~:/nullfix/\\)"))
-                                        texify-math ((#\m . "\\begin{equation}~%~*~:/nullfix/~%\\end{equation}")
-                                                     (#\i . "\\(~*~:/nullfix/\\)")))
-                           :string-default '((#\m . "\\mbox{~*~A}")
-                                             (#\t . "\\mbox{~A}"))
-                           :symbol-default '((#\m . "~[~;~A~:[~;~:*_{~{~A~^, ~}}~]~:;\\mathop{\\mathrm{~A}~:[~;~:*_{~{~A~^, ~}}~]}~]")
-                                             (#\u . "~*\\mathop{\\mathrm{~A}~:[~;~:*_{~@{~A~^, ~}}~]}"))
-                           :symbols '(%laplace ((#\m . "\\mathcal{L}"))
-                                      |$Alpha| ((#\m . "\\mathrm{A}"))
-                                      |$Beta| ((#\m . "\\mathrm{B}"))
-                                      |$Chi| ((#\m . "\\mathrm{X}"))
-                                      |$Epsilon| ((#\m . "\\mathrm{E}"))
-                                      |$Eta| ((#\m . "\\mathrm{H}"))
-                                      |$Iota| ((#\m . "\\mathrm{I}"))
-                                      |$Kappa| ((#\m . "\\mathrm{K}"))
-                                      |$Mu| ((#\m . "\\mathrm{M}"))
-                                      |$Nu| ((#\m . "\\mathrm{N}"))
-                                      |$Omicron| ((#\m . "\\mathrm{O}"))
-                                      |$Rho| ((#\m . "\\mathrm{P}"))
-                                      |$Tau| ((#\m . "\\mathrm{T}"))
-                                      |$Zeta| ((#\m . "\\mathrm{Z}"))
-                                      $done ((#\m . "\\mathop{\\mathbf{done}}"))
-                                      ($false nil) ((#\m . "\\mathop{\\mathbf{false}}"))
-                                      ($true t)  ((#\m . "\\mathop{\\mathbf{true}}"))
-                                      mprog ((#\m . "\\mathop{\\mathbf{block}}"))
-                                      ;; Ampere
-                                      ($ampere $amp) ((#\u . "\\mathop{\\mathrm{A}}"))
-                                      (|$microA| $microampere) ((#\u . "\\mathop{\\micro\\mathrm{A}}"))
-                                      ;; AU
-                                      $astronomical_unit ((#\u . "\\mathop{\\mathrm{AU}}"))
-                                      ;; becquerel
-                                      $becquerel ((#\u . "\\mathop{\\mathrm{Bq}}"))
-                                      ;; candela
-                                      $candela ((#\u . "\\mathop{\\mathrm{cd}}"))
-                                      ;; Coulomb
-                                      $coulomb ((#\u . "\\mathop{\\mathrm{C}}"))
-                                      (|$microC| $microcoulomb) ((#\u . "\\mathop{\\micro\\mathrm{C}}"))
-                                      ;; day
-                                      $day ((#\u . "\\mathop{\\mathrm{d}}"))
-                                      ;; Farad
-                                      $farad ((#\u . "\\mathop{\\mathrm{F}}"))
-                                      (|$microF| $microfarad) ((#\u . "\\mathop{\\micro\\mathrm{F}}"))
-                                      ;; feet
-                                      $feet ((#\u . "\\mathop{\\mathrm{ft}}"))
-                                      ;; Gram
-                                      $kilogram ((#\u . "\\mathop{\\mathrm{kg}}"))
-                                      ($microg $microgram) ((#\u . "\\mathop{\\micro\\mathrm{g}}"))
-                                      ;; Gray
-                                      $gray ((#\u . "\\mathop{\\mathrm{Gy}}"))
-                                      ;; Hectare
-                                      $hectare ((#\u . "\\mathop{\\mathrm{Ha}}"))
-                                      ;; Henry
-                                      $henry ((#\u . "\\mathop{\\mathrm{H}}"))
-                                      (|$microH| $microhenry) ((#\u . "\\mathop{\\micro\\mathrm{Hs}}"))
-                                      ;; Hertz
-                                      $hertz ((#\u . "\\mathop{\\mathrm{Hz}}"))
-                                      (|$microHz| $microhertz) ((#\u . "\\mathop{\\micro\\mathrm{Hz}}"))
-                                      ;; hour
-                                      $hour ((#\u . "\\mathop{\\mathrm{hr}}"))
-                                      ;; inch
-                                      $inch ((#\u . "\\mathop{\\mathrm{in}}"))
-                                      ;; Joule
-                                      ($joule |$j|) ((#\u . "\\mathop{\\mathrm{J}}"))
-                                      (|$microJ| $microjoule) ((#\u . "\\mathop{\\micro\\mathrm{J}}"))
-                                      ;; Katal
-                                      ($katal $kat) ((#\u . "\\mathop{\\mathrm{kat}}"))
-                                      ;; Kelvin
-                                      ('$kelvin |$k|) ((#\u . "\\mathop{\\mathrm{K}}"))
-                                      (|$microK| $microkelvin) ((#\u . "\\mathop{\\micro\\mathrm{K}}"))
-                                      ;; light year
-                                      $light_year ((#\u . "\\mathop{\\mathrm{lyr}}"))
-                                      ;; Liter
-                                      ($liter $l |$l|) ((#\u . "\\mathop{\\mathrm{L}}"))
-                                      ;; lumen
-                                      $lumen ((#\u . "\\mathop{\\mathrm{lm}}"))
-                                      ;; lux
-                                      $lux ((#\u . "\\mathop{\\mathrm{lx}}"))
-                                      ;; Meter
-                                      $kilometer ((#\u . "\\mathop{\\mathrm{km}}"))
-                                      $meter ((#\u . "\\mathop{\\mathrm{m}}"))
-                                      ($micrometer $micron $microm) ((#\u . "\\mathop{\\micro\\mathrm{m}}"))
-                                      ;; metric ton
-                                      $metric_ton ((#\u . "\\mathop{\\mathrm{t}}"))
-                                      ;; minute
-                                      $minute ((#\u . "\\mathop{\\mathrm{min}}"))
-                                      ;; Mole
-                                      $mole ((#\u . "\\mathop{\\mathrm{mol}}"))
-                                      ($micromole $micromol) ((#\u . "\\mathop{\\micro\\mathrm{mol}}"))
-                                      ;; Newton
-                                      $newton ((#\u . "\\mathop{\\mathrm{N}}"))
-                                      (|$microN| $micronewton) ((#\u . "\\mathop{\\micro\\mathrm{N}}"))
-                                      ;; Ohm
-                                      |$GOhm| ((#\u . "\\mathop{{\\mathrm{G}}\\Omega}"))
-                                      |$MOhm| ((#\u . "\\mathop{{\\mathrm{M}}\\Omega}"))
-                                      |$kOhm| ((#\u . "\\mathop{{\\mathrm{k}}\\Omega}"))
-                                      ($ohm |$Ohm|) ((#\u . "\\mathop{\\Omega}"))
-                                      |$mOhm| ((#\u . "\\mathop{{\\mathrm{m}}\\Omega}"))
-                                      $microOhm ((#\u . "\\mathop{\\micro\\Omega}"))
-                                      |$pOhm| ((#\u . "\\mathop{{\\mathrm{p}}\\Omega}"))
-                                      |$nOhm| ((#\u . "\\mathop{{\\mathrm{n}}\\Omega}"))
-                                      |$fOhm| ((#\u . "\\mathop{{\\mathrm{f}}\\Omega}"))
-                                      ;; Pascal
-                                      $pascal ((#\u . "\\mathop{\\mathrm{Pa}}"))
-                                      (|$microPa| $micropascal) ((#\u . "\\mathop{\\micro\\mathrm{Pa}}"))
-                                      ;; parsec
-                                      $parsec ((#\u . "\\mathop{\\mathrm{pc}}"))
-                                      ;; Second
-                                      $second ((#\u . "\\mathop{\\mathrm{s}}"))
-                                      ($micros $microsecond) ((#\u . "\\mathop{\\micro\\mathrm{s}}"))
-                                      ;; Siemens
-                                      $siemens ((#\u . "\\mathop{\\mathrm{S}}"))
-                                      (|$microS| $microsiemens) ((#\u . "\\mathop{\\micro\\mathrm{S}}"))
-                                      ;; Tesla
-                                      $tesla ((#\u . "\\mathop{\\mathrm{T}}"))
-                                      (|$microT| $microtesla) ((#\u . "\\mathop{\\micro\\mathrm{T}}"))
-                                      ;; Volt
-                                      $volt ((#\u . "\\mathop{\\mathrm{V}}"))
-                                      (|$microV| $microvolt) ((#\u . "\\mathop{\\micro\\mathrm{V}}"))
-                                      ;; Watt
-                                      $watt ((#\u . "\\mathop{\\mathrm{W}}"))
-                                      (|$microW| $microwatt) ((#\u . "\\mathop{\\micro\\mathrm{W}}"))
-                                      ;; Weber
-                                      $weber ((#\u . "\\mathop{\\mathrm{Wb}}"))
-                                      (|$microWb| $microweber) ((#\u . "\\mathop{\\micro\\mathrm{Wb}}"))
-                                      ;; yard
-                                      $yard ((#\u . "\\mathop{\\mathrm{yd}}"))
-                                      ;; physical_constants
-                                      $%E_h ((#\m . "E_{\\mathrm{h}}"))
-                                      $%ratio_h_me ((#\m . "(h/m_{\\mathrm{e}})"))
-                                      $%m_e ((#\m . "m_{\\mathrm{e}}"))
-                                      $%m_u ((#\m . "\\mu_{\\mathrm{u}}"))
-                                      $%c_1L ((#\m . "c_{\\mathrm{1L}}"))))
+(make-texify-style '$latex
+  :functions '((mquotient rat) ((#\m . "~*\\frac{~:/nullfix/}{~:/nullfix/}")
+                                (#\s . "~*~/postfix//~/prefix/")
+                                (#\u . "~*~/postfix//~/prefix/"))
+               texify-diff-leibniz ((#\m . "~*~*\\frac{d~@[^{~:/nullfix/}~]~@[~:/nullfix/~]}{~@{\\mathop{d~:/nullfix/}~@[^{~:/nullfix/}~]~}}~1@*~@[~/prefix/~]"))
+               texify-diff-newton ((#\m . "~2*{~@[~[~;\\dot~;\\ddot~;\\overset{\\cdots}~:;\\overset{\\scriptscriptstyle\\left(~:*~'s:/nullfix/\\right)}~]~]~@[\\overset{\\scriptscriptstyle\\left(~'s:/nullfix/\\right)}~]{~1@*~:/nullfix/}}~2*~#[~:;\\left(~@{~:/nullfix/~^, ~}\\right)~]"))
+               (%mdo mdo) ((#\m . "~*\\mathop{\\mathbf{for}}\\;~:/nullfix/~@[\\;{\\mathbf{from}}\\;~:/nullfix/~]~@[{\\mathbf{step}}\]\\;~:/nullfix/~]~@[\\;{\\mathbf{next}}\\;~:/nullfix/~]~@[\\;{\\mathbf{thru}}\\;~:/nullfix/~]~@[\\;{\\mathbf{unless}}\\;~:/nullfix/~]\\;{\\mathbf{do}}\\;~/prefix/"))
+               (%mdoin mdoin) ((#\m . "~*\\mathop{\\mathbf{for}}\\;~:/nullfix/\\;{\\mathbf{in}}\\;~:/nullfix/\\;~*~*~*~@[{\\mathbf{unless}}\\;~:/nullfix/\\;~]{\\mathbf{do}}\\;~/prefix/"))
+               (mcond %mcond) ((#\m . "~*\\mathop{\\mathbf{if}}\\;~:/nullfix/\\;\\mathop{\\mathbf{then}}\\;~:/nullfix/~@{\\;~:[\\mathop{\\mathbf{else}}~;~:*\\mathop{\\mathbf{elseif}}\\;~:/nullfix/\\;\\mathop{\\mathbf{then}}~]\\;~:/nullfix/~}"))
+               mlabel ((#\m . "\\[~*~:[~;~:*\\(~:/nullfix/\\)\\;~] ~:/nullfix/\\]")
+                       (#\i . "\\(~*~*~:/nullfix/\\)"))
+               texify-math ((#\m . "\\begin{equation}~%~*~:/nullfix/~%\\end{equation}")
+                            (#\i . "\\(~*~:/nullfix/\\)")))
+  :string-default '((#\m . "\\mbox{~*~A}")
+                    (#\t . "\\mbox{~A}"))
+  :symbol-default '((#\m . "~[~;~A~:[~;~:*_{~{~A~^, ~}}~]~:;\\mathop{\\mathrm{~A}~:[~;~:*_{~{~A~^, ~}}~]}~]")
+                    (#\u . "~*\\mathop{\\mathrm{~A}~:[~;~:*_{~@{~A~^, ~}}~]}"))
+  :symbols '(%laplace ((#\m . "\\mathcal{L}"))
+             |$Alpha| ((#\m . "\\mathrm{A}"))
+             |$Beta| ((#\m . "\\mathrm{B}"))
+             |$Chi| ((#\m . "\\mathrm{X}"))
+             |$Epsilon| ((#\m . "\\mathrm{E}"))
+             |$Eta| ((#\m . "\\mathrm{H}"))
+             |$Iota| ((#\m . "\\mathrm{I}"))
+             |$Kappa| ((#\m . "\\mathrm{K}"))
+             |$Mu| ((#\m . "\\mathrm{M}"))
+             |$Nu| ((#\m . "\\mathrm{N}"))
+             |$Omicron| ((#\m . "\\mathrm{O}"))
+             |$Rho| ((#\m . "\\mathrm{P}"))
+             |$Tau| ((#\m . "\\mathrm{T}"))
+             |$Zeta| ((#\m . "\\mathrm{Z}"))
+             $done ((#\m . "\\mathop{\\mathbf{done}}"))
+             ($false nil) ((#\m . "\\mathop{\\mathbf{false}}"))
+             ($true t)  ((#\m . "\\mathop{\\mathbf{true}}"))
+             mprog ((#\m . "\\mathop{\\mathbf{block}}"))
+             ;; Ampere
+             ($ampere $amp) ((#\u . "\\mathop{\\mathrm{A}}"))
+             (|$microA| $microampere) ((#\u . "\\mathop{\\micro\\mathrm{A}}"))
+             ;; AU
+             $astronomical_unit ((#\u . "\\mathop{\\mathrm{AU}}"))
+             ;; becquerel
+             $becquerel ((#\u . "\\mathop{\\mathrm{Bq}}"))
+             ;; candela
+             $candela ((#\u . "\\mathop{\\mathrm{cd}}"))
+             ;; Coulomb
+             $coulomb ((#\u . "\\mathop{\\mathrm{C}}"))
+             (|$microC| $microcoulomb) ((#\u . "\\mathop{\\micro\\mathrm{C}}"))
+             ;; day
+             $day ((#\u . "\\mathop{\\mathrm{d}}"))
+             ;; Farad
+             $farad ((#\u . "\\mathop{\\mathrm{F}}"))
+             (|$microF| $microfarad) ((#\u . "\\mathop{\\micro\\mathrm{F}}"))
+             ;; feet
+             $feet ((#\u . "\\mathop{\\mathrm{ft}}"))
+             ;; Gram
+             $kilogram ((#\u . "\\mathop{\\mathrm{kg}}"))
+             ($microg $microgram) ((#\u . "\\mathop{\\micro\\mathrm{g}}"))
+             ;; Gray
+             $gray ((#\u . "\\mathop{\\mathrm{Gy}}"))
+             ;; Hectare
+             $hectare ((#\u . "\\mathop{\\mathrm{Ha}}"))
+             ;; Henry
+             $henry ((#\u . "\\mathop{\\mathrm{H}}"))
+             (|$microH| $microhenry) ((#\u . "\\mathop{\\micro\\mathrm{Hs}}"))
+             ;; Hertz
+             $hertz ((#\u . "\\mathop{\\mathrm{Hz}}"))
+             (|$microHz| $microhertz) ((#\u . "\\mathop{\\micro\\mathrm{Hz}}"))
+             ;; hour
+             $hour ((#\u . "\\mathop{\\mathrm{hr}}"))
+             ;; inch
+             $inch ((#\u . "\\mathop{\\mathrm{in}}"))
+             ;; Joule
+             ($joule |$j|) ((#\u . "\\mathop{\\mathrm{J}}"))
+            (|$microJ| $microjoule) ((#\u . "\\mathop{\\micro\\mathrm{J}}"))
+             ;; Katal
+             ($katal $kat) ((#\u . "\\mathop{\\mathrm{kat}}"))
+             ;; Kelvin
+             ('$kelvin |$k|) ((#\u . "\\mathop{\\mathrm{K}}"))
+             (|$microK| $microkelvin) ((#\u . "\\mathop{\\micro\\mathrm{K}}"))
+             ;; light year
+             $light_year ((#\u . "\\mathop{\\mathrm{lyr}}"))
+             ;; Liter
+             ($liter $l |$l|) ((#\u . "\\mathop{\\mathrm{L}}"))
+             ;; lumen
+             $lumen ((#\u . "\\mathop{\\mathrm{lm}}"))
+             ;; lux
+             $lux ((#\u . "\\mathop{\\mathrm{lx}}"))
+             ;; Meter
+             $kilometer ((#\u . "\\mathop{\\mathrm{km}}"))
+             $meter ((#\u . "\\mathop{\\mathrm{m}}"))
+             ($micrometer $micron $microm) ((#\u . "\\mathop{\\micro\\mathrm{m}}"))
+             ;; metric ton
+             $metric_ton ((#\u . "\\mathop{\\mathrm{t}}"))
+             ;; minute
+             $minute ((#\u . "\\mathop{\\mathrm{min}}"))
+             ;; Mole
+             $mole ((#\u . "\\mathop{\\mathrm{mol}}"))
+             ($micromole $micromol) ((#\u . "\\mathop{\\micro\\mathrm{mol}}"))
+             ;; Newton
+             $newton ((#\u . "\\mathop{\\mathrm{N}}"))
+             (|$microN| $micronewton) ((#\u . "\\mathop{\\micro\\mathrm{N}}"))
+              ;; Ohm
+             |$GOhm| ((#\u . "\\mathop{{\\mathrm{G}}\\Omega}"))
+             |$MOhm| ((#\u . "\\mathop{{\\mathrm{M}}\\Omega}"))
+             |$kOhm| ((#\u . "\\mathop{{\\mathrm{k}}\\Omega}"))
+             ($ohm |$Ohm|) ((#\u . "\\mathop{\\Omega}"))
+             |$mOhm| ((#\u . "\\mathop{{\\mathrm{m}}\\Omega}"))
+             $microOhm ((#\u . "\\mathop{\\micro\\Omega}"))
+             |$pOhm| ((#\u . "\\mathop{{\\mathrm{p}}\\Omega}"))
+             |$nOhm| ((#\u . "\\mathop{{\\mathrm{n}}\\Omega}"))
+             |$fOhm| ((#\u . "\\mathop{{\\mathrm{f}}\\Omega}"))
+             ;; Pascal
+             $pascal ((#\u . "\\mathop{\\mathrm{Pa}}"))
+             (|$microPa| $micropascal) ((#\u . "\\mathop{\\micro\\mathrm{Pa}}"))
+             ;; parsec
+             $parsec ((#\u . "\\mathop{\\mathrm{pc}}"))
+             ;; Second
+             $second ((#\u . "\\mathop{\\mathrm{s}}"))
+             ($micros $microsecond) ((#\u . "\\mathop{\\micro\\mathrm{s}}"))
+             ;; Siemens
+             $siemens ((#\u . "\\mathop{\\mathrm{S}}"))
+             (|$microS| $microsiemens) ((#\u . "\\mathop{\\micro\\mathrm{S}}"))
+             ;; Tesla
+             $tesla ((#\u . "\\mathop{\\mathrm{T}}"))
+             (|$microT| $microtesla) ((#\u . "\\mathop{\\micro\\mathrm{T}}"))
+             ;; Volt
+             $volt ((#\u . "\\mathop{\\mathrm{V}}"))
+             (|$microV| $microvolt) ((#\u . "\\mathop{\\micro\\mathrm{V}}"))
+             ;; Watt
+             $watt ((#\u . "\\mathop{\\mathrm{W}}"))
+             (|$microW| $microwatt) ((#\u . "\\mathop{\\micro\\mathrm{W}}"))
+             ;; Weber
+             $weber ((#\u . "\\mathop{\\mathrm{Wb}}"))
+             (|$microWb| $microweber) ((#\u . "\\mathop{\\micro\\mathrm{Wb}}"))
+             ;; yard
+             $yard ((#\u . "\\mathop{\\mathrm{yd}}"))
+             ;; physical_constants
+             $%E_h ((#\m . "E_{\\mathrm{h}}"))
+             $%ratio_h_me ((#\m . "(h/m_{\\mathrm{e}})"))
+             $%m_e ((#\m . "m_{\\mathrm{e}}"))
+             $%m_u ((#\m . "\\mu_{\\mathrm{u}}"))
+             $%c_1L ((#\m . "c_{\\mathrm{1L}}"))))
 
-(make-texify-style '$amsmath :functions '((%at $at) ((#\m . "~*\\left.~/postfix/\\rvert_{~'s:/nullfix/}"))
-                                          $binomial ((#\m . "~*\\binom{~:/nullfix/}{~/nullfix/}"))
-                                          $matrix ((#\m . "~*\\begin{bmatrix}~%~@{  ~'a:/nullfix/~^\\\\~%~}~%\\end{bmatrix}"))
-                                          texify-diff-newton ((#\m . "~2*{~@[~[~;\\dot~;\\ddot~;\\dddot~:;\\overset{\\scriptscriptstyle\\left(~:*~'s:/nullfix/\\right)}~]~]~@[\\overset{\\scriptscriptstyle\\left(~'s:/nullfix/\\right)}~]{~1@*~:/nullfix/}}~2*~#[~:;\\left(~@{~:/nullfix/~^, ~}\\right)~]"))
-                                          mabs ((#\m . "~*\\lvert~:/nullfix/\\rvert"))
-                                          mlabel ((#\m . "~*~:[\\begin{equation*}~%~:/nullfix/~%\\end{equation*}~;~:*\\begin{equation}~%\\tag{\\(~:/nullfix/\\)}~:/nullfix/~%\\end{equation}~]")
-                                                  (#\i . "\\(~*~*~:/nullfix/\\)")))
-                             :string-default '((#\m . "\\text{~*~A}")
-                                               (#\t . "\\text{~A}")))
+(make-texify-style '$latex_leibniz_upright_d
+  :functions '(texify-diff-leibniz ((#\m . "~*~*\\frac{{\\rm d}~@[^{~:/nullfix/}~]~@[~:/nullfix/~]}{~@{\\mathop{{\\rm d}~:/nullfix/}~@[^{~:/nullfix/}~]~}}~1@*~@[~/prefix/~]"))
+               (%integrate $integrate) ((#\m . "~*\\int~2*~#[~:;_{~'s:/nullfix/}^{~'s:/nullfix/}~]~1@*~:/nullfix/\\mathop{{\\rm d}~:/nullfix/}"))))
 
-(make-texify-style '$amsmath_pmatrix :functions '($matrix ((#\m . "~*\\begin{pmatrix}~%~@{~{~*~@{~:/nullfix/~^ & ~}~}~^\\\\~%  ~}~%\\end{pmatrix}"))))
+(make-texify-style '$amsmath
+  :functions '((%at $at) ((#\m . "~*\\left.~/postfix/\\rvert_{~'s:/nullfix/}"))
+               $binomial ((#\m . "~*\\binom{~:/nullfix/}{~/nullfix/}"))
+               $matrix ((#\m . "~*\\begin{bmatrix}~%~@{  ~'a:/nullfix/~^\\\\~%~}~%\\end{bmatrix}"))
+               texify-diff-newton ((#\m . "~2*{~@[~[~;\\dot~;\\ddot~;\\dddot~:;\\overset{\\scriptscriptstyle\\left(~:*~'s:/nullfix/\\right)}~]~]~@[\\overset{\\scriptscriptstyle\\left(~'s:/nullfix/\\right)}~]{~1@*~:/nullfix/}}~2*~#[~:;\\left(~@{~:/nullfix/~^, ~}\\right)~]"))
+               mabs ((#\m . "~*\\lvert~:/nullfix/\\rvert"))
+               mlabel ((#\m . "~*~:[\\begin{equation*}~%~:/nullfix/~%\\end{equation*}~;~:*\\begin{equation}~%\\tag{\\(~:/nullfix/\\)}~:/nullfix/~%\\end{equation}~]")
+                       (#\i . "\\(~*~*~:/nullfix/\\)")))
+  :string-default '((#\m . "\\text{~*~A}")
+                    (#\t . "\\text{~A}")))
 
-(make-texify-style '$breqn :functions '(mdefine ((#\m . "~*~/postfix/ \\hiderel{:=} ~/prefix/"))
-                                        mdefmacro ((#\m . "~*~/postfix/ \\hiderel{::=} ~/prefix/"))
-                                        mlabel ((#\m . "~*~:[\\begin{dmath*}~%~:/nullfix/~%\\end{dmath*}~;~:*\\begin{dmath}[number={\\(~:/nullfix/\\)}]~%~:/nullfix/~%\\end{dmath}~]")
-                                                (#\i . "\\(~*~*~:/nullfix/\\)"))
-                                        mset ((#\m . "~*~/postfix/ \\hiderel{::} ~/prefix/"))
-                                        msetq ((#\m . "~*~/postfix/ \\hiderel{:} ~/prefix/"))
-                                        texify-math ((#\m . "~*\\begin{dmath}~%~:/nullfix/~%\\end{dmath)")
-                                                     (#\i . "\\(~*~:/nullfix/\\)"))))
+(make-texify-style '$amsmath_pmatrix
+  :functions '($matrix ((#\m . "~*\\begin{pmatrix}~%~@{~{~*~@{~:/nullfix/~^ & ~}~}~^\\\\~%  ~}~%\\end{pmatrix}"))))
 
-(make-texify-style '$mathtools :functions '(mdefine ((#\m . "~*~/postfix/ \\coloneqq ~/prefix/"))
-                                            mdefmacro ((#\m . "~*~/postfix/ \\Coloneqq ~/prefix/"))
-                                            mset ((#\m . "~*~/postfix/ \\dblcolon ~/prefix/"))
-                                            msetq ((#\m . "~*~/postfix/ \\vcentcolon ~/prefix/"))))
+(make-texify-style '$breqn
+  :functions '(mdefine ((#\m . "~*~/postfix/ \\hiderel{:=} ~/prefix/"))
+               mdefmacro ((#\m . "~*~/postfix/ \\hiderel{::=} ~/prefix/"))
+               mlabel ((#\m . "~*~:[\\begin{dmath*}~%~:/nullfix/~%\\end{dmath*}~;~:*\\begin{dmath}[number={\\(~:/nullfix/\\)}]~%~:/nullfix/~%\\end{dmath}~]")
+                       (#\i . "\\(~*~*~:/nullfix/\\)"))
+               mset ((#\m . "~*~/postfix/ \\hiderel{::} ~/prefix/"))
+               msetq ((#\m . "~*~/postfix/ \\hiderel{:} ~/prefix/"))
+               texify-math ((#\m . "~*\\begin{dmath}~%~:/nullfix/~%\\end{dmath)")
+                            (#\i . "\\(~*~:/nullfix/\\)"))))
 
-(make-texify-style '$nicefrac :functions '((mquotient rat) ((#\u . "~*\\nicefrac{~/postfix/}{~/prefix/}"))))
+(make-texify-style '$mathtools
+  :functions '(mdefine ((#\m . "~*~/postfix/ \\coloneqq ~/prefix/"))
+               mdefmacro ((#\m . "~*~/postfix/ \\Coloneqq ~/prefix/"))
+               mset ((#\m . "~*~/postfix/ \\dblcolon ~/prefix/"))
+               msetq ((#\m . "~*~/postfix/ \\vcentcolon ~/prefix/"))))
+
+(make-texify-style '$nicefrac
+  :functions '((mquotient rat) ((#\u . "~*\\nicefrac{~/postfix/}{~/prefix/}"))))
 
 (make-texify-style '$siunitx
   :functions '(|$`| ((#\m . "~*\\SI{~'n:/nullfix/}{~'u:/nullfix/}"))
