@@ -19,6 +19,7 @@
 (defparameter *texify-op* 'mparen)
 (defparameter *texify-lop* 'mparen)
 (defparameter *texify-rop* 'mparen)
+(defparameter *texify-styles* nil)
 
 (defparameter +texify-prefix-functions+ '(%acos
                                           %asin
@@ -133,7 +134,7 @@
 
 ; Wrap with parenthesis if needed. Otherwise call nformat then
 ; texify-normalize-function.
-(defun texify-normalize (expr styles modes lop rop)
+(defun texify-normalize (expr modes lop rop)
   (if (and (listp expr)
            (not (equalp (caar expr) 'mparen))
            (or (< (texify-lbp (caar expr)) (texify-rbp lop))
@@ -145,10 +146,10 @@
                 n)))
       (if (listp m)
         (or
-          (dolist (style styles)
+          (dolist (style *texify-styles*)
             (let ((normalizer (texify-mode-get (gethash (caar m) (texify-style-normalizers style)) modes)))
               (when normalizer
-                (let ((result (funcall normalizer m styles modes lop rop)))
+                (let ((result (funcall normalizer m modes lop rop)))
                   (when result
                     (return result))))))
           m)
@@ -177,29 +178,30 @@
 (defgeneric apply-default-style (expr style modes lop rop))
 
 (defun texify (expr &optional (modes '(#\m)) (lop 'mparen) (rop 'mparen))
-  (let* ((styles (mapcar (lambda (x) (gethash x texify-styles))
-                         (cdr $texify_styles)))
-         (nexpr (texify-normalize expr styles modes lop rop)))
+  (let ((nexpr (texify-normalize expr modes lop rop)))
     (or
-      (dolist (style styles)
+      (dolist (style *texify-styles*)
         (let ((value (apply-style nexpr style modes lop rop)))
           (when value
             (return value))))
-      (dolist (style styles)
+      (dolist (style *texify-styles*)
         (let ((value (apply-default-style nexpr style modes lop rop)))
           (when value
             (return value)))))))
 
-(defun mlabel-wrap (expr)
-  (if (texify-mlabelp expr)
-    expr
-    `((mlabel simp) nil ,expr)))
+(defun do-texify (expr modes styles)
+  (let ((*texify-styles* (mapcar (lambda (x) (gethash x texify-styles))
+                                 (append styles (cdr $texify_styles)))))
+    (texify (if (texify-mlabelp expr)
+              expr
+              `((mlabel simp) nil ,expr))
+            modes)))
 
-(defun $texify (expr)
-  (texify (mlabel-wrap expr)))
+(defun $texify (expr &rest styles)
+  (do-texify expr '(#\m) styles))
 
-(defun $texify_inline (expr)
-  (texify (mlabel-wrap expr) '(#\i #\m)))
+(defun $texify_inline (expr &rest styles)
+  (do-texify expr '(#\i #\m) styles))
 
 (defun $texify_available_styles ()
   (cons '(mlist)
@@ -256,14 +258,14 @@
                    expr style modes lop rop))
 
 (defun get-texify-function (name modes)
-  (dolist (style (cdr $texify_styles))
-    (let ((value (texify-mode-get (gethash name (texify-style-functions (gethash style texify-styles))) modes)))
+  (dolist (style *texify-styles*)
+    (let ((value (texify-mode-get (gethash name (texify-style-functions style)) modes)))
       (when value
         (return value)))))
 
 (defun get-texify-function-default (modes)
-  (dolist (style (cdr $texify_styles))
-    (let ((value (texify-mode-get (texify-style-function-default (gethash style texify-styles)) modes)))
+  (dolist (style *texify-styles*)
+    (let ((value (texify-mode-get (texify-style-function-default style) modes)))
       (when value
         (return value)))))
 
@@ -341,16 +343,16 @@ Normalization Functions
 
 |#
 
-(defun tex-normalize-diff-euler (expr styles modes l-op r-op)
-  (declare (ignore styles modes l-op r-op))
+(defun tex-normalize-diff-euler (expr modes l-op r-op)
+  (declare (ignore modes l-op r-op))
   (let ((vars (loop for rest on (cddr expr) by #'cddr
                     for var = (first rest)
                     for deg = (second rest)
                     append (list var (unless (onep deg) deg)))))
     `((texify-diff-euler simp) ,(second expr) ,@vars)))
 
-(defun tex-normalize-diff-lagrange (expr styles modes l-op r-op)
-  (declare (ignore styles l-op r-op))
+(defun tex-normalize-diff-lagrange (expr modes l-op r-op)
+  (declare (ignore l-op r-op))
   (when (and (equalp (length expr) 4)
              (or (symbolp (second expr))
                  (and (listp (second expr))
@@ -364,8 +366,8 @@ Normalization Functions
                                     ,(unless (numberp order) order)
                                     ,@(when (listp (second expr)) (cdr (second expr)))))))
 
-(defun tex-normalize-diff-leibniz (expr styles modes l-op r-op)
-  (declare (ignore styles modes l-op r-op))
+(defun tex-normalize-diff-leibniz (expr modes l-op r-op)
+  (declare (ignore modes l-op r-op))
   (let ((deg (simplifya `((mplus) ,@(loop for rest on (cddr expr) by #'cddr
                                           collect (second rest)))
                         nil))
@@ -376,8 +378,8 @@ Normalization Functions
                     append (list var (unless (onep deg) deg)))))
     `((texify-diff-leibniz simp) ,(unless (symbolp op) op) ,(unless (onep deg) deg) ,(when (symbolp op) op) ,@vars)))
 
-(defun tex-normalize-diff-newton (expr styles modes l-op r-op)
-  (declare (ignore styles l-op r-op))
+(defun tex-normalize-diff-newton (expr modes l-op r-op)
+  (declare (ignore l-op r-op))
   (when (and (equalp (length expr) 4)
              (equalp (third expr) '$t)
              (or (symbolp (second expr))
@@ -393,8 +395,8 @@ Normalization Functions
                                   ,@(when (listp (second expr)) (cdr (second expr)))))))
 
 ; Make the limit direction an index so we can use a format conditional.
-(defun tex-normalize-limit (expr styles modes l-op r-op)
-  (declare (ignore styles modes l-op r-op))
+(defun tex-normalize-limit (expr modes l-op r-op)
+  (declare (ignore modes l-op r-op))
   `(,(first expr)
     ,(second expr)
     ,(third expr)
@@ -406,8 +408,8 @@ Normalization Functions
 
 ; Remove empty else clauses and set the test of else classes to nil to make
 ; using a format conditional possible.
-(defun tex-normalize-mcond (expr styles modes l-op r-op)
-  (declare (ignore styles modes l-op r-op))
+(defun tex-normalize-mcond (expr modes l-op r-op)
+  (declare (ignore modes l-op r-op))
   (cons (first expr)
     (loop for test-body on (cdr expr) by #'cddr
           when (not (equalp '$false (second test-body)))
@@ -415,9 +417,9 @@ Normalization Functions
 
 ; Look for roots and push the exponent into the function arguments for prefix
 ; functions.
-(defun tex-normalize-mexpt (expr styles modes l-op r-op)
+(defun tex-normalize-mexpt (expr modes l-op r-op)
   (declare (ignore l-op r-op))
-  (let* ((n `(,(first expr) ,(second expr) ,(texify-normalize (third expr) styles modes 'mparen 'mparen)))
+  (let* ((n `(,(first expr) ,(second expr) ,(texify-normalize (third expr) modes 'mparen 'mparen)))
          (base (second n))
          (exponent (third n)))
     (cond
@@ -435,22 +437,22 @@ Normalization Functions
         n))))
 
 ; Respect *display-labels-p*
-(defun tex-normalize-mlabel (expr styles modes l-op r-op)
-  (declare (ignore styles modes l-op r-op))
+(defun tex-normalize-mlabel (expr modes l-op r-op)
+  (declare (ignore modes l-op r-op))
   `(,(first expr) ,(when *display-labels-p* (second expr))  ,(third expr)))
 
-(defun tex-no-label-normalize-mlabel (expr styles modes l-op r-op)
-  (declare (ignore styles modes l-op r-op))
+(defun tex-no-label-normalize-mlabel (expr modes l-op r-op)
+  (declare (ignore modes l-op r-op))
   `(,(first expr) nil ,(third expr)))
 
-(defun tex-eq-number-normalize-mlabel (expr styles modes l-op r-op)
-  (declare (ignore styles modes l-op r-op))
+(defun tex-eq-number-normalize-mlabel (expr modes l-op r-op)
+  (declare (ignore modes l-op r-op))
   `((texify-math simp) ,(third expr)))
 
 ; Look for mminus unary operators that are not in the first slot and turn them
 ; into n-ary mminus to avoid results like z+x+-y.
-(defun tex-normalize-mplus (expr styles modes l-op r-op)
-  (declare (ignore styles modes l-op r-op))
+(defun tex-normalize-mplus (expr modes l-op r-op)
+  (declare (ignore modes l-op r-op))
   (loop with previous = nil
         for arg in (cdr expr)
         if (and previous (texify-mminusp arg)) do
@@ -470,8 +472,8 @@ Normalization Functions
 
 ; Look for an argument with a low right binding power that can avoid parenthesis
 ; by moving it to the end of the product. This will move roots to the end.
-(defun tex-normalize-mtimes (expr styles modes l-op r-op)
-  (declare (ignore styles modes l-op r-op))
+(defun tex-normalize-mtimes (expr modes l-op r-op)
+  (declare (ignore modes l-op r-op))
   (let ((mtimes-rbp (texify-rbp 'mtimes))
         (min-rbp (texify-lbp 'mtimes))
         (min-pos nil))
