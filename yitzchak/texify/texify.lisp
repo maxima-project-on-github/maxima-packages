@@ -46,65 +46,6 @@
 (defun texify-rbp (x)
   (or (get x 'texify-rbp) (rbp x)))
 
-#|
-
-Normalization Functions
-
-|#
-
-; Make the limit direction an index so we can use a format conditional.
-(defun texify-normalize-limit (expr styles modes l-op r-op)
-  (declare (ignore styles modes l-op r-op))
-  `(,(first expr)
-    ,(second expr)
-    ,(third expr)
-    ,(fourth expr)
-    ,(case (fifth expr)
-      ($plus 1)
-      ($minus 0)
-      (otherwise 2))))
-
-; Look for roots and push the exponent into the function arguments for prefix
-; functions.
-(defun texify-normalize-mexpt (expr styles modes l-op r-op)
-  (declare (ignore l-op r-op))
-  (let* ((n `(,(first expr) ,(second expr) ,(texify-normalize (third expr) styles modes 'mparen 'mparen)))
-         (base (second n))
-         (exponent (third n)))
-    (cond
-      ((and (listp exponent)
-            (or (equalp 'rat (caar exponent))
-                (equalp 'mquotient (caar exponent)))
-            (= 1 (second exponent)))
-        `((texify-root simp) ,(third exponent) ,base))
-      ((and (listp base)
-            (or (not (numberp exponent))
-                (> exponent 0))
-            (find (caar base) +texify-prefix-functions+))
-        `(,(first base) ,exponent ,@(cdr base)))
-      (t
-        n))))
-
-; Remove empty else clauses and set the test of else classes to nil to make
-; using a format conditional possible.
-(defun texify-normalize-mcond (expr styles modes l-op r-op)
-  (declare (ignore styles modes l-op r-op))
-  (cons (first expr)
-    (loop for test-body on (cdr expr) by #'cddr
-          when (not (equalp '$false (second test-body)))
-          append (list (if (equalp t (first test-body)) nil (first test-body)) (second test-body)))))
-
-; Respect *display-labels-p*
-(defun texify-normalize-mlabel (expr styles modes l-op r-op)
-  (declare (ignore styles modes l-op r-op))
-  (cond
-    ($texify_eq_number
-      `((texify-math simp) ,(third expr)))
-    ((or (not *display-labels-p*) (not $texify_label))
-      `(,(first expr) nil ,(third expr)))
-    (t
-      expr)))
-
 (defun texify-mminusp (expr)
   (and expr
        (listp expr)
@@ -116,89 +57,6 @@ Normalization Functions
        (listp expr)
        (listp (car expr))
        (eql 'mlabel (caar expr))))
-
-; Look for mminus unary operators that are not in the first slot and turn them
-; into n-ary mminus to avoid results like z+x+-y.
-(defun texify-normalize-mplus (expr styles modes l-op r-op)
-  (declare (ignore styles modes l-op r-op))
-  (loop with previous = nil
-        for arg in (cdr expr)
-        if (and previous (texify-mminusp arg)) do
-          (if (and (texify-mminusp previous) (> (length previous) 2))
-            (setq previous (append previous (cdr arg)))
-            (setq previous `((mminus simp) ,previous ,@(cdr arg))))
-        else
-          when previous
-            collect previous into args
-          end
-          and do
-            (setq previous arg)
-        finally
-          (return (if previous
-                    `((mplus simp) ,@args ,previous)
-                    `((mplus simp) ,@args)))))
-
-; Look for an argument with a low right binding power that can avoid parenthesis
-; by moving it to the end of the product. This will move roots to the end.
-(defun texify-normalize-mtimes (expr styles modes l-op r-op)
-  (declare (ignore styles modes l-op r-op))
-  (let ((mtimes-rbp (texify-rbp 'mtimes))
-        (min-rbp (texify-lbp 'mtimes))
-        (min-pos nil))
-    (dotimes (pos (length expr))
-      (let ((arg (nth pos expr)))
-        (when (and (listp arg) (listp (car arg)))
-          (let ((my-lbp (texify-lbp (caar arg)))
-                (my-rbp (texify-rbp (caar arg))))
-            (when (and (< my-rbp min-rbp) (<= mtimes-rbp my-lbp))
-              (setq min-rbp my-rbp)
-              (setq min-pos pos))))))
-    (if min-pos
-      (append (subseq expr 0 min-pos)
-              (subseq expr (1+ min-pos))
-              (subseq expr min-pos (1+ min-pos)))
-      expr)))
-
-; Turn floats into texify-float, use mminus unary for numbers and look for
-; symbols that probably should be strings.
-(defun texify-normalize-args (expr)
-  (mapcar (lambda (x)
-            (cond
-              ((floatp x)
-                (let* ((rep (format nil "~A" x))
-                       (pos (position #\e rep)))
-                  (if pos
-                    `((texify-float) ,(subseq rep 0 pos) ,(subseq rep (1+ pos)))
-                    x)))
-              ((and (numberp x) (minusp x))
-                `((mminus) ,(- x)))
-              ((and (symbolp x)
-                    (find #\Space (string x))
-                    (not (equal '| --> | x)))
-                (maybe-invert-string-case (string x)))
-              (t
-                x)))
-          expr))
-
-; ; Dispatch based on function name
-; (defun texify-normalize-function (expr)
-;   (if (find 'array (car expr))
-;     `((array simp) ,(caar expr) ,@(cdr expr))
-;     (case (caar expr)
-;       (mexpt
-;         (texify-normalize-mexpt expr))
-;       ((mcond %mcond)
-;         (texify-normalize-mcond expr))
-;       (%limit
-;         (texify-normalize-limit expr))
-;       (mlabel
-;         (texify-normalize-mlabel expr))
-;       (mplus
-;         (texify-normalize-mplus expr))
-;       (mtimes
-;         (texify-normalize-mtimes expr))
-;       (otherwise
-;         expr))))
 
 (defclass texify-style ()
   ((functions
@@ -254,6 +112,27 @@ Normalization Functions
   (some (lambda (mode) (cdr (assoc mode values)))
         modes))
 
+; Turn floats into texify-float, use mminus unary for numbers and look for
+; symbols that probably should be strings.
+(defun texify-normalize-args (expr)
+  (mapcar (lambda (x)
+            (cond
+              ((floatp x)
+                (let* ((rep (format nil "~A" x))
+                       (pos (position #\e rep)))
+                  (if pos
+                    `((texify-float) ,(subseq rep 0 pos) ,(subseq rep (1+ pos)))
+                    x)))
+              ((and (numberp x) (minusp x))
+                `((mminus) ,(- x)))
+              ((and (symbolp x)
+                    (find #\Space (string x))
+                    (not (equal '| --> | x)))
+                (maybe-invert-string-case (string x)))
+              (t
+                x)))
+          expr))
+
 ; Wrap with parenthesis if needed. Otherwise call nformat then
 ; texify-normalize-function.
 (defun texify-normalize (expr styles modes lop rop)
@@ -271,7 +150,9 @@ Normalization Functions
           (dolist (style styles)
             (let ((normalizer (texify-mode-get (gethash (caar m) (texify-style-normalizers style)) modes)))
               (when normalizer
-                (return (funcall normalizer m styles modes lop rop)))))
+                (let ((result (funcall normalizer m styles modes lop rop)))
+                  (when result
+                    (return result))))))
           m)
         m))))
 
@@ -357,28 +238,23 @@ Normalization Functions
     (when string-default
       (format nil string-default (texify-quote expr :text t) (texify-quote (with-output-to-string (f) (mgrind expr f)) :text t)))))
 
-(defun texify-function (control rep expr style modes lop rop)
-  (cond
-    ((functionp control)
-      (funcall control rep expr style modes lop rop))
-    ((stringp control)
-      (let ((*texify-modes* modes)
-            (*texify-op* (caar expr))
-            (*texify-lop* lop)
-            (*texify-rop* rop))
-        (apply #'format nil control
-                        (texify rep modes 'mparen 'mparen)
-                        (cdr expr))))))
+(defun texify-function (control expr style modes lop rop)
+  (declare (ignore style))
+  (when control
+    (let ((*texify-modes* modes)
+          (*texify-op* (caar expr))
+          (*texify-lop* lop)
+          (*texify-rop* rop))
+      (apply #'format nil control
+                      (caar expr)
+                      (cdr expr)))))
 
 (defmethod apply-style ((expr list) style modes lop rop)
-  (let ((op (caar expr)))
-    (texify-function (texify-mode-get (gethash op (texify-style-functions style)) modes)
-                     op
-                     expr style modes lop rop)))
+  (texify-function (texify-mode-get (gethash (caar expr) (texify-style-functions style)) modes)
+                   expr style modes lop rop))
 
 (defmethod apply-default-style ((expr list) style modes lop rop)
   (texify-function (texify-mode-get (texify-style-function-default style) modes)
-                   (caar expr)
                    expr style modes lop rop))
 
 (defun get-texify-function (name modes)
@@ -457,20 +333,26 @@ the trig functions, sum, product, etc. as prefix operators.
 (texify-bp %sum 200. 110.)
 (texify-bp %tan 200. 130.)
 (texify-bp %tanh 200. 130.)
+(texify-bp texify-diff-euler 200. 125.)
+(texify-bp texify-diff-leibniz 200. 125.)
 (texify-bp texify-float 115.)
 
-(defun tex-diff-euler (rep expr style modes lop rop)
-  (declare (ignore rep style))
-  (texify (cons '(mtimes)
-                (append
-                  (loop for var-order on (cddr expr) by #'cddr
-                        collect (if (onep (second var-order))
-                                  `((|$d| array simp) ,(first var-order))
-                                  `((mexpt) ((|$d| array simp) ,(first var-order)) ,(second var-order))))
-                  (list (second expr)))) modes lop rop))
+#|
 
-(defun tex-diff-lagrange (rep expr style modes lop rop)
-  (declare (ignore rep style))
+Normalization Functions
+
+|#
+
+(defun tex-normalize-diff-euler (expr styles modes l-op r-op)
+  (declare (ignore styles modes l-op r-op))
+  (let ((vars (loop for rest on (cddr expr) by #'cddr
+                    for var = (first rest)
+                    for deg = (second rest)
+                    append (list var (unless (onep deg) deg)))))
+    `((texify-diff-euler simp) ,(second expr) ,@vars)))
+
+(defun tex-normalize-diff-lagrange (expr styles modes l-op r-op)
+  (declare (ignore styles l-op r-op))
   (when (and (equalp (length expr) 4)
              (or (symbolp (second expr))
                  (and (listp (second expr))
@@ -478,35 +360,26 @@ the trig functions, sum, product, etc. as prefix operators.
                       (equalp (second (second expr)) (third expr))
                       (not (get-texify-function (caar (second expr)) modes)))))
     (let* ((base (if (listp (second expr)) (caar (second expr)) (second expr)))
-           (order (fourth expr))
-           (dec (case order
-                  (1 `((texify-single-prime simp) ,base))
-                  (2 `((texify-double-prime simp) ,base))
-                  (3 `((texify-triple-prime simp) ,base))
-                  (otherwise
-                    `((mexpt simp) ,base ((mparen) ,order))))))
-      (if (listp (second expr))
-        (texify-function (get-texify-function-default modes) dec (second expr) nil modes lop rop)
-        (texify dec modes lop rop)))))
+           (order (fourth expr)))
+      `((texify-diff-lagrange simp) ,base
+                                    ,(when (numberp order) order)
+                                    ,(unless (numberp order) order)
+                                    ,@(when (listp (second expr)) (cdr (second expr)))))))
 
-(defun tex-diff-leibniz (rep expr style modes lop rop)
-  (declare (ignore rep style))
-  (let* ((arg (second expr))
-         (difflist (cddr expr))
-         (ords (or (odds difflist 0) '(1)))
-         (vars (odds difflist 1))
-         (numer (simplifya `((mexpt) $d ((mplus) ,@ords)) nil))
-         (denom (cons '(mtimes)
-                      (mapcan #'(lambda (b e)
-                                  `($d ,(simplifya `((mexpt) ,b ,(or e 1)) nil)))
-                              vars ords))))
-    (if (symbolp arg)
-      (texify `((mquotient) ((mtimes) ,numer ,arg) ,denom) modes lop rop)
-      (format nil "~A~A" (texify `((mquotient) ,numer ,denom) modes lop 'mparen)
-              (texify arg modes '%derivative rop)))))
+(defun tex-normalize-diff-leibniz (expr styles modes l-op r-op)
+  (declare (ignore styles modes l-op r-op))
+  (let ((deg (simplifya `((mplus) ,@(loop for rest on (cddr expr) by #'cddr
+                                          collect (second rest)))
+                        nil))
+        (op (second expr))
+        (vars (loop for rest on (cddr expr) by #'cddr
+                    for var = (first rest)
+                    for deg = (second rest)
+                    append (list var (unless (onep deg) deg)))))
+    `((texify-diff-leibniz simp) ,(unless (symbolp op) op) ,(unless (onep deg) deg) ,(when (symbolp op) op) ,@vars)))
 
-(defun tex-diff-newton (rep expr style modes lop rop)
-  (declare (ignore rep style))
+(defun tex-normalize-diff-newton (expr styles modes l-op r-op)
+  (declare (ignore styles l-op r-op))
   (when (and (equalp (length expr) 4)
              (equalp (third expr) '$t)
              (or (symbolp (second expr))
@@ -515,20 +388,113 @@ the trig functions, sum, product, etc. as prefix operators.
                       (equalp (second (second expr)) (third expr))
                       (not (get-texify-function (caar (second expr)) modes)))))
     (let* ((base (if (listp (second expr)) (caar (second expr)) (second expr)))
-           (order (fourth expr))
-           (dec (case order
-                  (1 `((texify-single-dot simp) ,base))
-                  (2 `((texify-double-dot simp) ,base))
-                  (3 `((texify-triple-dot simp) ,base))
-                  (otherwise
-                    `((texify-over simp) ((mparen) ,order) ,base)))))
-      (if (listp (second expr))
-        (texify-function (get-texify-function-default modes) dec (second expr) nil modes lop rop)
-        (texify dec modes lop rop)))))
+           (order (fourth expr)))
+      `((texify-diff-newton simp) ,base
+                                  ,(when (numberp order) order)
+                                  ,(unless (numberp order) order)
+                                  ,@(when (listp (second expr)) (cdr (second expr)))))))
 
-(make-texify-style '$tex :functions `((%at $at) ((#\m . "~*\\left.~/postfix/\\right|_{~'s:/nullfix/}"))
+; Make the limit direction an index so we can use a format conditional.
+(defun tex-normalize-limit (expr styles modes l-op r-op)
+  (declare (ignore styles modes l-op r-op))
+  `(,(first expr)
+    ,(second expr)
+    ,(third expr)
+    ,(fourth expr)
+    ,(case (fifth expr)
+      ($plus 1)
+      ($minus 0)
+      (otherwise 2))))
+
+; Remove empty else clauses and set the test of else classes to nil to make
+; using a format conditional possible.
+(defun tex-normalize-mcond (expr styles modes l-op r-op)
+  (declare (ignore styles modes l-op r-op))
+  (cons (first expr)
+    (loop for test-body on (cdr expr) by #'cddr
+          when (not (equalp '$false (second test-body)))
+          append (list (if (equalp t (first test-body)) nil (first test-body)) (second test-body)))))
+
+; Look for roots and push the exponent into the function arguments for prefix
+; functions.
+(defun tex-normalize-mexpt (expr styles modes l-op r-op)
+  (declare (ignore l-op r-op))
+  (let* ((n `(,(first expr) ,(second expr) ,(texify-normalize (third expr) styles modes 'mparen 'mparen)))
+         (base (second n))
+         (exponent (third n)))
+    (cond
+      ((and (listp exponent)
+            (or (equalp 'rat (caar exponent))
+                (equalp 'mquotient (caar exponent)))
+            (= 1 (second exponent)))
+        `((texify-root simp) ,(third exponent) ,base))
+      ((and (listp base)
+            (or (not (numberp exponent))
+                (> exponent 0))
+            (find (caar base) +texify-prefix-functions+))
+        `(,(first base) ,exponent ,@(cdr base)))
+      (t
+        n))))
+
+; Respect *display-labels-p*
+(defun tex-normalize-mlabel (expr styles modes l-op r-op)
+  (declare (ignore styles modes l-op r-op))
+  (cond
+    ($texify_eq_number
+      `((texify-math simp) ,(third expr)))
+    ((or (not *display-labels-p*) (not $texify_label))
+      `(,(first expr) nil ,(third expr)))
+    (t
+      expr)))
+
+; Look for mminus unary operators that are not in the first slot and turn them
+; into n-ary mminus to avoid results like z+x+-y.
+(defun tex-normalize-mplus (expr styles modes l-op r-op)
+  (declare (ignore styles modes l-op r-op))
+  (loop with previous = nil
+        for arg in (cdr expr)
+        if (and previous (texify-mminusp arg)) do
+          (if (and (texify-mminusp previous) (> (length previous) 2))
+            (setq previous (append previous (cdr arg)))
+            (setq previous `((mminus simp) ,previous ,@(cdr arg))))
+        else
+          when previous
+            collect previous into args
+          end
+          and do
+            (setq previous arg)
+        finally
+          (return (if previous
+                    `((mplus simp) ,@args ,previous)
+                    `((mplus simp) ,@args)))))
+
+; Look for an argument with a low right binding power that can avoid parenthesis
+; by moving it to the end of the product. This will move roots to the end.
+(defun tex-normalize-mtimes (expr styles modes l-op r-op)
+  (declare (ignore styles modes l-op r-op))
+  (let ((mtimes-rbp (texify-rbp 'mtimes))
+        (min-rbp (texify-lbp 'mtimes))
+        (min-pos nil))
+    (dotimes (pos (length expr))
+      (let ((arg (nth pos expr)))
+        (when (and (listp arg) (listp (car arg)))
+          (let ((my-lbp (texify-lbp (caar arg)))
+                (my-rbp (texify-rbp (caar arg))))
+            (when (and (< my-rbp min-rbp) (<= mtimes-rbp my-lbp))
+              (setq min-rbp my-rbp)
+              (setq min-pos pos))))))
+    (if min-pos
+      (append (subseq expr 0 min-pos)
+              (subseq expr (1+ min-pos))
+              (subseq expr min-pos (1+ min-pos)))
+      expr)))
+
+(make-texify-style '$tex :functions '((%at $at) ((#\m . "~*\\left.~/postfix/\\right|_{~'s:/nullfix/}"))
                                       %binomial ((#\m . "~*{{~:/nullfix/}\\choose{~:/nullfix/}}"))
-                                      (%derivative $diff) ((#\m . ,#'tex-diff-leibniz))
+                                      texify-diff-euler ((#\m . "~2*~@{\\mathop{D}_~:/nullfix/~@[^{~:/nullfix/}~] ~}~1@*~/prefix/"))
+                                      texify-diff-lagrange ((#\m . "~*~:/nullfix/~@[~[~;'~;''~;'''~:;^{\\left(~:*~:/nullfix/\\right)}~]~]~@[^{\\left(~:/nullfix/\\right)}~]~#[~:;\\left(~@{~:/nullfix/~^, ~}\\right)~]"))
+                                      texify-diff-leibniz ((#\m . "~*~*{d~@[^{~:/nullfix/}~]~@[~:/nullfix/~]}\\over{~@{\\mathop{d~:/nullfix/}~@[^{~:/nullfix/}~]~}}~1@*~@[~/prefix/~]"))
+                                      texify-diff-newton ((#\m . "~2*{~@[~[~;\\dot~;\\ddot~;\\buildrel{\\cdots}\\over~:;\\buildrel{\\scriptscriptstyle\\left(~:*~'s:/nullfix/\\right)}\\over~]~]~@[\\buildrel{\\scriptscriptstyle\\left(~'s:/nullfix/\\right)}\\over~]{~1@*~:/nullfix/}}~2*~#[~:;\\left(~@{~:/nullfix/~^, ~}\\right)~]"))
                                       %del ((#\m . "~*\\mathop{d~:/nullfix/}"))
                                       (%integrate $integrate) ((#\m . "~*\\int~2*~#[~:;_{~'s:/nullfix/}^{~'s:/nullfix/}~]~1@*~:/nullfix/\\mathop{d~:/nullfix/}"))
                                       %limit ((#\m . "~2*\\lim_{~:/nullfix/ \\rightarrow ~:/nullfix/~[^{-}~;^{+}~]} ~1@*~/prefix/"))
@@ -579,21 +545,15 @@ the trig functions, sum, product, etc. as prefix operators.
                                       texify-math ((#\m . "$$~*~:/nullfix/\\eqnum$$")
                                                    (#\i . "$~*~:/nullfix/$"))
                                       texify-float ((#\m . "~*~A \\times 10^{~A}"))
-                                      texify-over ((#\m . "~*{\\buildrel{\\scriptscriptstyle~:/nullfix/}\\over{~:/nullfix/}}"))
-                                      texify-root ((#\m . "~*\\sqrt[~:/nullfix/]{~:/nullfix/}"))
-                                      texify-single-dot ((#\m . "~*\\dot{~:/nullfix/}"))
-                                      texify-double-dot ((#\m . "~*\\ddot{~:/nullfix/}"))
-                                      texify-triple-dot ((#\m . "~*{\\buildrel{\\cdots}\\over{~:/nullfix/}}"))
-                                      texify-single-prime ((#\m . "~*~:/nullfix/'"))
-                                      texify-double-prime ((#\m . "~*~:/nullfix/''"))
-                                      texify-triple-prime ((#\m . "~*~:/nullfix/'''")))
-                         :function-default '((#\m . "~A\\left(~@{~:/nullfix/~^, ~}\\right)"))
-                         :normalizers `(mexpt ((#\m . ,#'texify-normalize-mexpt))
-                                        (mcond %mcond) ((#\m . ,#'texify-normalize-mcond))
-                                        %limit ((#\m . ,#'texify-normalize-limit))
-                                        mlabel ((#\m . ,#'texify-normalize-mlabel))
-                                        mplus ((#\m . ,#'texify-normalize-mplus))
-                                        mtimes ((#\m . ,#'texify-normalize-mtimes)))
+                                      texify-root ((#\m . "~*\\sqrt[~:/nullfix/]{~:/nullfix/}")))
+                         :function-default '((#\m . "~:/nullfix/\\left(~@{~:/nullfix/~^, ~}\\right)"))
+                         :normalizers `(mexpt ((#\m . ,#'tex-normalize-mexpt))
+                                        (mcond %mcond) ((#\m . ,#'tex-normalize-mcond))
+                                        (%derivative $diff) ((#\m . ,#'tex-normalize-diff-leibniz))
+                                        %limit ((#\m . ,#'tex-normalize-limit))
+                                        mlabel ((#\m . ,#'tex-normalize-mlabel))
+                                        mplus ((#\m . ,#'tex-normalize-mplus))
+                                        mtimes ((#\m . ,#'tex-normalize-mtimes)))
                          :string-default '((#\m . "\\hbox{\\rm ~*~A}")
                                            (#\t . "\\hbox{\\rm ~A}"))
                          :symbol-default '((#\m . "~[~;{~A}~:[~;~:*_{~{~A~^, ~}}~]~:;\\mathop{{\\rm ~A}~:[~;~:*_{~{~A~^, ~}}~]}~]")
@@ -829,32 +789,32 @@ the trig functions, sum, product, etc. as prefix operators.
 
 (let ((funs (texify-style-functions (gethash '$tex texify-styles))))
   (dolist (fun +texify-prefix-functions+)
-    (setf (gethash fun funs) '((#\m . "~#[~;~;~A\\left(~:/nullfix/\\right)~;\\left(~A\\left(~*~:/nullfix/\\right)\\right)^{~:*~:*~'s:/nullfix/}~]")))))
+    (setf (gethash fun funs) '((#\m . "~#[~;~;~:/nullfix/\\left(~:/nullfix/\\right)~;\\left(~:/nullfix/\\left(~*~:/nullfix/\\right)\\right)^{~:*~:*~'s:/nullfix/}~]")))))
 
 (make-texify-style '$tex_pmatrix :functions '($matrix ((#\m . "~*\\pmatrix{~@{~'a:/nullfix/~^ & ~}~}~^\\cr~%  ~}}"))))
 
-(make-texify-style '$tex_diff_lagrange :functions (list '(%derivative $diff) '((#\m . #'tex-diff-lagrange))))
+(make-texify-style '$tex_diff_lagrange :normalizers `((%derivative $diff) ((#\m . ,#'tex-normalize-diff-lagrange))))
 
-(make-texify-style '$tex_diff_newton :functions (list '(%derivative $diff) '((#\m . #'tex-diff-newton))))
+(make-texify-style '$tex_diff_newton :normalizers `((%derivative $diff) ((#\m . ,#'tex-normalize-diff-newton))))
 
-(make-texify-style '$tex_diff_euler :functions (list '(%derivative $diff) '((#\m . #'tex-diff-euler))))
+(make-texify-style '$tex_diff_euler :normalizers `((%derivative $diff) ((#\m . ,#'tex-normalize-diff-euler))))
 
 (make-texify-style '$tex_prefix_functions
-  :functions (mapcan (lambda (x) (list x '((#\m . "~A~#[~; ~/prefix/~;^{~'s:/nullfix/} ~/prefix/~]"))))
+  :functions (mapcan (lambda (x) (list x '((#\m . "~:/nullfix/~#[~; ~/prefix/~;^{~'s:/nullfix/} ~/prefix/~]"))))
                      +texify-prefix-functions+))
 
 (make-texify-style '$latex :functions '((mquotient rat) ((#\m . "~*\\frac{~:/nullfix/}{~:/nullfix/}")
                                                          (#\s . "~*~/postfix//~/prefix/")
                                                          (#\u . "~*~/postfix//~/prefix/"))
+                                        texify-diff-leibniz ((#\m . "~*~*\\frac{d~@[^{~:/nullfix/}~]~@[~:/nullfix/~]}{~@{\\mathop{d~:/nullfix/}~@[^{~:/nullfix/}~]~}}~1@*~@[~/prefix/~]"))
+                                        texify-diff-newton ((#\m . "~2*{~@[~[~;\\dot~;\\ddot~;\\overset{\\cdots}~:;\\overset{\\scriptscriptstyle\\left(~:*~'s:/nullfix/\\right)}~]~]~@[\\overset{\\scriptscriptstyle\\left(~'s:/nullfix/\\right)}~]{~1@*~:/nullfix/}}~2*~#[~:;\\left(~@{~:/nullfix/~^, ~}\\right)~]"))
                                         (%mdo mdo) ((#\m . "~*\\mathop{\\mathbf{for}}\\;~:/nullfix/~@[\\;{\\mathbf{from}}\\;~:/nullfix/~]~@[{\\mathbf{step}}\]\\;~:/nullfix/~]~@[\\;{\\mathbf{next}}\\;~:/nullfix/~]~@[\\;{\\mathbf{thru}}\\;~:/nullfix/~]~@[\\;{\\mathbf{unless}}\\;~:/nullfix/~]\\;{\\mathbf{do}}\\;~/prefix/"))
                                         (%mdoin mdoin) ((#\m . "~*\\mathop{\\mathbf{for}}\\;~:/nullfix/\\;{\\mathbf{in}}\\;~:/nullfix/\\;~*~*~*~@[{\\mathbf{unless}}\\;~:/nullfix/\\;~]{\\mathbf{do}}\\;~/prefix/"))
                                         (mcond %mcond) ((#\m . "~*\\mathop{\\mathbf{if}}\\;~:/nullfix/\\;\\mathop{\\mathbf{then}}\\;~:/nullfix/~@{\\;~:[\\mathop{\\mathbf{else}}~;~:*\\mathop{\\mathbf{elseif}}\\;~:/nullfix/\\;\\mathop{\\mathbf{then}}~]\\;~:/nullfix/~}"))
                                         mlabel ((#\m . "\\[~*~:[~;~:*\\(~:/nullfix/\\)\\;~] ~:/nullfix/\\]")
                                                 (#\i . "\\(~*~*~:/nullfix/\\)"))
                                         texify-math ((#\m . "\\begin{equation}~%~*~:/nullfix/~%\\end{equation}")
-                                                     (#\i . "\\(~*~:/nullfix/\\)"))
-                                        texify-over ((#\m . "~*\\overset{\\scriptscriptstyle~:/nullfix/}{~:/nullfix/}"))
-                                        texify-triple-dot ((#\m . "~*{\\overset{\\cdots}{~:/nullfix/}}")))
+                                                     (#\i . "\\(~*~:/nullfix/\\)")))
                            :string-default '((#\m . "\\mbox{~*~A}")
                                              (#\t . "\\mbox{~A}"))
                            :symbol-default '((#\m . "~[~;~A~:[~;~:*_{~{~A~^, ~}}~]~:;\\mathop{\\mathrm{~A}~:[~;~:*_{~{~A~^, ~}}~]}~]")
@@ -988,12 +948,12 @@ the trig functions, sum, product, etc. as prefix operators.
 (make-texify-style '$amsmath :functions '((%at $at) ((#\m . "~*\\left.~/postfix/\\rvert_{~'s:/nullfix/}"))
                                           $binomial ((#\m . "~*\\binom{~:/nullfix/}{~/nullfix/}"))
                                           $matrix ((#\m . "~*\\begin{bmatrix}~%~@{  ~'a:/nullfix/~^\\\\~%~}~%\\end{bmatrix}"))
+                                          texify-diff-newton ((#\m . "~2*{~@[~[~;\\dot~;\\ddot~;\\dddot~:;\\overset{\\scriptscriptstyle\\left(~:*~'s:/nullfix/\\right)}~]~]~@[\\overset{\\scriptscriptstyle\\left(~'s:/nullfix/\\right)}~]{~1@*~:/nullfix/}}~2*~#[~:;\\left(~@{~:/nullfix/~^, ~}\\right)~]"))
                                           mabs ((#\m . "~*\\lvert~:/nullfix/\\rvert"))
                                           mlabel ((#\m . "~*~:[\\begin{equation*}~%~:/nullfix/~%\\end{equation*}~;~:*\\begin{equation}~%\\tag{\\(~:/nullfix/\\)}~:/nullfix/~%\\end{equation}~]")
-                                                  (#\i . "\\(~*~*~:/nullfix/\\)"))
-                                          texify-triple-dot ((#\m . "~*\\dddot{~:/nullfix/}"))
+                                                  (#\i . "\\(~*~*~:/nullfix/\\)")))
                              :string-default '((#\m . "\\text{~*~A}")
-                                               (#\t . "\\text{~A}"))))
+                                               (#\t . "\\text{~A}")))
 
 (make-texify-style '$amsmath_pmatrix :functions '($matrix ((#\m . "~*\\begin{pmatrix}~%~@{~{~*~@{~:/nullfix/~^ & ~}~}~^\\\\~%  ~}~%\\end{pmatrix}"))))
 
