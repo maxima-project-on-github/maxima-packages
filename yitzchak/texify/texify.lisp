@@ -2,8 +2,6 @@
 
 (defvar $texify_styles '((mlist simp) $latex $tex_prefix_functions $tex))
 (defparameter texify-styles (make-hash-table :test 'equal))
-(defvar $texify_label t)
-(defvar $texify_eq_number nil)
 
 #|
   Modes
@@ -439,13 +437,15 @@ Normalization Functions
 ; Respect *display-labels-p*
 (defun tex-normalize-mlabel (expr styles modes l-op r-op)
   (declare (ignore styles modes l-op r-op))
-  (cond
-    ($texify_eq_number
-      `((texify-math simp) ,(third expr)))
-    ((or (not *display-labels-p*) (not $texify_label))
-      `(,(first expr) nil ,(third expr)))
-    (t
-      expr)))
+  `(,(first expr) ,(when *display-labels-p* (second expr))  ,(third expr)))
+
+(defun tex-no-label-normalize-mlabel (expr styles modes l-op r-op)
+  (declare (ignore styles modes l-op r-op))
+  `(,(first expr) nil ,(third expr)))
+
+(defun tex-eq-number-normalize-mlabel (expr styles modes l-op r-op)
+  (declare (ignore styles modes l-op r-op))
+  `((texify-math simp) ,(third expr)))
 
 ; Look for mminus unary operators that are not in the first slot and turn them
 ; into n-ary mminus to avoid results like z+x+-y.
@@ -786,6 +786,10 @@ Normalization Functions
                                     $%c_2 ((#\m . "c_2"))
                                     $%b ((#\m . "b"))
                                     $%b_prime ((#\m . "b'"))))
+
+(make-texify-style '$tex_no_label :normalizers `(mlabel ((#\m . ,#'tex-no-label-normalize-mlabel))))
+
+(make-texify-style '$tex_eq_number :normalizers `(mlabel ((#\m . ,#'tex-eq-number-normalize-mlabel))))
 
 (let ((funs (texify-style-functions (gethash '$tex texify-styles))))
   (dolist (fun +texify-prefix-functions+)
