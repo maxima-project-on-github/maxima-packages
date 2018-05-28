@@ -351,6 +351,11 @@ Normalization Functions
                     append (list var (unless (onep deg) deg)))))
     `((texify-diff-euler simp) ,(second expr) ,@vars)))
 
+(defun tex-normalize-int-euler (expr modes l-op r-op)
+  (declare (ignore modes l-op r-op))
+  (when (= 3 (length expr))
+    `((texify-diff-euler simp) ,(second expr) ,(third expr) -1)))
+
 (defun tex-normalize-diff-lagrange (expr modes l-op r-op)
   (declare (ignore l-op r-op))
   (when (and (equalp (length expr) 4)
@@ -501,7 +506,7 @@ Normalization Functions
                texify-diff-leibniz ((#\m . "~*~*{d~@[^{~:/nullfix/}~]~@[~:/nullfix/~]}\\over{~@{\\mathop{d~:/nullfix/}~@[^{~:/nullfix/}~]~}}~1@*~@[~/prefix/~]"))
                texify-diff-newton ((#\m . "~2*{~@[~[~;\\dot~;\\ddot~;\\buildrel{\\cdots}\\over~:;\\buildrel{\\scriptscriptstyle\\left(~:*~'s:/nullfix/\\right)}\\over~]~]~@[\\buildrel{\\scriptscriptstyle\\left(~'s:/nullfix/\\right)}\\over~]{~1@*~:/nullfix/}}~2*~#[~:;\\left(~@{~:/nullfix/~^, ~}\\right)~]"))
                %del ((#\m . "~*\\mathop{d~:/nullfix/}"))
-               (%integrate $integrate) ((#\m . "~*\\int~2*~#[~:;_{~'s:/nullfix/}^{~'s:/nullfix/}~]~1@*~:/nullfix/\\mathop{d~:/nullfix/}"))
+               (%integrate $integrate) ((#\m . "~*\\int~2*~#[~:;_{~'s:/nullfix/}^{~'s:/nullfix/}~] ~1@*~:/nullfix/\\mathop{d~:/nullfix/}"))
                %limit ((#\m . "~2*\\lim_{~:/nullfix/ \\rightarrow ~:/nullfix/~[^{-}~;^{+}~]} ~1@*~/prefix/"))
                (%product $product) ((#\m . "~*\\prod~*_{~'s:/nullfix/=~'s:/nullfix/}^{~'s:/nullfix/}~1@*~/prefix/"))
                %sqrt ((#\m . "~*\\sqrt{~:/nullfix/}"))
@@ -797,9 +802,10 @@ Normalization Functions
              %asin ((#\m . "\\sin^{-1}"))
              %atan ((#\m . "\\tan^{-1}"))))
 
-(make-texify-style '$tex_leibniz_upright_d
-  :functions '(texify-diff-leibniz ((#\m . "~*~*{{\\rm d}~@[^{~:/nullfix/}~]~@[~:/nullfix/~]}\\over{~@{\\mathop{{\\rm d}~:/nullfix/}~@[^{~:/nullfix/}~]~}}~1@*~@[~/prefix/~]"))
-               (%integrate $integrate) ((#\m . "~*\\int~2*~#[~:;_{~'s:/nullfix/}^{~'s:/nullfix/}~]~1@*~:/nullfix/\\mathop{{\\rm d}~:/nullfix/}"))))
+(make-texify-style '$tex_diff_upright_d
+  :functions '(texify-diff-euler ((#\m . "~2*~@{\\mathop{{\\rm D}}_~:/nullfix/~@[^{~:/nullfix/}~] ~}~1@*~/prefix/"))
+               texify-diff-leibniz ((#\m . "~*~*{{\\rm d}~@[^{~:/nullfix/}~]~@[~:/nullfix/~]}\\over{~@{\\mathop{{\\rm d}~:/nullfix/}~@[^{~:/nullfix/}~]~}}~1@*~@[~/prefix/~]"))
+               (%integrate $integrate) ((#\m . "~*\\int~2*~#[~:;_{~'s:/nullfix/}^{~'s:/nullfix/}~] ~1@*~:/nullfix/\\mathop{{\\rm d}~:/nullfix/}"))))
 
 (make-texify-style '$tex_no_label
   :normalizers `(mlabel ((#\m . ,#'tex-no-label-normalize-mlabel))))
@@ -818,6 +824,9 @@ Normalization Functions
 
 (make-texify-style '$tex_diff_euler
   :normalizers `((%derivative $diff) ((#\m . ,#'tex-normalize-diff-euler))))
+
+(make-texify-style '$tex_int_euler
+  :normalizers `((%integrate $integrate) ((#\m . ,#'tex-normalize-int-euler))))
 
 (make-texify-style '$tex_prefix_functions
   :functions `(,+tex-prefix-functions+ ((#\m . "~:/nullfix/~#[~; ~/prefix/~;^{~'s:/nullfix/} ~/prefix/~]")))
@@ -966,9 +975,10 @@ Normalization Functions
              $%m_u ((#\m . "\\mu_{\\mathrm{u}}"))
              $%c_1L ((#\m . "c_{\\mathrm{1L}}"))))
 
-(make-texify-style '$latex_leibniz_upright_d
-  :functions '(texify-diff-leibniz ((#\m . "~*~*\\frac{{\\rm d}~@[^{~:/nullfix/}~]~@[~:/nullfix/~]}{~@{\\mathop{{\\rm d}~:/nullfix/}~@[^{~:/nullfix/}~]~}}~1@*~@[~/prefix/~]"))
-               (%integrate $integrate) ((#\m . "~*\\int~2*~#[~:;_{~'s:/nullfix/}^{~'s:/nullfix/}~]~1@*~:/nullfix/\\mathop{{\\rm d}~:/nullfix/}"))))
+(make-texify-style '$latex_diff_upright_d
+  :functions '(texify-diff-euler ((#\m . "~2*~@{\\mathop{\\mathrm{D}}_~:/nullfix/~@[^{~:/nullfix/}~] ~}~1@*~/prefix/"))
+               texify-diff-leibniz ((#\m . "~*~*\\frac{\\mathrm{d}~@[^{~:/nullfix/}~]~@[~:/nullfix/~]}{~@{\\mathop{\\mathrm{d}~:/nullfix/}~@[^{~:/nullfix/}~]~}}~1@*~@[~/prefix/~]"))
+               (%integrate $integrate) ((#\m . "~*\\int~2*~#[~:;_{~'s:/nullfix/}^{~'s:/nullfix/}~] ~1@*~:/nullfix/\\mathop{\\mathrm{d}~:/nullfix/}"))))
 
 (make-texify-style '$amsmath
   :functions '((%at $at) ((#\m . "~*\\left.~/postfix/\\rvert_{~'s:/nullfix/}"))
