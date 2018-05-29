@@ -1011,7 +1011,10 @@ Normalization Functions
                msetq ((#\m . "~*~/postfix/ \\vcentcolon ~/prefix/"))))
 
 (make-texify-style '$nicefrac
-  :functions '((mquotient rat) ((#\u . "~*\\nicefrac{~/postfix/}{~/prefix/}"))))
+  :functions '((mquotient rat) ((#\m . "~*\\frac{~:/nullfix/}{~:/nullfix/}")
+                                (#\i . "~*\\nicefrac{~/postfix/}{~/prefix/}")
+                                (#\s . "~*~/postfix//~/prefix/")
+                                (#\u . "~*\\nicefrac{~/postfix/}{~/prefix/}"))))
 
 (make-texify-style '$siunitx
   :functions '(|$`| ((#\m . "~*\\SI{~'n:/nullfix/}{~'u:/nullfix/}"))
