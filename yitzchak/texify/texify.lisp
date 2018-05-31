@@ -237,9 +237,20 @@
   (texify-quote (format nil "~A" expr)))
 
 (defun texify-parse-symbol (sym)
-  (let* ((nn-list (extract-trailing-digits (symbol-name sym)))
-         (name (maybe-invert-string-case (texify-quote (stripdollar (if nn-list (first nn-list) sym))))))
-    (list (length name) name (cdr nn-list))))
+  (loop with name = (symbol-name sym)
+        with number-search = #.(maxima-nregex::regex-compile "_*([0-9]+)$")
+        for match = (funcall number-search name)
+        while match
+        collect (parse-integer
+                  (subseq name
+                          (first (aref maxima-nregex::*regex-groups* 1))
+                          (second (aref maxima-nregex::*regex-groups* 1))))
+                into values
+        do (setq name (subseq name 0
+                              (first (aref maxima-nregex::*regex-groups* 0))))
+        finally (return
+                  (let ((tex-name (maybe-invert-string-case (texify-quote (stripdollar name)))))
+                    (list (length tex-name) tex-name (reverse values))))))
 
 (defmethod apply-style ((expr symbol) style modes lop rop)
   (texify-mode-get (gethash expr (texify-style-symbols style)) modes))
