@@ -148,14 +148,18 @@
                 x)))
           expr))
 
-; Wrap with parenthesis if needed. Otherwise call nformat then
-; texify-normalize-function.
-(defun texify-normalize (expr modes lop rop)
+; Wrap with parenthesis if needed.
+(defun texify-wrap (expr)
   (if (and (listp expr)
            (not (equalp (caar expr) 'mparen))
            (or (< (texify-lbp (caar expr)) (texify-rbp lop))
                (> (texify-lbp rop) (texify-rbp (caar expr)))))
     `((mparen simp) ,expr)
+    expr))
+
+;  nformat then apply appropriate normalizers.
+(defun texify-normalize (expr modes lop rop)
+  (texify-wrap
     (let* ((n (nformat expr))
            (m (if (and (listp n) (find 'array (car n)))
                 `((array simp) ,(caar n) ,@(cdr n))
@@ -195,6 +199,7 @@
 
 (defun texify (expr &optional (modes '(#\m)) (lop 'mparen) (rop 'mparen))
   (let ((nexpr (texify-normalize expr modes lop rop)))
+    ; (format *trace-output* "~A~%" nexpr)
     (or
       (dolist (style *texify-styles*)
         (let ((value (apply-style nexpr style modes lop rop)))
