@@ -1,5 +1,5 @@
 ;; texify.lisp -- Cascading style TeX/LaTeX code of Maxima expressions.
-;; Copyright (C) 2018 by Tarn W. Burton
+;; Copyright (C) 2018 by Tarn W. Burton <https://github.com/yitzchak>
 ;;
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
