@@ -25,7 +25,7 @@ to `texify`. The current global styles are stored in the variable
 `texify_styles`. By default this variable is set to produce LaTeX code. To
 produce plain TeX the `latex` style needs to be removed. For instance, the
 following will produce plain TeX and override the default Leibniz derivative
-style with Lagrange's notional for one expression.
+style with Lagrange's notation for one expression.
 
     (%i1) load("texify.lisp")$
     (%i2) texify_styles;
