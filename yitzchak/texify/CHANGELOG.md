@@ -4,6 +4,15 @@ All significant changes to this project will be documented in the notes below.
 
 ## In Progress
 
+### Added
+
+-   Add `tex_no_math_delimiters` style for no math delimeters or labels.
+
+### Changes
+
+-   The functions `texify` and `texify_inline` are now backward compatible with
+    Maxima's function `tex`.
+
 ### Fixed
 
 -   Remove unneeded math delimiters in LaTeX `mlabel` format.

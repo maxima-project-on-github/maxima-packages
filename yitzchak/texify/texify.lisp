@@ -210,19 +210,52 @@
           (when value
             (return value)))))))
 
-(defun do-texify (expr modes styles)
-  (let ((*texify-styles* (mapcar (lambda (x) (gethash x texify-styles))
-                                 (append styles (cdr $texify_styles)))))
-    (texify (if (texify-mlabelp expr)
-              expr
-              `((mlabel simp) nil ,expr))
-            modes)))
+(defun do-texify (expr dest modes styles)
+  (let* ((*texify-styles* (mapcar (lambda (x) (gethash x texify-styles))
+                                 (append styles (cdr $texify_styles))))
+         (result (texify (if (texify-mlabelp expr)
+                           expr
+                           `((mlabel simp) nil ,expr))
+                         modes)))
+    (cond
+      ((null dest)
+        result)
+      ((streamp dest)
+        (write-line result dest)
+        nil)
+      ((equal dest t)
+        (write-line result)
+        nil)
+      (t
+        (with-open-file (f (namestring (maxima-string dest))
+                           :direction :output
+                           :if-exists :append
+                           :if-does-not-exist :create)
+          (write-line result f))
+          nil))))
 
-(defun $texify (expr &rest styles)
-  (do-texify expr '(#\m) styles))
+(defun texify-display (expr &optional (dest t) &rest styles)
+  (do-texify expr dest '(#\m) styles))
 
-(defun $texify_inline (expr &rest styles)
-  (do-texify expr '(#\i #\m) styles))
+(defun texify-inline (expr &optional (dest t) &rest styles)
+  (do-texify expr dest '(#\i #\m) styles))
+
+(defmspec $texify (l)
+  (let* ((ml (mapcar #'meval (cdr l)))
+         (expr (second l))
+         (mexpr (first ml)))
+    (apply #'texify-display (if (member expr $labels :test #'eq)
+                              `((mlabel simp) ,expr ,mexpr)
+                              mexpr)
+                            (cdr ml))))
+(defmspec $texify_inline (l)
+  (let* ((ml (mapcar #'meval (cdr l)))
+         (expr (second l))
+         (mexpr (first ml)))
+    (apply #'texify-inline (if (member expr $labels :test #'eq)
+                              `((mlabel simp) ,expr ,mexpr)
+                              mexpr)
+                            (cdr ml))))
 
 (defun $texify_available_styles ()
   (cons '(mlist)
@@ -559,7 +592,7 @@ Normalization Functions
                mfactorial ((#\m . "~*~/postfix/!"))
                mgeqp ((#\m . "~*~/postfix/ \\geq ~/prefix/"))
                mgreaterp ((#\m . "~*~/postfix/ > ~/prefix/"))
-               mlabel ((#\m . "$$~*~:[~;~:*$~:/nullfix/$\\;~] ~:/nullfix/$$")
+               mlabel ((#\m . "$$~*~:[~;~:*(~:/nullfix/)\\; ~]~:/nullfix/$$")
                        (#\i . "$~*~*~:/nullfix/$"))
                mleqp ((#\m . "~*~/postfix/ \\leq ~/prefix/"))
                mlessp ((#\m . "~*~/postfix/ < ~/prefix/"))
@@ -839,6 +872,9 @@ Normalization Functions
                texify-diff-leibniz ((#\m . "~*~*{{\\rm d}~@[^{~:/nullfix/}~]~@[~:/nullfix/~]}\\over{~@{\\mathop{{\\rm d}~:/nullfix/}~@[^{~:/nullfix/}~]~}}~1@*~@[~/prefix/~]"))
                (%integrate $integrate) ((#\m . "~*\\int~2*~#[~:;_{~'s:/nullfix/}^{~'s:/nullfix/}~] ~1@*~:/nullfix/\\mathop{{\\rm d}~:/nullfix/}"))))
 
+(make-texify-style '$tex_no_math_delimiters
+  :functions '(mlabel ((#\m . "~2*~:/nullfix/"))))
+
 (make-texify-style '$tex_no_label
   :normalizers `(mlabel ((#\m . ,#'tex-no-label-normalize-mlabel))))
 
@@ -873,7 +909,7 @@ Normalization Functions
                (%mdo mdo) ((#\m . "~*\\mathop{\\mathbf{for}}\\;~:/nullfix/~@[\\;{\\mathbf{from}}\\;~:/nullfix/~]~@[{\\mathbf{step}}\]\\;~:/nullfix/~]~@[\\;{\\mathbf{next}}\\;~:/nullfix/~]~@[\\;{\\mathbf{thru}}\\;~:/nullfix/~]~@[\\;{\\mathbf{unless}}\\;~:/nullfix/~]\\;{\\mathbf{do}}\\;~/prefix/"))
                (%mdoin mdoin) ((#\m . "~*\\mathop{\\mathbf{for}}\\;~:/nullfix/\\;{\\mathbf{in}}\\;~:/nullfix/\\;~*~*~*~@[{\\mathbf{unless}}\\;~:/nullfix/\\;~]{\\mathbf{do}}\\;~/prefix/"))
                (mcond %mcond) ((#\m . "~*\\mathop{\\mathbf{if}}\\;~:/nullfix/\\;\\mathop{\\mathbf{then}}\\;~:/nullfix/~@{\\;~:[\\mathop{\\mathbf{else}}~;~:*\\mathop{\\mathbf{elseif}}\\;~:/nullfix/\\;\\mathop{\\mathbf{then}}~]\\;~:/nullfix/~}"))
-               mlabel ((#\m . "\\[~*~:[~;~:*(~:/nullfix/)\\;~] ~:/nullfix/\\]")
+               mlabel ((#\m . "\\[~*~:[~;~:*(~:/nullfix/)\\; ~]~:/nullfix/\\]")
                        (#\i . "\\(~*~*~:/nullfix/\\)"))
                texify-math ((#\m . "\\begin{equation}~%~*~:/nullfix/~%\\end{equation}")
                             (#\i . "\\(~*~:/nullfix/\\)")))
@@ -1018,7 +1054,7 @@ Normalization Functions
                $matrix ((#\m . "~*\\begin{bmatrix}~%~@{  ~'a:/nullfix/~^\\\\~%~}~%\\end{bmatrix}"))
                texify-diff-newton ((#\m . "~2*{~@[~[~;\\dot~;\\ddot~;\\dddot~:;\\overset{\\scriptscriptstyle\\left(~:*~'s:/nullfix/\\right)}~]~]~@[\\overset{\\scriptscriptstyle\\left(~'s:/nullfix/\\right)}~]{~1@*~:/nullfix/}}~2*~#[~:;\\left(~@{~:/nullfix/~^, ~}\\right)~]"))
                mabs ((#\m . "~*\\lvert~:/nullfix/\\rvert"))
-               mlabel ((#\m . "~*~:[\\begin{equation*}~%~:/nullfix/~%\\end{equation*}~;~:*\\begin{equation}~%\\tag{\\(~:/nullfix/\\)}~:/nullfix/~%\\end{equation}~]")
+               mlabel ((#\m . "~*~:[\\begin{equation*}~%~:/nullfix/~%\\end{equation*}~;~:*\\begin{equation}~%\\tag{\\(~:/nullfix/\\)} ~:/nullfix/~%\\end{equation}~]")
                        (#\i . "\\(~*~*~:/nullfix/\\)")))
   :string-default '((#\m . "\\text{~*~A}")
                     (#\t . "\\text{~A}")))

@@ -19,7 +19,8 @@ produces the following Leibniz's notation for derivatives.
 ```
 (%i1) load("texify.lisp")$
 (%i2) texify(diff(f(x),x));
-(%o2)              \[\frac{d}{\mathop{dx}}f\left(x\right)\]
+\[\frac{d}{\mathop{dx}}f\left(x\right)\]
+(%o2)                                false
 ```
 
 Additional styles may be globally added using `texify_add_styles`, globally
@@ -36,21 +37,29 @@ style with Lagrange's notional for one expression.
 (%o2)                 [latex, tex_prefix_functions, tex]
 (%i3) texify_remove_styles(latex);
 (%o3)                     [tex_prefix_functions, tex]
-(%i4) texify(diff(f(x),x));
-(%o4)           $${d}\over{\mathop{d{x}}}{f}\left({x}\right)$$
-(%i5) texify(diff(f(x),x), tex_diff_lagrange);
-(%o5)                      $${f}'\left({x}\right)$$
+(%i4) texify(diff(f(x),x))$
+$${d}\over{\mathop{d{x}}}{f}\left({x}\right)$$
+(%i5) texify(diff(f(x),x), true, tex_diff_lagrange)$
+$${f}'\left({x}\right)$$
 ```
 
 ## Functions
 
-- `texify(expression, style, ...)` &mdash; Convert expression to TeX/LaTeX using
-  styles listed in `texify_styles` variable prefixed by any styles explicitly
-  specified.
-
-- `texify_inline(expression, style, ...)` &mdash; Convert expression to *inline*
+- `texify(expression, destination, style, ...)` &mdash; Convert expression to
   TeX/LaTeX using styles listed in `texify_styles` variable prefixed by any
-  styles explicitly specified.
+  styles explicitly specified. `expression` and `destination` follow the same
+  semantics as Maxima's `tex` function. Specifically, a label specified in
+  `expression` will result in the value of that label being used. A value of
+  `true` in `destination` will result in the output being sent to
+  `*standard-output*`, whereas a value of `false` will return a string. If
+  `destination` is a stream then the result will be written to that stream.
+  Finally, if `destination` is a string the output will appended to a file of
+  that name and will be created if needed.
+
+- `texify_inline(expression, destination, style, ...)` &mdash; Convert
+  expression to *inline* TeX/LaTeX using styles listed in `texify_styles`
+  variable prefixed by any styles explicitly specified and using the sample
+  semantics as `texify`.
 
 - `texify_available_styles()` &mdash; Return all available styles as a list.
 
@@ -75,6 +84,8 @@ style with Lagrange's notional for one expression.
 
 - `tex_eq_number` &mdash; Number equations using default TeX/LaTeX method versus
   labelling with specified output label.
+
+- `tex_no_math_delimiters` &mdash; Do not wrap output in math delimeters.
 
 - `tex_pmatrix` &mdash; Display matrices using parenthesis versus the default
   which is to use brackets.
