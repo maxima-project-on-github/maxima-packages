@@ -6,7 +6,8 @@ All significant changes to this project will be documented in the notes below.
 
 ### Added
 
--   Add `tex_no_math_delimiters` style for no math delimeters or labels.
+-   `tex_no_math_delimiters` style for no math delimeters or labels.
+-   Support for big floats.
 
 ### Changes
 

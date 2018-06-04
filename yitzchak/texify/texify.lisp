@@ -248,6 +248,7 @@
                               `((mlabel simp) ,expr ,mexpr)
                               mexpr)
                             (cdr ml))))
+
 (defmspec $texify_inline (l)
   (let* ((ml (mapcar #'meval (cdr l)))
          (expr (second l))
@@ -407,6 +408,15 @@ the trig functions, sum, product, etc. as prefix operators.
 Normalization Functions
 
 |#
+
+(defun tex-normalize-bigfloat (expr modes l-op r-op)
+  (declare (ignore modes l-op r-op))
+  (let* ((rep (fpformat expr))
+         (pos (position '|b| rep)))
+    (if pos
+      `((texify-float) ,(format nil "~{~A~}" (subseq rep 0 pos))
+                       ,(format nil "~{~A~}" (subseq rep (1+ pos))))
+      `((texify-float) ,(format nil "~{~A~}" rep) nil))))
 
 (defun tex-normalize-diff-euler (expr modes l-op r-op)
   (declare (ignore modes l-op r-op))
@@ -619,10 +629,11 @@ Normalization Functions
                (mcond %mcond) ((#\m . "~*\\mathop{\\bf if}\\;~:/nullfix/\\;\\mathop{\\bf then}\\;~:/nullfix/~@{\\;~:[\\mathop{\\bf else}~;~:*\\mathop{\\bf elseif}\\;~:/nullfix/\\;\\mathop{\\bf then}~]\\;~:/nullfix/~}"))
                texify-math ((#\m . "$$~*~:/nullfix/\\eqnum$$")
                             (#\i . "$~*~:/nullfix/$"))
-               texify-float ((#\m . "~*~A \\times 10^{~A}"))
+               texify-float ((#\m . "~*~A~@[ \\times 10^{~A}~]"))
                texify-root ((#\m . "~*\\sqrt[~:/nullfix/]{~:/nullfix/}")))
   :function-default '((#\m . "~:/nullfix/\\left(~@{~:/nullfix/~^, ~}\\right)"))
-  :normalizers `(mexpt ((#\m . ,#'tex-normalize-mexpt))
+  :normalizers `(bigfloat ((#\m . ,#'tex-normalize-bigfloat))
+                 mexpt ((#\m . ,#'tex-normalize-mexpt))
                  (mcond %mcond) ((#\m . ,#'tex-normalize-mcond))
                  (%derivative $diff) ((#\m . ,#'tex-normalize-diff-leibniz))
                  %limit ((#\m . ,#'tex-normalize-limit))
@@ -1089,7 +1100,7 @@ Normalization Functions
                mexpt ((#\u . "~*~:/nullfix/\\tothe{~:/nullfix/}"))
                mquotient ((#\u . "~*~/postfix//~/prefix/"))
                mtimes ((#\u . "~*~@{~:/nullfix/~^.~}"))
-               texify-float ((#\n . "~*~Ae~A")))
+               texify-float ((#\n . "~*~A~@[e~A~]")))
   :symbols '(;; Ampere
              |$GA| ((#\u . "\\giga\\ampere"))
              |$MA| ((#\u . "\\mega\\ampere"))
