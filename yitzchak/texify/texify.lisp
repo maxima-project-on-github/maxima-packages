@@ -533,7 +533,7 @@ Normalization Functions
 (make-texify-style '$tex
   :functions `((%at $at) ((#\m . "~*\\left.~/postfix/\\right|_{~'s:/nullfix/}"))
                %binomial ((#\m . "~*{{~:/nullfix/}\\choose{~:/nullfix/}}"))
-               texify-diff-euler ((#\m . "~2*~@{\\mathop{D}_~:/nullfix/~@[^{~:/nullfix/}~] ~}~1@*~/prefix/"))
+               texify-diff-euler ((#\m . "~2*~@{D_~:/nullfix/~@[^{~:/nullfix/}~] ~}~1@*~/prefix/"))
                texify-diff-lagrange ((#\m . "~*~:/nullfix/~@[~[~;'~;''~;'''~:;^{\\left(~:*~:/nullfix/\\right)}~]~]~@[^{\\left(~:/nullfix/\\right)}~]~#[~:;\\left(~@{~:/nullfix/~^, ~}\\right)~]"))
                texify-diff-leibniz ((#\m . "~*~*{d~@[^{~:/nullfix/}~]~@[~:/nullfix/~]}\\over{~@{\\mathop{d~:/nullfix/}~@[^{~:/nullfix/}~]~}}~1@*~@[~/prefix/~]"))
                texify-diff-newton ((#\m . "~2*{~@[~[~;\\dot~;\\ddot~;\\buildrel{\\cdots}\\over~:;\\buildrel{\\scriptscriptstyle\\left(~:*~'s:/nullfix/\\right)}\\over~]~]~@[\\buildrel{\\scriptscriptstyle\\left(~'s:/nullfix/\\right)}\\over~]{~1@*~:/nullfix/}}~2*~#[~:;\\left(~@{~:/nullfix/~^, ~}\\right)~]"))
@@ -873,7 +873,7 @@ Normalization Functions
                (%mdo mdo) ((#\m . "~*\\mathop{\\mathbf{for}}\\;~:/nullfix/~@[\\;{\\mathbf{from}}\\;~:/nullfix/~]~@[{\\mathbf{step}}\]\\;~:/nullfix/~]~@[\\;{\\mathbf{next}}\\;~:/nullfix/~]~@[\\;{\\mathbf{thru}}\\;~:/nullfix/~]~@[\\;{\\mathbf{unless}}\\;~:/nullfix/~]\\;{\\mathbf{do}}\\;~/prefix/"))
                (%mdoin mdoin) ((#\m . "~*\\mathop{\\mathbf{for}}\\;~:/nullfix/\\;{\\mathbf{in}}\\;~:/nullfix/\\;~*~*~*~@[{\\mathbf{unless}}\\;~:/nullfix/\\;~]{\\mathbf{do}}\\;~/prefix/"))
                (mcond %mcond) ((#\m . "~*\\mathop{\\mathbf{if}}\\;~:/nullfix/\\;\\mathop{\\mathbf{then}}\\;~:/nullfix/~@{\\;~:[\\mathop{\\mathbf{else}}~;~:*\\mathop{\\mathbf{elseif}}\\;~:/nullfix/\\;\\mathop{\\mathbf{then}}~]\\;~:/nullfix/~}"))
-               mlabel ((#\m . "\\[~*~:[~;~:*\\(~:/nullfix/\\)\\;~] ~:/nullfix/\\]")
+               mlabel ((#\m . "\\[~*~:[~;~:*(~:/nullfix/)\\;~] ~:/nullfix/\\]")
                        (#\i . "\\(~*~*~:/nullfix/\\)"))
                texify-math ((#\m . "\\begin{equation}~%~*~:/nullfix/~%\\end{equation}")
                             (#\i . "\\(~*~:/nullfix/\\)")))
@@ -1008,7 +1008,7 @@ Normalization Functions
              $%c_1L ((#\m . "c_{\\mathrm{1L}}"))))
 
 (make-texify-style '$latex_diff_upright_d
-  :functions '(texify-diff-euler ((#\m . "~2*~@{\\mathop{\\mathrm{D}}_~:/nullfix/~@[^{~:/nullfix/}~] ~}~1@*~/prefix/"))
+  :functions '(texify-diff-euler ((#\m . "~2*~@{\\mathrm{D}_~:/nullfix/~@[^{~:/nullfix/}~] ~}~1@*~/prefix/"))
                texify-diff-leibniz ((#\m . "~*~*\\frac{\\mathrm{d}~@[^{~:/nullfix/}~]~@[~:/nullfix/~]}{~@{\\mathop{\\mathrm{d}~:/nullfix/}~@[^{~:/nullfix/}~]~}}~1@*~@[~/prefix/~]"))
                (%integrate $integrate) ((#\m . "~*\\int~2*~#[~:;_{~'s:/nullfix/}^{~'s:/nullfix/}~] ~1@*~:/nullfix/\\mathop{\\mathrm{d}~:/nullfix/}"))))
 
