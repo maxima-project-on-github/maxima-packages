@@ -884,7 +884,8 @@ Normalization Functions
                (%integrate $integrate) ((#\m . "~*\\int~2*~#[~:;_{~'s:/nullfix/}^{~'s:/nullfix/}~] ~1@*~:/nullfix/\\mathop{{\\rm d}~:/nullfix/}"))))
 
 (make-texify-style '$tex_no_math_delimiters
-  :functions '(mlabel ((#\m . "~2*~:/nullfix/"))))
+  :functions '(mlabel ((#\m . "~2*~:/nullfix/")
+                       (#\i . "~2*~:/nullfix/"))))
 
 (make-texify-style '$tex_no_label
   :normalizers `(mlabel ((#\m . ,#'tex-no-label-normalize-mlabel))))
