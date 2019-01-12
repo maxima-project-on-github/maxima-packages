@@ -142,23 +142,14 @@
 	
     /* m: int
      * n: int
-     * omit_output: Boolean
      */
-    low_discrepancy_main (m, n, omit_output) :=
+    low_discrepancy_makelist (m, n) :=
 	block ([flag, quasi],
         flag : make_array (any, 2),
-        print ("low_discrepancy_main: m =", m, "n =", n),
 		quasi : make_array (flonum, m),
 
 		low_discrepancy_infaur( flag, m, n ),
-        for i:0 thru n - 1 do
-		(
-			low_discrepancy_gofaur( quasi ),
-			if ( not omit_output ) then
-			(
-				printf (true, "~{~a~^, ~}~%", listarray (quasi))
-			)
-		)
+        makelist ((low_discrepancy_gofaur (quasi), listarray (quasi)), n)
 	);
 
 	halton_s;
