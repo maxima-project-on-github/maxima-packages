@@ -22,7 +22,9 @@
     low_discrepancy_primes : make_array (fixnum, length (low_discrepancy_primes_list));
     fillarray (low_discrepancy_primes, low_discrepancy_primes_list);
 
-	/* dimen must be at least 2.
+    /* low_discrepancy_infaur -- initialize Faure sequence.
+     *
+	 * dimen must be at least 2.
      * flag: boolean array
      * dimen: int
      * atmost: int
@@ -55,7 +57,10 @@
 		faure_rqs:1.0/faure_qs
 	);
 
-    /* quasi: double array
+    /* low_discrepancy_gofaur -- construct next element in Faure sequence
+     * quasi is modified in-place to return the element.
+     *
+     * quasi: double array
      */
 	low_discrepancy_gofaur ( quasi ) :=
 	block ([ytemp, ztemp, ktemp,ltemp,mtemp, r],
@@ -99,7 +104,9 @@
 		)
 	);
 
-    /* flag: boolean array
+    /* low_discrepancy_inhalt -- initialize Halton sequence
+     *
+     * flag: boolean array
      * dimen: int
      * atmost: int
      * tiny: double
@@ -121,7 +128,10 @@
 		)
 	);
 
-    /* quasi: double array
+    /* low_discrepancy_gohalt -- construct next element in Halton sequence
+     * quasi is modified in-place to return the element.
+     *
+     * quasi: double array
      */
 	low_discrepancy_gohalt ( quasi ) :=
 	block ([t, f,g,h],
@@ -140,7 +150,11 @@
 		)
 	);
 	
-    /* m: int
+    /* low_discrepancy_makelist -- return list of elements of Faure sequence
+     * low_discrepancy_makelist initializes the Faure sequence and then
+     * generates n elements of m dimensions each.
+     *
+     * m: int
      * n: int
      */
     low_discrepancy_makelist (m, n) :=
