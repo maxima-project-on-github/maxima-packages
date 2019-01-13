@@ -105,8 +105,8 @@ public class LowDiscrepancy
 		if ( ! flag [ 2-1 ] ) return;
 		for ( int i = 1 ; i <= halton.s ; i++ )
 		{
-			halton.prime [ i-1 ] =1/halton.prime [ i-1 ];
-			quasi [ i-1 ] =halton.prime [ i-1 ];
+			halton.prime1 [ i-1 ] =1/halton.prime [ i-1 ];
+			quasi [ i-1 ] =halton.prime1 [ i-1 ];
 		}
 	}
 
@@ -115,7 +115,7 @@ public class LowDiscrepancy
 		double t, f,g,h;
 		for ( int i = 1 ; i <= halton.s ; i++ )
 		{
-			t=halton.prime [ i-1 ];
+			t=halton.prime1 [ i-1 ];
 			f=1-quasi [ i-1 ];
 			g=1;
 			h=t;
@@ -177,6 +177,7 @@ class halton
 		47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107,
 		109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173 
 	};
+    static double [ ] prime1 = new double [prime.length];
 }
 
 class faure
