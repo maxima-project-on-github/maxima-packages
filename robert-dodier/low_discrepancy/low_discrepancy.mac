@@ -123,8 +123,8 @@
         if ( not flag [ 2-1 ] ) then return,
         for i:1 thru halton_s do
         (
-            halton_prime [ i-1 ] :1.0/halton_prime [ i-1 ],
-            quasi [ i-1 ] :halton_prime [ i-1 ]
+            halton_prime1 [ i-1 ] :1.0/halton_prime [ i-1 ],
+            quasi [ i-1 ] :halton_prime1 [ i-1 ]
         )
     );
 
@@ -137,7 +137,7 @@
     block ([t, f,g,h],
         for i:1 thru halton_s do
         (
-            t:halton_prime [ i-1 ],
+            t:halton_prime1 [ i-1 ],
             f:1-quasi [ i-1 ],
             g:1,
             h:t,
@@ -168,12 +168,15 @@
 
     halton_s;
     halton_e;
-    halton_prime :
+    halton_prime_list :
     [
         2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43,
         47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107,
         109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173 
     ];
+    halton_prime : make_array (flonum, length (halton_prime_list));
+    fillarray (halton_prime, halton_prime_list);
+    halton_prime1 : make_array (flonum, length (halton_prime_list));
 
     faure_s;
     faure_qs;
