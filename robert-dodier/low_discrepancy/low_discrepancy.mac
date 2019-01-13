@@ -150,20 +150,36 @@
         )
     );
     
-    /* low_discrepancy_makelist -- return list of elements of Faure sequence
-     * low_discrepancy_makelist initializes the Faure sequence and then
+    /* low_discrepancy_makelist_faure -- return list of elements of Faure sequence
+     * low_discrepancy_makelist_faure initializes the Faure sequence and then
      * generates n elements of m dimensions each.
      *
      * m: int
      * n: int
      */
-    low_discrepancy_makelist (m, n) :=
+    low_discrepancy_makelist_faure (m, n) :=
     block ([flag, quasi],
         flag : make_array (any, 2),
         quasi : make_array (flonum, m),
 
         low_discrepancy_infaur( flag, m, n ),
         makelist ((low_discrepancy_gofaur (quasi), listarray (quasi)), n)
+    );
+
+    /* low_discrepancy_makelist_halton -- return list of elements of Halton sequence
+     * low_discrepancy_makelist_halton initializes the Halton sequence and then
+     * generates n elements of m dimensions each.
+     *
+     * m: int
+     * n: int
+     */
+    low_discrepancy_makelist_halton (m, n) :=
+    block ([flag, quasi],
+        flag : make_array (any, 2),
+        quasi : make_array (flonum, m),
+
+        low_discrepancy_inhalt( flag, m, n, 1e-15, quasi ),
+        makelist ((low_discrepancy_gohalt (quasi), listarray (quasi)), n)
     );
 
     halton_s;
