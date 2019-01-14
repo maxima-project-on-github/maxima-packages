@@ -41,14 +41,14 @@ although there is no definite plan to do so at this time (January 2019).
 @node Definitions for package low_discrepancy, Function and variable index, Introduction to package low_discrepancy, Top
 @section Definitions for package low_discrepancy
 
-@deffn {Function} low_discrepancy_makelist_faure (@var{m}, @var{n})
+@deffn {Function} cacm647_makelist_faure (@var{m}, @var{n})
 
 Returns the first @var{n} elements of the @var{m}-dimensional Faure sequence,
 as prescribed by CACM Algorithm 647.
 
 @end deffn
 
-@deffn {Function} low_discrepancy_makelist_halton (@var{m}, @var{n})
+@deffn {Function} cacm647_makelist_halton (@var{m}, @var{n})
 
 Returns the first @var{n} elements of the @var{m}-dimensional Halton sequence,
 as prescribed by CACM Algorithm 647.

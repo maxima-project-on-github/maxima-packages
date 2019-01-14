@@ -12,29 +12,29 @@
  * A copy of the license agreement, <tt>ACM-LICENSE.html</tt>, is included.
  */
 
-    low_discrepancy_primes_list :
+    cacm647_primes_list :
     [
         1, 2, 3, 5, 5, 7, 7, 11, 11, 11, 11, 13, 13, 17, 17, 17, 17, 19, 19, 
         23, 23, 23, 23, 29, 29, 29, 29, 29, 29, 31, 31, 37, 37, 37, 37,
         37, 37, 41, 41, 41
     ];
     
-    low_discrepancy_primes : make_array (fixnum, length (low_discrepancy_primes_list));
-    fillarray (low_discrepancy_primes, low_discrepancy_primes_list);
+    cacm647_primes : make_array (fixnum, length (cacm647_primes_list));
+    fillarray (cacm647_primes, cacm647_primes_list);
 
-    /* low_discrepancy_infaur -- initialize Faure sequence.
+    /* cacm647_infaur -- initialize Faure sequence.
      *
      * dimen must be at least 2.
      * flag: boolean array
      * dimen: int
      * atmost: int
      */
-    low_discrepancy_infaur ( flag, dimen, atmost ) :=
+    cacm647_infaur ( flag, dimen, atmost ) :=
     (
         faure_s:dimen,
         flag [ 1-1 ] : is( faure_s > 1 and faure_s < 41 ),
         if ( not flag [ 1-1 ] ) then return (),
-        faure_qs:low_discrepancy_primes [ faure_s-1 ],
+        faure_qs:cacm647_primes [ faure_s-1 ],
         faure_testn:faure_qs*faure_qs*faure_qs*faure_qs,
         faure_hisum: floor (float ( log ( atmost+faure_testn ) /log ( faure_qs ) )),
         flag [ 2-1 ] : is( faure_hisum < 20 ),
@@ -57,12 +57,12 @@
         faure_rqs:1.0/faure_qs
     );
 
-    /* low_discrepancy_gofaur -- construct next element in Faure sequence
+    /* cacm647_gofaur -- construct next element in Faure sequence
      * quasi is modified in-place to return the element.
      *
      * quasi: double array
      */
-    low_discrepancy_gofaur ( quasi ) :=
+    cacm647_gofaur ( quasi ) :=
     block ([ytemp, ztemp, ktemp,ltemp,mtemp, r],
         ytemp : make_array (fixnum, 20),
         ktemp:faure_testn,
@@ -104,7 +104,7 @@
         )
     );
 
-    /* low_discrepancy_inhalt -- initialize Halton sequence
+    /* cacm647_inhalt -- initialize Halton sequence
      *
      * flag: boolean array
      * dimen: int
@@ -112,7 +112,7 @@
      * tiny: double
      * quasi: double array
      */
-    low_discrepancy_inhalt ( flag, dimen, atmost, tiny, quasi ) :=
+    cacm647_inhalt ( flag, dimen, atmost, tiny, quasi ) :=
     block ([delta],
         halton_s:dimen,
         flag [ 1-1 ] : is( halton_s > 1 and halton_s < 41 ),
@@ -128,12 +128,12 @@
         )
     );
 
-    /* low_discrepancy_gohalt -- construct next element in Halton sequence
+    /* cacm647_gohalt -- construct next element in Halton sequence
      * quasi is modified in-place to return the element.
      *
      * quasi: double array
      */
-    low_discrepancy_gohalt ( quasi ) :=
+    cacm647_gohalt ( quasi ) :=
     block ([t, f,g,h],
         for i:1 thru halton_s do
         (
@@ -150,36 +150,36 @@
         )
     );
     
-    /* low_discrepancy_makelist_faure -- return list of elements of Faure sequence
-     * low_discrepancy_makelist_faure initializes the Faure sequence and then
+    /* cacm647_makelist_faure -- return list of elements of Faure sequence
+     * cacm647_makelist_faure initializes the Faure sequence and then
      * generates n elements of m dimensions each.
      *
      * m: int
      * n: int
      */
-    low_discrepancy_makelist_faure (m, n) :=
+    cacm647_makelist_faure (m, n) :=
     block ([flag, quasi],
         flag : make_array (any, 2),
         quasi : make_array (flonum, m),
 
-        low_discrepancy_infaur( flag, m, n ),
-        makelist ((low_discrepancy_gofaur (quasi), listarray (quasi)), n)
+        cacm647_infaur( flag, m, n ),
+        makelist ((cacm647_gofaur (quasi), listarray (quasi)), n)
     );
 
-    /* low_discrepancy_makelist_halton -- return list of elements of Halton sequence
-     * low_discrepancy_makelist_halton initializes the Halton sequence and then
+    /* cacm647_makelist_halton -- return list of elements of Halton sequence
+     * cacm647_makelist_halton initializes the Halton sequence and then
      * generates n elements of m dimensions each.
      *
      * m: int
      * n: int
      */
-    low_discrepancy_makelist_halton (m, n) :=
+    cacm647_makelist_halton (m, n) :=
     block ([flag, quasi],
         flag : make_array (any, 2),
         quasi : make_array (flonum, m),
 
-        low_discrepancy_inhalt( flag, m, n, 1e-15, quasi ),
-        makelist ((low_discrepancy_gohalt (quasi), listarray (quasi)), n)
+        cacm647_inhalt( flag, m, n, 1e-15, quasi ),
+        makelist ((cacm647_gohalt (quasi), listarray (quasi)), n)
     );
 
     halton_s;
