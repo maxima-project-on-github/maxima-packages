@@ -1,0 +1,72 @@
+\input texinfo
+
+@setfilename low_discrepancy.info
+@settitle Package low_discrepancy
+
+@ifinfo
+@macro var {expr}
+<\expr\>
+@end macro
+@end ifinfo
+
+@dircategory Mathematics/Maxima
+@direntry
+* Package low_discrepancy: (maxima)Maxima share package low_discrepancy for low-discrepancy (quasirandom) sequences.
+@end direntry
+
+@node Top, Introduction to package low_discrepancy, (dir), (dir)
+@top
+@menu
+* Introduction to package low_discrepancy::
+* Definitions for package low_discrepancy::
+* Function and variable index::
+@end menu
+@chapter Package low_discrepancy
+
+@node Introduction to package low_discrepancy, Definitions for package low_discrepancy, Top, Top
+@section Introduction to package low_discrepancy
+
+Package @code{low_discrepancy} contains functions to construct low-discrepancy sequences,
+also known as quasirandom sequences.
+
+At present there are functions to construct Faure and Halton sequences
+as prescribed by Algorithm 647 of the Collected Algorithms of the ACM (CACM).
+The Maxima code is a translation of a Java translation of the original Fortran code.
+CACM Algorithm 647 also contains code for Sobol sequences, which is not yet translated.
+
+It is foreseen that other algorithms for low-discrepancy sequences
+could be collected here,
+although there is no definite plan to do so at this time (January 2019).
+
+@node Definitions for package low_discrepancy, Function and variable index, Introduction to package low_discrepancy, Top
+@section Definitions for package low_discrepancy
+
+@deffn {Function} cacm647_makelist_faure (@var{m}, @var{n})
+
+Returns the first @var{n} elements of the @var{m}-dimensional Faure sequence,
+as prescribed by CACM Algorithm 647.
+
+@end deffn
+
+@deffn {Function} cacm647_makelist_halton (@var{m}, @var{n})
+
+Returns the first @var{n} elements of the @var{m}-dimensional Halton sequence,
+as prescribed by CACM Algorithm 647.
+
+@end deffn
+
+@c @defvr {Variable} frotz
+@c Default value: @code{true}
+@c 
+@c When @code{frotz} is @code{true},
+@c @code{transmogrify} computes the transmogrification by Smith's algorithm.
+@c Otherwise, the transmogrification is computed by Jones' algorithm.
+@c 
+@c @end defvr
+
+@node Function and variable index,  , Definitions for package low_discrepancy, Top
+@appendix Function and variable index
+@printindex fn
+@printindex vr
+
+@bye

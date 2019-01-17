@@ -1,0 +1,203 @@
+/* cacm647.mac -- low discrepancy sequences
+ * Adapted from riso/numerical/LowDiscrepancy.java.
+ *
+ * Translated (from Fortran to Java) from <tt>http://www.netlib.org/toms/647</tt>:
+ * Bennett L. Fox, "Algorithm 647: Implementation and Relative Efficiency of Quasirandom Sequence Generators",
+ * ACM Transactions on Mathematical Software, vol. 12, no. 4 (December, 1986), pp 362--376.
+ *
+ * <p> Note that this scheme works only in 2 or more dimensions -- it cannot generate
+ * a 1-dimensional sequence.
+ * 
+ * <p> This file is distributed under the terms of the ACM Software Copyright and License Agreement.
+ * A copy of the license agreement, <tt>ACM-LICENSE.html</tt>, is included.
+ */
+
+    cacm647_primes_list :
+    [
+        1, 2, 3, 5, 5, 7, 7, 11, 11, 11, 11, 13, 13, 17, 17, 17, 17, 19, 19, 
+        23, 23, 23, 23, 29, 29, 29, 29, 29, 29, 31, 31, 37, 37, 37, 37,
+        37, 37, 41, 41, 41
+    ];
+    
+    cacm647_primes : make_array (fixnum, length (cacm647_primes_list));
+    fillarray (cacm647_primes, cacm647_primes_list);
+
+    /* cacm647_infaur -- initialize Faure sequence.
+     *
+     * dimen must be at least 2.
+     * flag: boolean array
+     * dimen: int
+     * atmost: int
+     */
+    cacm647_infaur ( flag, dimen, atmost ) :=
+    (
+        faure_s:dimen,
+        flag [ 1-1 ] : is( faure_s > 1 and faure_s < 41 ),
+        if ( not flag [ 1-1 ] ) then return (),
+        faure_qs:cacm647_primes [ faure_s-1 ],
+        faure_testn:faure_qs*faure_qs*faure_qs*faure_qs,
+        faure_hisum: floor (float ( log ( atmost+faure_testn ) /log ( faure_qs ) )),
+        flag [ 2-1 ] : is( faure_hisum < 20 ),
+        if ( not flag [ 2-1 ] ) then return (),
+        faure_coef [ 0, 0 ] :1,
+        for j:1 thru faure_hisum do
+        (
+            faure_coef [ j, 0 ] :1,
+            faure_coef [ j, j ] :1
+        ),
+        for j:1 thru faure_hisum do
+        (
+            for i:j+1 thru faure_hisum do
+            (
+                faure_coef [ i, j ] : mod (faure_coef [ i-1, j ] +faure_coef [ i-1, j-1 ], faure_qs)
+            )
+        ),
+        faure_nextn:faure_testn-1,
+        faure_hisum:3,
+        faure_rqs:1.0/faure_qs
+    );
+
+    /* cacm647_gofaur -- construct next element in Faure sequence
+     * quasi is modified in-place to return the element.
+     *
+     * quasi: double array
+     */
+    cacm647_gofaur ( quasi ) :=
+    block ([ytemp, ztemp, ktemp,ltemp,mtemp, r],
+        ytemp : make_array (fixnum, 20),
+        ktemp:faure_testn,
+        ltemp:faure_nextn,
+        for i:faure_hisum thru 0 step -1 do
+        (
+            ktemp:ktemp/faure_qs,
+            mtemp: mod (ltemp, ktemp),
+            ytemp [ i ] : ( ltemp-mtemp ) /ktemp,
+            ltemp:mtemp
+        ),
+        r:ytemp [ faure_hisum ],
+        for i:faure_hisum - 1 thru 0 step -1 do
+        (
+            r:ytemp [ i ] +faure_rqs*r
+        ),
+        quasi [ 1-1 ] :r*faure_rqs,
+        for k:2 thru faure_s do
+        (
+            quasi [ k-1 ] :0,
+            r:faure_rqs,
+            for j:0 thru faure_hisum do
+            (
+                ztemp:0,
+                for i:j thru faure_hisum do
+                (
+                    ztemp:ztemp+faure_coef [ i, j ] *ytemp [ i ]
+                ),
+                ytemp [ j ] :mod (ztemp, faure_qs),
+                quasi [ k-1 ] :quasi [ k-1 ] +ytemp [ j ] *r,
+                r:r*faure_rqs
+            )
+        ),
+        faure_nextn:faure_nextn+1,
+        if ( faure_nextn = faure_testn ) then
+        (
+            faure_testn:faure_testn*faure_qs,
+            faure_hisum:faure_hisum+1
+        )
+    );
+
+    /* cacm647_inhalt -- initialize Halton sequence
+     *
+     * flag: boolean array
+     * dimen: int
+     * atmost: int
+     * tiny: double
+     * quasi: double array
+     */
+    cacm647_inhalt ( flag, dimen, atmost, tiny, quasi ) :=
+    block ([delta],
+        halton_s:dimen,
+        flag [ 1-1 ] : is( halton_s > 1 and halton_s < 41 ),
+        if ( not flag [ 1-1 ] ) then return (),
+        halton_e:0.9* ( 1.0/ ( atmost*halton_prime [ halton_s-1 ] ) -10*tiny ),
+        delta: float (100*tiny* ( atmost+1 ) * (log( atmost )/log(10))),
+        flag [ 2-1 ] : is( delta <= 0.09* ( halton_e-10*tiny ) ),
+        if ( not flag [ 2-1 ] ) then return,
+        for i:1 thru halton_s do
+        (
+            halton_prime1 [ i-1 ] :1.0/halton_prime [ i-1 ],
+            quasi [ i-1 ] :halton_prime1 [ i-1 ]
+        )
+    );
+
+    /* cacm647_gohalt -- construct next element in Halton sequence
+     * quasi is modified in-place to return the element.
+     *
+     * quasi: double array
+     */
+    cacm647_gohalt ( quasi ) :=
+    block ([t, f,g,h],
+        for i:1 thru halton_s do
+        (
+            t:halton_prime1 [ i-1 ],
+            f:1-quasi [ i-1 ],
+            g:1,
+            h:t,
+            while ( f-h < halton_e ) do
+            (
+                g:h,
+                h:h*t
+            ),
+            quasi [ i-1 ] :g+h-f
+        )
+    );
+    
+    /* cacm647_makelist_faure -- return list of elements of Faure sequence
+     * cacm647_makelist_faure initializes the Faure sequence and then
+     * generates n elements of m dimensions each.
+     *
+     * m: int
+     * n: int
+     */
+    cacm647_makelist_faure (m, n) :=
+    block ([flag, quasi],
+        flag : make_array (any, 2),
+        quasi : make_array (flonum, m),
+
+        cacm647_infaur( flag, m, n ),
+        makelist ((cacm647_gofaur (quasi), listarray (quasi)), n)
+    );
+
+    /* cacm647_makelist_halton -- return list of elements of Halton sequence
+     * cacm647_makelist_halton initializes the Halton sequence and then
+     * generates n elements of m dimensions each.
+     *
+     * m: int
+     * n: int
+     */
+    cacm647_makelist_halton (m, n) :=
+    block ([flag, quasi],
+        flag : make_array (any, 2),
+        quasi : make_array (flonum, m),
+
+        cacm647_inhalt( flag, m, n, 1e-15, quasi ),
+        makelist ((cacm647_gohalt (quasi), listarray (quasi)), n)
+    );
+
+    halton_s;
+    halton_e;
+    halton_prime_list :
+    [
+        2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43,
+        47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107,
+        109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173 
+    ];
+    halton_prime : make_array (flonum, length (halton_prime_list));
+    fillarray (halton_prime, halton_prime_list);
+    halton_prime1 : make_array (flonum, length (halton_prime_list));
+
+    faure_s;
+    faure_qs;
+    faure_nextn;
+    faure_testn;
+    faure_hisum;
+    faure_rqs;
+    faure_coef : make_array (fixnum, 20, 20);
