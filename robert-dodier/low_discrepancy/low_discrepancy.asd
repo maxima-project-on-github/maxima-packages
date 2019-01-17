@@ -8,5 +8,5 @@
   :long-description "Maxima package for generating low-discrepancy (quasirandom) sequences, based on CACM Algorithm 647."
   
   :components
-  ((:maxima-file "low_discrepancy")
+  ((:maxima-file "cacm647")
    (:info-index "low_discrepancy-index")))

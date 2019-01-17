@@ -1,4 +1,4 @@
-/* low_discrepancy.mac -- low discrepancy sequences
+/* cacm647.mac -- low discrepancy sequences
  * Adapted from riso/numerical/LowDiscrepancy.java.
  *
  * Translated (from Fortran to Java) from <tt>http://www.netlib.org/toms/647</tt>:
