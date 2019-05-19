@@ -35,7 +35,7 @@ xmat(r,n):=[[PadRight([0,2],r),PadRight([n-1],r)],
      [PadRight([1],r),ConstantArray(0,r)]]$
 
 isprime(n):=With([r => smallestr(n)],
-        If(r = 0,n = 2,
+        If(r = 0, is(n = 2),
            With([xp => matpow(xmat(r,n),n-1,r,n)],
                 SameQ(Mod(RotateRight(Part(xp,1,1))+Part(xp,1,2),n),
                       PadRight(Append(ConstantArray(0,Mod(n,r)),1),r)))))$

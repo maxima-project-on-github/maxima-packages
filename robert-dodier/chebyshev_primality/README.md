@@ -42,4 +42,5 @@ and I collected that output to a file via `with_stdout`.
 I then loaded it into Maxima via `batch`,
 and reformatted it in a manner which is slightly easier to read via `grind`
 (these additional steps are not shown above).
-The output of `grind` is what is found in `chebyshev\_primality.mac`.
+The output of `grind` is almost entirely what is found in `chebyshev\_primality.mac`,
+with only a minor modification to change `n = 2` to `is(n = 2)` to ensure a Boolean result.
