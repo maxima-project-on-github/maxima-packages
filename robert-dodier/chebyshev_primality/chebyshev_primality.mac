@@ -1,0 +1,46 @@
+/* Original from: https://mathoverflow.net/questions/286304/chebyshev-polynomials-of-the-first-kind-and-primality-testing
+ * Written by Mamuka Jibladze
+ * (https://mathoverflow.net/users/41291/%e1%83%9b%e1%83%90%e1%83%9b%e1%83%a3%e1%83%99%e1%83%90-%e1%83%af%e1%83%98%e1%83%91%e1%83%9a%e1%83%90%e1%83%ab%e1%83%94)
+ * Copied here under terms of the Creative Commons Share-Alike license
+ * (https://creativecommons.org/licenses/by-sa/4.0/)
+ * as specified by the Stack Overflow Public Network Terms of Service
+ * (https://stackoverflow.com/legal/terms-of-service#licensing)
+ *
+ * This translation to Maxima was carried out by the Mixima translator,
+ * by John Lapeyre, with minor modifications by Robert Dodier;
+ * see: https://github.com/maxima-project-on-github/mixima
+ * As a derived work of the original Mathemtica version,
+ * this translation is covered by the same license (namely CC-SA).
+ */
+
+polmul(f,g,r,n):=Mod(Dot(f,NestList(RotateRight,g,r-1)),n)$
+
+matmul(a,b,r,n):=Mod(
+       [[polmul(Part(a,1,1),Part(b,1,1),r,n)
+          +polmul(Part(a,1,2),Part(b,2,1),r,n),
+         polmul(Part(a,1,1),Part(b,1,2),r,n)
+          +polmul(Part(a,1,2),Part(b,2,2),r,n)],
+        [polmul(Part(a,2,1),Part(b,1,1),r,n)
+          +polmul(Part(a,2,2),Part(b,2,1),r,n),
+         polmul(Part(a,2,1),Part(b,1,2),r,n)
+          +polmul(Part(a,2,2),Part(b,2,2),r,n)]],n)$
+
+matsq(a,r,n):=matmul(a,a,r,n)$
+
+matpow(a,k,r,n):=If(k = 1,a,
+       If(EvenQ(k),matpow(matsq(a,r,n),(k*1)/2,r,n),
+          matmul(a,matpow(matsq(a,r,n),((k-1)*1)/2,r,n),r,n)))$
+
+xmat(r,n):=[[PadRight([0,2],r),PadRight([n-1],r)],
+     [PadRight([1],r),ConstantArray(0,r)]]$
+
+isprime(n):=With([r => smallestr(n)],
+        If(r = 0,n = 2,
+           With([xp => matpow(xmat(r,n),n-1,r,n)],
+                SameQ(Mod(RotateRight(Part(xp,1,1))+Part(xp,1,2),n),
+                      PadRight(Append(ConstantArray(0,Mod(n,r)),1),r)))))$
+
+smallestr(n):=Module([r],
+          (If(n = 1 or EvenQ(n),Return(0)),
+           For(r => 3,MemberQ([0,1,r-1],Mod(n,r)),r => NextPrime(r+1),
+               If(r < n and Mod(n,r) = 0,Return(0))),r))$
