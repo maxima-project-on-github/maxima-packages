@@ -5,10 +5,29 @@ of testing primality via Chebyshev polynomials.
 
 ### Usage
 
+Load `chebyshev\_primality` and test some possible primes:
+
 ```{maxima}
-load ("/home/robert/.maxima/mixima/mixima.mac");
-load ("chebyshev_primality.mac");
-makelist (isprime (2^n + 1), n, 1, 20);
+(%i1) load ("/home/robert/.maxima/mixima/mixima.mac");
+mixima version 0.25 loaded. 
+(%o1)        /home/robert/.maxima/mixima/mixima.mac
+(%i2) load ("chebyshev_primality.mac");
+(%o2)                chebyshev_primality.mac
+(%i3) makelist (isprime (2^n - 1), n, 1, 20);
+(%o3) [false, true, true, false, true, false, true, false, 
+false, false, false, false, true, false, false, false, true, 
+false, true, false]
+```
+
+Compare the result to the built-in function `primep`:
+
+```{maxima}
+(%i4) makelist (primep (2^n - 1), n, 1, 20);
+(%o4) [false, true, true, false, true, false, true, false, 
+false, false, false, false, true, false, false, false, true, 
+false, true, false]
+(%i5) is (%o4 = %o3);
+(%o5)                         true
 ```
 
 ### Original Mathematica version
