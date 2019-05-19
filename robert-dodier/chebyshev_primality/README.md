@@ -1,11 +1,11 @@
 ### Summary
 
-This package, chebyshev\_primality, contains functions to experiment with a method
+This package, `chebyshev_primality`, contains functions to experiment with a method
 of testing primality via Chebyshev polynomials.
 
 ### Usage
 
-Load `chebyshev\_primality` and test some possible primes:
+Load `chebyshev_primality` and test some possible primes:
 
 ```{maxima}
 (%i1) load ("/home/robert/.maxima/mixima/mixima.mac");
@@ -46,7 +46,7 @@ as specified by the Stack Overflow Public Network Terms of Service
 This translation to Maxima was carried out by the Mixima translator,
 by John Lapeyre, with minor modifications by Robert Dodier;
 see: https://github.com/maxima-project-on-github/mixima
-As a derived work of the original Mathemtica version,
+As a derived work of the original Mathematica version,
 this translation is covered by the same license (namely CC-SA).
 
 ```{maxima}
@@ -56,10 +56,10 @@ with_stdout ("chebyshev_primality.mac",
 ```
 
 The function `miximaTransFile` prints the Maxima translation
-of the Mathematica file `chebyshev\_primality.m"`
+of the Mathematica file `chebyshev_primality.m"`
 and I collected that output to a file via `with_stdout`.
 I then loaded it into Maxima via `batch`,
 and reformatted it in a manner which is slightly easier to read via `grind`
 (these additional steps are not shown above).
-The output of `grind` is almost entirely what is found in `chebyshev\_primality.mac`,
+The output of `grind` is almost entirely what is found in `chebyshev_primality.mac`,
 with only a minor modification to change `n = 2` to `is(n = 2)` to ensure a Boolean result.
