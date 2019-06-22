@@ -1,0 +1,35 @@
+/* tex_table -- define table structure and LaTeX output
+ * copyright 2019 by Robert Dodier
+ * I release this work under terms of the GNU General Public License, version 2
+ */
+
+defstruct (table (header = [], rows = [], outline = false, hsep = false, vsep = false));
+
+load ("tex_table.lisp");
+
+tex_table (t) :=
+  if t@header = [] and t@rows = []
+    then ""
+    else
+      block ([ncolumns, spec, tex_header, tex_rows1, tex_rows_rest, hsep, tabular_begin, tabular_end],
+             ncolumns: if t@header # []
+                         then length (t@header)
+                         else length (t@rows[1]),
+             if t@vsep
+               then printf (false, "~{~a~^|~}", makelist ("c", ncolumns))
+               else printf (false, "~{~a~}", makelist ("c", ncolumns)),
+             spec: if t@outline then sconcat ("|", %%, "|") else %%,
+             hsep: if t@hsep then "\\hline" else "",
+             tex_header: if t@header # []
+                           then printf (false, "~{$~a$~^ & ~} \\\\~a~a~%", map (tex1, t@header), hsep, hsep)
+                           else "",
+             tex_rows1: if t@rows # [] then printf (false, "~{$~a$~^ & ~} \\\\~%", map (tex1, t@rows[1])) else "",
+             tex_rows_rest: map (lambda ([r], printf (false, "~a ~{$~a$~^ & ~} \\\\~%", hsep, map (tex1, r))), rest (t@rows)),
+             tabular_begin: printf (false, "\\begin{tabular}{~a}~a~%", spec, if t@outline then "\\hline" else ""),
+             tabular_end: printf (false, "~a~%\\end{tabular}~%", if t@outline then "\\hline" else ""),
+             sconcat (tabular_begin,
+                      tex_header,
+                      tex_rows1,
+                      apply (sconcat, tex_rows_rest),
+                      tabular_end));
+
