@@ -1,0 +1,35 @@
+/* tex_table -- define table structure and LaTeX output
+ * copyright 2019 by Robert Dodier
+ * I release this work under terms of the GNU General Public License, version 2
+ */
+
+load ("tex_table.mac");
+
+rows: [[1, 2, 3], [x, y, z], [a - b, c + 3*%pi*d, e^2 + f/4]];
+
+/* value assigned to options below is same as
+ *   cartesian_product_list ([[], [p, q, r]], [false, true], [false, true], [false, true])
+ * but that's a recently-introduced function, so just spell it out
+ * for the sake of older (pre-5.43) versions. 
+ */
+options:
+[[[],false,false,false],[[],false,false,true],[[],false,true,false],
+ [[],false,true,true],[[],true,false,false],[[],true,false,true],
+ [[],true,true,false],[[],true,true,true],[[p,q,r],false,false,false],
+ [[p,q,r],false,false,true],[[p,q,r],false,true,false],
+ [[p,q,r],false,true,true],[[p,q,r],true,false,false],
+ [[p,q,r],true,false,true],[[p,q,r],true,true,false],[[p,q,r],true,true,true]]$
+
+with_stdout ("tmp_tex_table.tex",
+  print ("\\documentclass{article}"),
+  print ("\\title{\\TeX\\ output for tables in Maxima}"),
+  print ("\\begin{document}"),
+  print ("\\maketitle"),
+  for o in options
+    do block ([t: table (o[1], rows, o[2], o[3], o[4])],
+              print ("\\begin{table}"),
+              print (tex_table (t)),
+              printf (true, "\\caption{Header = ~a, outline = ~a, hsep = ~a, vsep = ~a.}~%",
+                      t@header, t@outline, t@hsep, t@vsep),
+              print ("\\end{table}")),
+  print ("\\end{document}"));
