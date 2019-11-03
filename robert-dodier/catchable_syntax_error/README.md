@@ -26,6 +26,7 @@ incorrect syntax: x is not an infix operator
 
 OK, I'll try to catch the error with `errcatch`.
 
+```
 (%i2) errcatch (load ("foo.mac"));
 incorrect syntax: x is not an infix operator
 2 x;
