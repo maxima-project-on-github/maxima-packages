@@ -35,7 +35,8 @@ incorrect syntax: x is not an infix operator
 ```
 
 Rats! The syntax error has bypassed `errcatch` and gone straight back
-to the input prompt; my function didn't return `OOPS` as expected.
+to the input prompt; I was hoping that `errcatch` would return `[]` as
+it always does when it catches an error.
 
 Now try it with the new implementation of MREAD-SYNERR. `errcatch`
 catches the syntax error.
