@@ -1,4 +1,4 @@
-;; blex.lisp -- lexical block for Maxima
+;; lexical_symbols.lisp -- lexical symbols for Maxima
 ;; copyright 2012, 2019 by Robert Dodier
 ;; I release this work under terms of the GNU GPL
 ;;
