@@ -3,11 +3,15 @@
 ;; I release this work under terms of the GNU GPL
 ;;
 ;; examples:
-;; blex ([n:100], f(x) := n : n + x, g() := display(n));
-;; blex ([f], f(x) := 2*x);
-;; blex ([a], h(x) := a[x] : 1, i() := arrayinfo(a));
+;; with_lexical_symbols ([n:100], f(x) := n : n + x, g() := display(n));
+;; with_lexical_symbols ([f], f(x) := 2*x);
+;; with_lexical_symbols ([a], h(x) := a[x] : 1, i() := arrayinfo(a));
 
-(defmspec $blex (x)
+;; After this, one can say declare(foo, special) and then featurep(foo, special) => true,
+;; or, equivalently, (KINDP '$FOO '$SPECIAL) => T.
+(mfuncall '$declare '$special '$feature)
+
+(defmspec $with_lexical_symbols (x)
  (let*
    ((args (cdr x))
     (vars+var-inits (cdr (car args)))
@@ -27,13 +31,14 @@
 
 ;; Redefine function definition operator ":=" so that gensyms are substituted for function arguments.
 ;; This is a simple-minded experiment to investigate lexical scope for function arguments.
+;; Any symbols declared special are excluded from gensym substitution.
 
 (let ((default-mdefine-mfexpr* (get 'mdefine 'mfexpr*)))
   (setf (get 'mdefine 'mfexpr*)
         #'(lambda (e)
             ;; (format t "HEY E = ~S~%" e)
             (let*
-              ((args (rest ($listofvars (second e))))
+              ((args (remove-if #'(lambda (x) (kindp x '$special)) (rest ($listofvars (second e)))))
                (args-gensyms (mapcar
                                #'(lambda (s)
                                    (let ((s1 (gensym)))
