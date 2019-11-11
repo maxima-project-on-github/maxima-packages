@@ -9,7 +9,11 @@
 
 ;; After this, one can say declare(foo, special) and then featurep(foo, special) => true,
 ;; or, equivalently, (KINDP '$FOO '$SPECIAL) => T.
+;; Any symbols declared special are excluded from gensym substitution.
+
 (mfuncall '$declare '$special '$feature)
+
+;; Lexicalize MPROG (i.e., block([a, b, c, ...], ...))
 
 (defun subst-lexical-symbols-into-mprog (e)
  (let*
@@ -41,28 +45,9 @@
      (header (mheader 'mprog)))
     (cons '$any (subst-lexical-symbols-into-mprog (cons header right)))))
 
-;; Redefine function definition operator ":=" so that gensyms are substituted for function arguments.
-;; This is a simple-minded experiment to investigate lexical scope for function arguments.
-;; Any symbols declared special are excluded from gensym substitution.
+;; Lexicalize MDEFINE (i.e. f(a, b, c, ...) := ...)
 
-#|
-(let ((default-mdefine-mfexpr* (get 'mdefine 'mfexpr*)))
-  (setf (get 'mdefine 'mfexpr*)
-        #'(lambda (e)
-            ;; (format t "HEY E = ~S~%" e)
-            (let*
-              ((args (remove-if #'(lambda (x) (kindp x '$special)) (rest ($listofvars (second e)))))
-               (args-gensyms (mapcar
-                               #'(lambda (s)
-                                   (let ((s1 (gensym)))
-                                     (setf (get s1 'reversealias) (or (get s 'reversealias) s)) s1)) args))
-               (subst-eqns (mapcar #'(lambda (x y) `((mequal) ,x ,y)) args args-gensyms))
-               (gensym-expr ($psubstitute `((mlist) ,@ subst-eqns) e)))
-              ;; (format t "HEY NOW CALL DEFAULT MDEFINE MFEXPR* ON ~S~%" gensym-expr)
-              (funcall default-mdefine-mfexpr* gensym-expr)))))
- |#
-
-(defun subst-lexical-symbols-into-mdefine (e)
+(defun subst-lexical-symbols-into-mdefine-or-lambda (e)
   (let*
     ((args (remove-if #'(lambda (x) (kindp x '$special)) (rest ($listofvars (second e)))))
      (args-gensyms (mapcar
@@ -72,8 +57,15 @@
      (subst-eqns (mapcar #'(lambda (x y) `((mequal) ,x ,y)) args args-gensyms)))
     ($psubstitute `((mlist) ,@ subst-eqns) e)))
 
-(defun parse-mdefine-with-lexical-symbols (op left)
+(def-led (|$:=| 180. 20.) (op left)
   (let ((e (parse-infix op left)))
-    (cons (first e) (subst-lexical-symbols-into-mdefine (rest e)))))
+    (cons (first e) (subst-lexical-symbols-into-mdefine-or-lambda (rest e)))))
 
-(setf (get '|$:=| 'led) 'parse-mdefine-with-lexical-symbols)
+;; Lexicalize LAMBDA (i.e., lambda([a, b, c, ...], ...))
+
+(def-nud (lambda) (op)
+  (pop-c) ;; eat the opening parenthesis
+  (let
+    ((right (prsmatch right-paren-symbol '$any))
+     (header (mheader 'lambda)))
+    (cons '$any (subst-lexical-symbols-into-mdefine-or-lambda (cons header right)))))
