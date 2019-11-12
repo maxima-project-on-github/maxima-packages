@@ -54,8 +54,10 @@
                      #'(lambda (s)
                          (let ((s1 (gensym)))
                            (setf (get s1 'reversealias) (or (get s 'reversealias) s)) s1)) args))
-     (subst-eqns (mapcar #'(lambda (x y) `((mequal) ,x ,y)) args args-gensyms)))
-    ($psubstitute `((mlist) ,@ subst-eqns) e)))
+     (subst-eqns (mapcar #'(lambda (x y) `((mequal) ,x ,y)) args args-gensyms))
+     (substituted-definition ($psubstitute `((mlist) ,@ subst-eqns) e))
+     (function-header (first (second e))))
+    (list (first e) (cons function-header (rest (second substituted-definition))) (third substituted-definition))))
 
 (def-led (|$:=| 180. 20.) (op left)
   (let ((e (parse-infix op left)))
