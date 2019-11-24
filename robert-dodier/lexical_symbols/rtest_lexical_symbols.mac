@@ -1,105 +1,4 @@
-/* mailing list 2019-11-20: "Strange behavior of a simple function"
-
-foo(x,y) := x[1] + y[2]$
-
-Now consider a call like foo(a,b). This will give:
-
-a[1]+b[2]
-
-as expected. However, now consider foo(y,a). This will give:
-
-a[1] + a[2]
-
-The correct answer should have been:
-
-y[1] + a[2]
-
-Worse, calling foo(y,x) will make Maxima hang.
- */
-
-/* mailing list 2019-11-19: "general proposal to implement lexical scope + path to Maxima 6.0 version"
-
-A couple of possibly confusing cases:
-
-     f(x):='x returns a symbol which looks like x, but isn't x.
-
-     f(ex,x):=diff(ex,x) works fine
-     f(ex,x):=diff(ex,'x) might not work as expected -- if the user expects 'x to be the same ex as in the input expression
-
- */
-
-/* mailing list 2019-11-20: "Re: [Maxima-discuss] general proposal to implement lexical"
-
-
-(%i4) bob(a,b,c,x) := block([p : [a,b], q : [c]],hypergeometric(p,q,x));
-warning: The first two arguments to 'hypergeometric' must be lists.
-
-But function bob seems to work OK
-
-(%i5) bob(2,3,1/2,x);
-(%o5) hypergeometric([2,3],[1/2],x)
-
- */
-
-
-/* mailing list 2019-11-19: "concepts vs implementation, was: general proposal to implement lexical"
-
-
-matchdeclare(p1, true);
-defrule(r1,m(p1,p1), double(p1));
-apply1(m(3,3),r1)  ;
-
-defrule(r2,k(p1),p1(k));
-sin:cos;
-apply1(k(sin),r2);
-
-[...]
-
-/*Easy. */
-integrate(sin(x),x);
-sum(f(i),i,n,n+1);
-sum(n,i,n,n+1);  /* 2*n */
-product(n,i,n,n+1);
-block([j:0], for j:1 thru 10 do nothing, j);
-block([j:10], while j>0 do j:j-1,j);
-block([sin:cos], [sin(x),apply(sin,[x])]);
-
-
-/* more challenging */
-block([h:43,ans:[]],kill(f),
-  push([1,f(1)],ans),
-  f(e):=g(e),
-  push([2,f(2)],ans),
-  f(r):=block([m:h+r],m),
-  push([3,f(3)],ans),
-  f(r):=block([h],h+r),
-  push([4,f(4)],ans),
-  f(r):=block([],h+r),
-  push([5,f(5)],ans),
-  f(r):=(f(s):=g(r),1776),
-  push([6,f(6)],ans),
-  push([7,f(7)],ans),
-
-  reverse(ans));
-
-
-test3(e):=block([x],integrate(x^e,x))$
-x^2/2-test3(1);
-
-w(z):=block([numer:true],sin(z));
-
-inv(f,x,y):= solve(f(x)=y,x);
-kill(f);
-inv(atan,x,y);
-
-
-
-gg(f,g):=gradef(f(x),g(x));
-
-gg(foo,bar)   /* fails, define gradient for f, not foo */
- */
-
-/* mailing list 2014-04-19: "How to make buildq evaluate its first argument - please help"
+/* maxima-discuss 2014-04-19: "How to make buildq evaluate its first argument - please help"
 
 (%i1) gen_rhs(Ex,Vars)::= block([n:length(Ex),m:length(Vars)],
     Exs:subst(makelist(Vars[i]=y[i,1],i,m),Ex),print(Exs),
@@ -125,20 +24,20 @@ gg(foo,bar)   /* fails, define gradient for f, not foo */
 ;; blex ([a], h(x) := a[x] : 1, i() := arrayinfo(a));
  */
 
-/* mailing list 2014-08-01: "lexical scope and more"
+/* maxima-discuss 2014-08-01: "lexical scope and more"
 
 block([?mplus:foo],?mplus(a,a))  -->  2*a
 block([ gg:foo],    gg(a,a))     -->  foo(a,a)
  */
 
-/* mailing list 2014-08-07: "declared constants cannot be formal parameters"
+/* maxima-discuss 2014-08-07: "declared constants cannot be formal parameters"
 
 > In Maxima, declared constants cannot be formal parameters; thus every
 > Maxima function that happens to have a formal parameter named 'n'
 > will misbehave when n is a declared constant.
  */
 
-/* mailing list 2014-08-09: "declared constants cannot be formal parameters"
+/* maxima-discuss 2014-08-09: "declared constants cannot be formal parameters"
 
 > The user documentation for ":=" or "define" doesn't say that formal parameters are not allowed to
 > be declared constants. Neither do I find any explanation of why the formal parameter of a lambda
@@ -164,21 +63,21 @@ rr(n):=block([],declare(n,constant),ss[n]:=n+1,ss(4))
 > products--opps, ode, invert, and .. didn't work after that.
  */
 
-/* mailing list 2014-08-09: "declared constants cannot be formal parameters"
+/* maxima-discuss 2014-08-09: "declared constants cannot be formal parameters"
 
 f(x):=block([n], declare(n,constant)  g(r):=  something-with-n... );
 is there a way to preserve this declaration if someone
 subsequent does, say,  kill(n);
  */
 
-/* mailing list 2014-08-14: "Allow f(x)(y)"
+/* maxima-discuss 2014-08-14: "Allow f(x)(y)"
 
 g(x) := subst(x, 'x, lambda([y], x + y))$      << simulated lexical scope
 g(4) => lambda([y],y+4)
 g(4)(5) => 9
  */
 
-/* mailing list 2014-09-07: "Define derivative of discontinue function"
+/* maxima-discuss 2014-09-07: "Define derivative of discontinue function"
 
 Roberts (ingenious) tellsimpafter solution (http://stackoverflow.com/questi=
 ons/24892016/maxima-differentiating-a-piecewise-function/25233479#25233479)=
@@ -193,7 +92,7 @@ Not OK:
     (%o5) if (aa^2<1)^2<1 then 3*(aa^2<1)^2 else 1
 
  */
-/* mailing list 2014-09-06: "Define derivative of discontinue function"
+/* maxima-discuss 2014-09-06: "Define derivative of discontinue function"
 
 PS. The following is copied from my answer to this question
 on Stackoverflow:
@@ -216,7 +115,7 @@ I can give it a try if there is interest.
                                            discontinuities(x > 0,x))
  */
 
-/* mailing list 2014-11-10: "question on poltting absolut values"
+/* maxima-discuss 2014-11-10: "question on poltting absolut values"
 
    - What about lambda-bindings? Can assume(x>0) affect all functions with
    x as a formal? In our current system, lambda([x]...) does *not* create a
@@ -224,8 +123,7 @@ I can give it a try if there is interest.
    should really be a different x.
  */
 
-/* mailing list 2014-12-22: "Unexpected behavior (no global/local decoupling)
- when passing a function name as a parameter to another function"
+/* maxima-discuss 2014-12-22: "Unexpected behavior (no global/local decoupling) when passing a function name as a parameter to another function"
 
     kill(all)$
     fun(h):=diff(h(x,y),x)+diff(h(x,y),y)$
@@ -263,7 +161,7 @@ which returns:
     cos(x)*cos(y)-sin(x)*sin(y)
  */
 
-/* mailing list 2015-06-03: "Apply function under the summation sign"
+/* maxima-discuss 2015-06-03: "Apply function under the summation sign"
 
 expr:'sum(x**i,i,1,3);
 L(x):= block(
@@ -313,8 +211,7 @@ For instance, Brouncker's continued fraction for 4/pi would be
   f(k, x) := K( lambda([n], ... stuff with k, n, x ... etc.
  */
 
-/* maxima-discuss 2016-03-16: "Maxima function changes behavior depending on the NAME of its parameter
-"
+/* maxima-discuss 2016-03-16: "Maxima function changes behavior depending on the NAME of its parameter"
 
 f(cos,x) :=  cos(x);
 
@@ -509,13 +406,13 @@ global scope, not in the calling function's (f) scope. In lexical scope,
 both f(23) and g() would return 0.
  */
 
-/* maxima-discuss 2018-09-07: ""lambda" should be renamed to something else"
+/* maxima-discuss 2018-09-07: "\"lambda\" should be renamed to something else"
 
 (%i1) lambda([f], lambda([x], [f, x]))(g)(y);
 (%o1)                               [f, y]
  */
 
-/* maxima-discuss 2018-09-08: ""lambda" should be renamed to something else"
+/* maxima-discuss 2018-09-08: "\"lambda\" should be renamed to something else"
 
 f: block([private:0],lambda([],private:private+1))
 
@@ -651,5 +548,106 @@ expr1: u=m*r^2*f+m*s^2*g+m*t^2*h;    =>    u=h*m*t^2+g*m*s^2+f*m*r^2
 
 
 Apply2Part(factor, expr1, 2, [1,2]);    =>    u=m*(h*t^2+g*s^2)+factor*m*r^2
+ */
+
+/* maxima-discuss 2019-11-20: "Strange behavior of a simple function"
+
+foo(x,y) := x[1] + y[2]$
+
+Now consider a call like foo(a,b). This will give:
+
+a[1]+b[2]
+
+as expected. However, now consider foo(y,a). This will give:
+
+a[1] + a[2]
+
+The correct answer should have been:
+
+y[1] + a[2]
+
+Worse, calling foo(y,x) will make Maxima hang.
+ */
+
+/* maxima-discuss 2019-11-19: "general proposal to implement lexical scope + path to Maxima 6.0 version"
+
+A couple of possibly confusing cases:
+
+     f(x):='x returns a symbol which looks like x, but isn't x.
+
+     f(ex,x):=diff(ex,x) works fine
+     f(ex,x):=diff(ex,'x) might not work as expected -- if the user expects 'x to be the same ex as in the input expression
+
+ */
+
+/* maxima-discuss 2019-11-20: "Re: [Maxima-discuss] general proposal to implement lexical"
+
+
+(%i4) bob(a,b,c,x) := block([p : [a,b], q : [c]],hypergeometric(p,q,x));
+warning: The first two arguments to 'hypergeometric' must be lists.
+
+But function bob seems to work OK
+
+(%i5) bob(2,3,1/2,x);
+(%o5) hypergeometric([2,3],[1/2],x)
+
+ */
+
+
+/* maxima-discuss 2019-11-19: "concepts vs implementation, was: general proposal to implement lexical"
+
+
+matchdeclare(p1, true);
+defrule(r1,m(p1,p1), double(p1));
+apply1(m(3,3),r1)  ;
+
+defrule(r2,k(p1),p1(k));
+sin:cos;
+apply1(k(sin),r2);
+
+[...]
+
+/*Easy. */
+integrate(sin(x),x);
+sum(f(i),i,n,n+1);
+sum(n,i,n,n+1);  /* 2*n */
+product(n,i,n,n+1);
+block([j:0], for j:1 thru 10 do nothing, j);
+block([j:10], while j>0 do j:j-1,j);
+block([sin:cos], [sin(x),apply(sin,[x])]);
+
+
+/* more challenging */
+block([h:43,ans:[]],kill(f),
+  push([1,f(1)],ans),
+  f(e):=g(e),
+  push([2,f(2)],ans),
+  f(r):=block([m:h+r],m),
+  push([3,f(3)],ans),
+  f(r):=block([h],h+r),
+  push([4,f(4)],ans),
+  f(r):=block([],h+r),
+  push([5,f(5)],ans),
+  f(r):=(f(s):=g(r),1776),
+  push([6,f(6)],ans),
+  push([7,f(7)],ans),
+
+  reverse(ans));
+
+
+test3(e):=block([x],integrate(x^e,x))$
+x^2/2-test3(1);
+
+w(z):=block([numer:true],sin(z));
+
+inv(f,x,y):= solve(f(x)=y,x);
+kill(f);
+inv(atan,x,y);
+
+
+
+gg(f,g):=gradef(f(x),g(x));
+
+gg(foo,bar)   /* fails, define gradient for f, not foo */
  */
 
