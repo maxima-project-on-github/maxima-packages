@@ -18,17 +18,92 @@
 (%o5) matrix([sin(y[2,1]+y[1,1])],[cos(y[1,1]*y[2,1])])
  */
 
+(kill(y, z),
+ fred: lambda([t,y],matrix([sin(y[2,1]+y[1,1])],[cos(y[1,1]*y[2,1])])),
+ fred(5, z));
+matrix([sin(z[2,1]+z[1,1])],[cos(z[1,1]*z[2,1])]);
+
+(y[2,7]: 42,
+ fred(5, z));
+matrix([sin(z[2,1]+z[1,1])],[cos(z[1,1]*z[2,1])]);
+
+(kill(y, z),
+ gen_rhs(Ex,Vars)::= block([n:length(Ex),m:length(Vars)],
+   Exs:subst(makelist(Vars[i]=y[i,1],i,m),Ex),print(Exs),
+   MList:ev(makelist(makelist(Exs[i]),i,m)),print(MList),
+   buildq([MList],lambda([t,y],matrix(splice(MList))))),
+ george : gen_rhs([sin(a+b),cos(a*b)],[a,b]),
+ string(george));
+"lambda([t,y],matrix([sin(y[2,1]+y[1,1])],[cos(y[1,1]*y[2,1])]))";
+
+george(5, z);
+matrix([sin(z[2,1]+z[1,1])],[cos(z[1,1]*z[2,1])]);
+
+(y[2,7]: 42,
+ george(5, z));
+matrix([sin(z[2,1]+z[1,1])],[cos(z[1,1]*z[2,1])]);
+
 /* examples from blex.lisp
 ;; blex ([n:100], f(x) := n : n + x, g() := display(n));
 ;; blex ([f], f(x) := 2*x);
 ;; blex ([a], h(x) := a[x] : 1, i() := arrayinfo(a));
  */
 
+block ([n: 100], f(x) := n: n + x, g() := ldisplay(n), 0);
+0;
+
+f(99);
+199;
+
+n;
+n;
+
+string (?meval (g()));
+"[n = 199]";
+
+block ([f], f(x) := 2*x, f1(x) := f(x), 0);
+0;
+
+f(99);
+298;
+
+f1(99);
+198;
+
+block ([a], h(x) := a[x]: 1, i() := arrayinfo(a), l() := listarray(a), 0);
+0;
+
+[h(17), h(29), h(1729)];
+[1, 1, 1];
+
+(a[11]: 2,
+ a[13]: 2,
+ a[17]: 2);
+2;
+
+arrayinfo(a);
+[hashed, 1, [11], [13], [17]];
+
+listarray(a);
+[2, 2, 2];
+
+i();
+[hashed, 1, [17], [29], [1729]];
+
+l();
+[1, 1, 1];
+
 /* maxima-discuss 2014-08-01: "lexical scope and more"
 
 block([?mplus:foo],?mplus(a,a))  -->  2*a
 block([ gg:foo],    gg(a,a))     -->  foo(a,a)
  */
+
+block ([?mplus: foo], ?mplus(a, a));
+foo(a, a);
+
+block ([gg: foo], gg(a, a));
+foo(a, a);
 
 /* maxima-discuss 2014-08-07: "declared constants cannot be formal parameters"
 
@@ -70,12 +145,49 @@ is there a way to preserve this declaration if someone
 subsequent does, say,  kill(n);
  */
 
+block ([n], declare (n, constant), g() := constantp (n), 0);
+0;
+
+constantp (n);
+false;
+
+g();
+true;
+
+(kill(n),
+ g());
+true;
+
+(kill(props),
+ g());
+false;
+
 /* maxima-discuss 2014-08-14: "Allow f(x)(y)"
 
 g(x) := subst(x, 'x, lambda([y], x + y))$      << simulated lexical scope
 g(4) => lambda([y],y+4)
 g(4)(5) => 9
  */
+
+/* this already works w/ dynamic scope; include this to ensure it doesn't get messed up */
+(g(x) := subst(x, 'x, lambda([y], x + y)), string(%%))$
+"g(x):=subst(x,'x,lambda([y],x+y))";
+
+string(g(4));
+"lambda([y],y+4)";
+
+g(4)(5);
+9;
+
+/* reimplement w/ lexical scope */
+(g(x) := lambda([y], x + y), string(%%))$
+"lambda([y],y+4)";
+
+string(g(4));
+"closure([x:4],lambda([y],x+y))";
+
+g(4)(5);
+9;
 
 /* maxima-discuss 2014-09-07: "Define derivative of discontinue function"
 
