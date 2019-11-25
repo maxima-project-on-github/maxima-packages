@@ -66,8 +66,11 @@
 ;; Lexicalize LAMBDA (i.e., lambda([a, b, c, ...], ...))
 
 (def-nud (lambda) (op)
-  (pop-c) ;; eat the opening parenthesis
-  (let
-    ((right (prsmatch right-paren-symbol '$any))
-     (header (mheader 'lambda)))
-    (cons '$any (subst-lexical-symbols-into-mdefine-or-lambda (cons header right)))))
+  (if (eq (first-c) '|$(|)
+    (progn
+      (pop-c) ;; eat the opening parenthesis
+      (let
+        ((right (prsmatch right-paren-symbol '$any))
+         (header (mheader 'lambda)))
+        (cons '$any (subst-lexical-symbols-into-mdefine-or-lambda (cons header right)))))
+    `($any . ,op)))
