@@ -28,10 +28,14 @@ matrix([sin(z[2,1]+z[1,1])],[cos(z[1,1]*z[2,1])]);
 matrix([sin(z[2,1]+z[1,1])],[cos(z[1,1]*z[2,1])]);
 
 (kill(y, z),
- gen_rhs(Ex,Vars)::= block([n:length(Ex),m:length(Vars)],
-   Exs:subst(makelist(Vars[i]=y[i,1],i,m),Ex),print(Exs),
-   MList:ev(makelist(makelist(Exs[i]),i,m)),print(MList),
-   buildq([MList],lambda([t,y],matrix(splice(MList))))),
+ gen_rhs(Ex,Vars)::=
+   block([n:length(Ex), m:length(Vars), y],
+         Exs:subst(makelist(Vars[i]=y[i,1],i,m),Ex),
+         MList:ev(makelist(makelist(Exs[i]),i,m)),
+         /* Call apply here to ensure that y in the lambda argument list
+          * is the same y as in MList.
+          */
+         apply (lambda, [[t, y], apply (matrix, MList)])),
  george : gen_rhs([sin(a+b),cos(a*b)],[a,b]),
  string(george));
 "lambda([t,y],matrix([sin(y[2,1]+y[1,1])],[cos(y[1,1]*y[2,1])]))";
