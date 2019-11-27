@@ -15,18 +15,24 @@
 
 ;; Lexicalize MPROG (i.e., block([a, b, c, ...], ...))
 
-(defun subst-lexical-symbols-into-mprog (e)
- (let*
-   ((mprog-op (car e))
-    (mprog-args (cdr e))
-    (vars+var-inits (cdr (car mprog-args)))
-    (vars+var-inits-lexical (remove-if #'(lambda (x) (kindp (if (symbolp x) x (second x)) '$special)) vars+var-inits))
+(defun maybe-subst-lexical-symbols-into-mprog (e)
+  (if (or (null (cdr e)) (not ($listp (cadr e))))
+    e
+    (let*
+      ((mprog-op (car e))
+       (mprog-args (cdr e))
+       (vars+var-inits (cdr (car mprog-args)))
+       (exprs (cdr mprog-args)))
+      (subst-lexical-symbols-into-mprog mprog-op vars+var-inits exprs))))
+
+(defun subst-lexical-symbols-into-mprog (mprog-op vars+var-inits exprs)
+  (let*
+   ((vars+var-inits-lexical (remove-if #'(lambda (x) (kindp (if (symbolp x) x (second x)) '$special)) vars+var-inits))
     (vars+var-inits-special (remove-if-not #'(lambda (x) (kindp (if (symbolp x) x (second x)) '$special)) vars+var-inits))
     (vars-only-lexical (remove-if-not #'symbolp vars+var-inits-lexical))
     (var-inits-lexical (remove-if #'symbolp vars+var-inits-lexical))
     (var-inits-vars-lexical (mapcar #'second var-inits-lexical))
     (vars-all-lexical (append vars-only-lexical var-inits-vars-lexical))
-    (exprs (cdr mprog-args))
     (vars-only-gensyms (mapcar #'(lambda (s) (let ((s1 (gensym))) (setf (get s1 'reversealias) (or (get s 'reversealias) s)) s1)) vars-only-lexical))
     (var-inits-gensyms (mapcar #'(lambda (s) (let ((s1 (gensym))) (setf (get s1 'reversealias) (or (get s 'reversealias) s)) s1)) var-inits-vars-lexical))
     (gensyms-all (append vars-only-gensyms var-inits-gensyms))
@@ -43,7 +49,7 @@
   (let
     ((right (prsmatch right-paren-symbol '$any))
      (header (mheader 'mprog)))
-    (cons '$any (subst-lexical-symbols-into-mprog (cons header right)))))
+    (cons '$any (maybe-subst-lexical-symbols-into-mprog (cons header right)))))
 
 ;; Lexicalize MDEFINE (i.e. f(a, b, c, ...) := ...)
 
