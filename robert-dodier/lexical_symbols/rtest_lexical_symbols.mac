@@ -221,6 +221,60 @@ diff(if aa^2 < 1 then aa^3 else aa,aa);
    should really be a different x.
  */
 
+(kill (x, y, f, g, h, i),
+ myctxt: newcontext (),
+ assume ('x > 0),
+ f: lambda ([], is ('x > 0)),
+ g: lambda ([x], is ('x > 0)),
+ h() := is ('x > 0),
+ i(x) := is ('x > 0),
+ 0);
+0;
+
+f();
+true;
+
+g(1);
+unknown;
+
+h();
+true;
+
+i(1);
+unknown;
+
+block ([x], assume (x < 0), is (x > 0));
+false;
+
+declare (y, special);
+done;
+
+(assume ('y > 0),
+ f: lambda ([], is ('y > 0)),
+ g: lambda ([y], is ('y > 0)),
+ h() := is ('y > 0),
+ i(y) := is ('y > 0),
+ 0);
+0;
+
+f();
+true;
+
+g(1);
+true;
+
+h();
+true;
+
+i(1);
+true;
+
+block ([y], is (y > 0));
+true;
+ 
+(killcontext (myctxt), 0);
+0;
+
 /* maxima-discuss 2014-12-22: "Unexpected behavior (no global/local decoupling) when passing a function name as a parameter to another function"
 
     kill(all)$
@@ -259,6 +313,21 @@ which returns:
     cos(x)*cos(y)-sin(x)*sin(y)
  */
 
+(fun(h):=diff(h(x,y),x)+diff(h(x,y),y),
+ h0(x,y):=sin(x)*cos(y),
+ fun(h0));
+cos(x)*cos(y)-sin(x)*sin(y);
+
+(h(x,y):=x*y, /*<<<<<<<<<<<<<<<<<<*/
+ fun(h0));
+cos(x)*cos(y)-sin(x)*sin(y);
+
+(fun(h):=diff(h,x)+diff(h,y),
+ h0:sin(x)*cos(y),
+ h:x*y, /*<<<<<<<<<<<<<<<<<<*/
+ fun(h0));
+cos(x)*cos(y)-sin(x)*sin(y);
+
 /* maxima-discuss 2015-06-03: "Apply function under the summation sign"
 
 expr:'sum(x**i,i,1,3);
@@ -276,7 +345,17 @@ If I call apply(sum,subst(g(summand),summand,args(x))) outside of the
 function it works as expected.
  */
 
-/* mailing lit 2015-11-18: "Sublist"
+(expr:'sum(x**i,i,1,3),
+ L(x):= block([g],
+    g(y):=y**2,
+    if operatorp(x,nounify(sum)) then block([summand],
+        summand: args(x)[1],
+        apply(sum,subst(g(summand),summand,args(x))))),
+ L(expr));
+x^2 + x^4 + x^6;
+
+/* I DUNNO, I DON'T THINK THIS ONE ILLUSTRATES ANYTHING ABOUT LEXICAL VS DYNAMIC BINDING !!
+mailing list 2015-11-18: "Sublist"
 
 f(k) := mod(k,mm)>0 $
 mm:5 $
@@ -291,6 +370,16 @@ f(Z);
 
 [...] he expects the result of the third line to be 2*k, when in fact he gets 3.
  */
+
+(Z: [k, k],
+ /* sum was supposed to make its index a local symbol,
+  * but that got lost somewhere along the way in 2005 ...
+  * anyway by explicitly making k a local symbol, 
+  * we can get the expected result.
+  */
+ f(A) := block ([k], sum(A[k],k,1,2)),
+ f(Z));
+2*k;
 
 /* maxima-discuss 2016-02-28: "Lambda functions and dynamic scoping"
 
