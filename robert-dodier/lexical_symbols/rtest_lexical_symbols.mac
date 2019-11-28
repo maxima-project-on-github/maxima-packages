@@ -381,7 +381,8 @@ f(Z);
  f(Z));
 2*k;
 
-/* maxima-discuss 2016-02-28: "Lambda functions and dynamic scoping"
+/* HMM, SOUNDS INTERESTING BUT I DON'T SEE AN EXAMPLE HERE
+maxima-discuss 2016-02-28: "Lambda functions and dynamic scoping"
 
     K(b,a,k) :=  block([p,q,p1:1,p2:0,q1:0,q2:1],
       for n:1 thru k do (
@@ -409,96 +410,113 @@ Should that compute sin(x)?
 what about  f(lambda([x],x) ,cos(x))?
  */
 
+(f(cos, x) := cos(x),
+ f(sin, x));
+sin(x);
+
+f(lambda ([x], x), cos(x));
+cos(x);
+
 /* maxima-discuss 2016-03-15: "Maxima function changes behavior depending on the NAME of its parameter"
 
 The function call does not give the desired result, although it should. And the strange things are:
 
--          Changing the name of the parameter of function mmetric from g to anything else, e.g. k, will make the
-function call give the correct result.
+- Changing the name of the parameter of function mmetric from g to anything else, e.g. k, will make the function call give the correct result.
 
--          Alternatively, deleting code block 3 will also make the program give the correct result, so does a "kill (g)"
-prior to the function call.
+- Alternatively, deleting code block 3 will also make the program give the correct result, so does a "kill (g)" prior to the function call.
 
--          Alternatively, changing in code block 3 the indices a,b,c to 1,2,3 will also make the function call give the
-correct result.
-
-
+- Alternatively, changing in code block 3 the indices a,b,c to 1,2,3 will also make the function call give the correct result.
 
 One would expect that the local parameter g is independent of the global variables g[a],g[b],g[c]. But the contrary
 seems to be the case. There is some strange interdependency. Does anyone have an explanation? Is this a bug, or is it a
 situation one should avoid, because it causes these side effects? What is the general issue behind that?
 
-
-
-
-
 /* 1. Location vector R (column vector) in terms of cylindrical coordinates: */
 
 R: covect([r*cos(phi),r*sin(phi),z]);
 
-
-
 /* 2. Compute tangent vectors and assign them to h[1 .. ,2 .. ,3]: */
 
 h[1]: diff(R,r);
-
 h[2]: diff(R,phi);
-
 h[3]: diff(R,z);
-
-
 
 /* 3. Also assign the results to g[a .. ,b .. ,c]: */
 
 g[a]: h[1];
-
 g[b]: h[2];
-
 g[c]: h[3];
-
-
 
 /* 4.  */
 
 arrayinfo(g);
-
 arrayinfo(h);
-
-
 
 /* 5. Define function to compute the metric */
 
 mmetric(g) := block([a,b,dim,gij],
-
     dim: length(g[1]),
-
     /* print intermediate result */
     print("dim = ",dim),
-
     gij: zeromatrix(dim,dim),
-
     for a: 1 thru dim do
-
         for b:1 thru dim do
-
             gij[a,b]: g[a].g[b],
-
     trigsimp(gij)
-
 )$
-
-
 
 /* 6.  */
 
 length(h[1]);
 
-
-
 /* 7. Call function mmetric with argument h */
 
 h[ij]: mmetric(h);
  */
+
+(columnvector(x):=transpose(matrix(x)),
+ covect(x):=columnvector(x),
+ kill (R, r, phi, z, h, g, a, b, c, mmetric),
+ /* 1. */
+ R: covect([r*cos(phi),r*sin(phi),z]),
+ /* 2. */
+ h[1]: diff(R,r),
+ h[2]: diff(R,phi),
+ h[3]: diff(R,z),
+ [h[1], h[2], h[3]]);
+[matrix([cos(phi)], [sin(phi)], [0]),
+ matrix([-r*sin(phi)], [r*cos(phi)], [0]),
+ matrix([0], [0], [1])];
+
+ /* 3. */
+(g[a]: h[1],
+ g[b]: h[2],
+ g[c]: h[3],
+ /* 4. */
+ [arrayinfo(g), arrayinfo(h)]);
+[[hashed, 1, [a], [b], [c]], [hashed, 1, [1], [2], [3]]];
+
+ /* 5. */
+(mmetric(g) := block([a,b,dim,gij],
+    dim: length(g[1]),
+    /* print intermediate result */
+    print("dim = ",dim),
+    gij: zeromatrix(dim,dim),
+    for a: 1 thru dim do
+        for b:1 thru dim do
+            gij[a,b]: g[a].g[b],
+    /* DISABLE TRIGSIMP UNTIL I GET IT WORKING WITH LEXICAL: trigsimp(gij) */
+    gij),
+ 0);
+0;
+
+/* 6.  */
+length(h[1]);
+3;
+
+/* 7. Call function mmetric with argument h */
+h[ij]: mmetric(h);
+FOO;
 
 /* maxima-discuss 2017-03-17: "Functions as parameters to lambda"
 
