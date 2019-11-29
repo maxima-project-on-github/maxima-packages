@@ -505,8 +505,7 @@ h[ij]: mmetric(h);
     for a: 1 thru dim do
         for b:1 thru dim do
             gij[a,b]: g[a].g[b],
-    /* DISABLE TRIGSIMP UNTIL I GET IT WORKING WITH LEXICAL: trigsimp(gij) */
-    gij),
+    trigsimp(gij)),
  0);
 0;
 
@@ -516,7 +515,7 @@ length(h[1]);
 
 /* 7. Call function mmetric with argument h */
 h[ij]: mmetric(h);
-FOO;
+matrix([1, 0, 0], [0, r^2, 0], [0, 0, 1]);
 
 /* maxima-discuss 2017-03-17: "Functions as parameters to lambda"
 
@@ -526,6 +525,17 @@ FOO;
 
 but the result is f^2(0.1) and not (sin(0.1))^2.
  */
+
+/* verify f is captured in lexical environment */
+
+(kill(f, g),
+ square(f) := lambda([x],(f(x))^2),
+ g:square(sin),
+ string(%%));
+"lambda([x],f(x)^2)";
+
+g(1);
+sin(1)^2;
 
 /* maxima-discuss 2017-03-17: "Functions as parameters to lambda"
 
@@ -538,6 +548,17 @@ but the result is f^2(0.1) and not (sin(0.1))^2.
 (%o3) 0.009966711079379185
  */
 
+/* already works, ensure it continues to work */
+
+(kill(f, g),
+ square(f) := buildq([f],lambda([x],f(x)^2)),
+ g:square(sin),
+ string(%%));
+"lambda([x],sin(x)^2)";
+
+g(1);
+sin(1)^2;
+
 /* maxima-discuss 2017-03-18: "Functions as parameters to lambda"
 
 h: lambda ([b], h2:lambda ([a], a*b), h2(2));
@@ -546,6 +567,17 @@ h(3) ->  6
 g: lambda ([b], g2:lambda ([a], a*b), g2);
 (g(3))(2) -> 2 b
  */
+
+/* verify that b is captured in lexical environment of g2 */
+
+(kill (g, h, a, b),
+ h: lambda ([b], h2:lambda ([a], a*b), h2(2)),
+ h(3));
+6;
+
+(g: lambda ([b], g2:lambda ([a], a*b), g2),
+ g(3)(2));
+6;
 
 /* maxima-discuss 2017-08-27: "Bound variables in lambdas only sometimes shadow globals?"
 
@@ -565,6 +597,17 @@ Too few arguments supplied to a(x); found: []
 (%o4)                                 bar
  */
 
+/* verify that global a and local a are distinguished */
+
+(kill(a, b),
+ a(x) := x,
+ b : lambda([x], x),
+ lambda([a], a())(lambda([], "foo")));
+"foo";
+
+errcatch (lambda([a], a("bar"))(lambda([], "foo")));
+[];
+
 /* maxima-discuss 2017-08-28: "Bound variables in lambdas only sometimes shadow globals?"
 
 a:23$
@@ -577,6 +620,22 @@ With dynamic binding, f(7) prints 7.
 
 And with dynamic binding, ( f(7), g() )  prints 7 then 23, not 7 then 7,
  */
+
+/* verify that global a and local a are distinguished */
+
+(kill(a, f, g, l),
+ a:23,
+ f(a) := g(),
+ l: [],
+ g() := push (a, l),
+ f(7),
+ l);
+[23];
+
+(l: [],
+ (f(7), g()),
+ l);
+[23, 23];
 
 /* maxima-discuss 2017-11-03: "Free-variable capture in Maxima, was: Evaluate derivative at a point with ev"
 
@@ -601,11 +660,29 @@ global scope, not in the calling function's (f) scope. In lexical scope,
 both f(23) and g() would return 0.
  */
 
+/* verify global x and local x are distinguished */
+
+(kill(f, g, x),
+ x: 0,
+ f(x):=g(47),
+ g(y) := x,
+ f(23));
+0;
+
+g(99);
+0;
+
 /* maxima-discuss 2018-09-07: "\"lambda\" should be renamed to something else"
 
 (%i1) lambda([f], lambda([x], [f, x]))(g)(y);
 (%o1)                               [f, y]
  */
+
+/* verify that f is captured in the lexical environment of the inner lambda */
+
+(kill(x, y, f, g),
+ lambda([f], lambda([x], [f, x]))(g)(y));
+[g, y];
 
 /* maxima-discuss 2018-09-08: "\"lambda\" should be renamed to something else"
 
@@ -620,6 +697,25 @@ And of course it doesn't matter if there are other variables named
 
       block( [private:100], [f(),private:200,f()]) => [4,200,5]
  */
+
+/* verify that private captured in the lexical environment of lambda
+ * verify that global private and local private are distinguished
+ */
+
+(kill(private, f),
+ f: block([private:0],lambda([],private:private+1)),
+ string(f));
+"lambda([],private:private+1)";
+
+[f(), f(), f()];
+[1, 2, 3];
+
+block( [private:100], [f(),private:200,f()]) => [4,200,5]
+[4, 200, 5];
+
+(private: 300,
+ f());
+6;
 
 /* maxima-discuss 2019-03-24: "Questions about compiling"
 

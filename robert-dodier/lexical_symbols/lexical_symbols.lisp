@@ -13,6 +13,13 @@
 
 (mfuncall '$declare '$special '$feature)
 
+(let ((prev-mfexpr* (get '$define_variable 'mfexpr*)))
+  (setf (get '$define_variable 'mfexpr*)
+        #'(lambda (e)
+            (let ((var (second e)))
+              (declare1 (list var) t '$special 'kind)
+              (funcall prev-mfexpr* e)))))
+
 ;; Lexicalize MPROG (i.e., block([a, b, c, ...], ...))
 
 (defun maybe-subst-lexical-symbols-into-mprog (e)
