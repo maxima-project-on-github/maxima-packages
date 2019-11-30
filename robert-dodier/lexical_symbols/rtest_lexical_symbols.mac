@@ -376,6 +376,7 @@ f(Z);
   * but that got lost somewhere along the way in 2005 ...
   * anyway by explicitly making k a local symbol, 
   * we can get the expected result.
+  *   #summationindexscope
   */
  f(A) := block ([k], sum(A[k],k,1,2)),
  f(Z));
@@ -739,6 +740,26 @@ Point 2:
 
 */
 
+/* verify that global innerf and local innerf are distinguished */
+
+(kill(f, innerf),
+ f():= block([innerf],  innerf():=23, innerf()),
+ f());
+23;
+
+innerf();
+innerf();
+
+/* already works, ensure it continues to work */
+
+(kill(f, innerf),
+ f():= block([innerf], local(innerf), innerf():=23, innerf()),
+ f());
+23;
+
+innerf();
+innerf();
+
 /* maxima-discuss 2019-03-24: "Questions about compiling"
 
 func() := print(3)$
@@ -759,11 +780,46 @@ ff():=block([func], func:lambda([],print(88)), (+func)()) ;
 ff() => 88
  */
 
+/* verify that global func and local func are distinguished */
+
+(kill(func, ff),
+ func() := print(3),
+ ff():=block([func],func:lambda([],print(88)), func()),
+ ff());
+88;
+
+/* already works, ensure it continues to work */
+
+(ff():=block([func],local(func), func:lambda([],print(88)), func()),
+ ff());
+88;
+
+(ff():=block([func], func:lambda([],print(88)), (+func)()),
+ ff());
+88;
+
 /* maxima-discuss 2019-05-15: "Scope error with sum"
 
     f(x) := sum(i*x, i, 1, 5);         (with f(i) = 55 )
 will look like an error.
  */
+
+/* Hmm. f returns 15*i only if the summation index i is distinguished from the global i.
+ * sum doesn't treat its index as a local variable, maybe it should.
+ *   #summationindexscope
+ */
+
+(kill(f, i),
+ f(x) := sum(i*x, i, 1, 5),
+ f(j));
+15*j;
+
+f(i);
+55;
+
+(f(x) := block ([i], sum(i*x, i, 1, 5)),
+ f(i));
+15*i;
 
 /* maxima-discuss 2019-05-25: "Question about defmatch"
 
@@ -777,12 +833,29 @@ hh:sin(w)+4*sin(mm);
 find_sin(hh);   returns      [sin(w),sin(mm)]
  */
 
+/* verify that functions refer to the same kk */
+
+block ([kk],
+  find_sin(z):= (kk: [], apply1(z,push_on_kk), kk),
+  push_on_kk(r):= if not(mapatom(r)) and (part(r,0)=sin) then push(r,kk),
+  0);
+0;
+
+(hh:sin(w)+4*sin(mm),
+ find_sin(hh));
+[sin(w), sin(mm)];
+
 /* maxima-discuss 2019-05-28: "Advantages of dynamic scoping (was Question about defmatch)"
 
 (%i1)      mod1(value,modulus):=mod(value-1,modulus)+1$
 (%i2)      mod1(0,8);
 warning: assigning 8, a non-prime, to 'modulus'
 (%o2)     8
+ */
+
+/* NOT SEEING A DISTINCTION BETWEEN LEXICAL AND DYNAMIC SCOPE HERE.
+ * IN EITHER CASE, MODULUS REFERS TO THE GLOBAL SYMBOL
+ * (ASSUMING ALL BUILT-IN GLOBAL FLAGS ARE DECLARED SPECIAL IN THE LEXICAL CASE)
  */
 
 /* maxima-discuss 2019-05-28: "Advantages of dynamic scoping (was Question about defmatch)"
@@ -795,6 +868,32 @@ bar()-x
 what about
 bar():=block([x:45],parse_string("x"));
  */
+
+/* assume parse_string (and eval_string) work in the global environment; this is subject to discussion !! */
+
+(kill(x),
+ bar():=  parse_string("x"),
+ bar());
+x;
+
+bar() - x;
+0;
+
+(bar():=block([x:45],eval_string("x")),
+ bar());
+x;
+
+bar() - x;
+0;
+
+(baz() := block([x], eval_string("x") - x, string(%%)),
+ baz());
+"x-x";
+
+(x: 99,
+ baz() := block([x: 45], eval_string("x") - x),
+ baz ());
+54;
 
 /* maxima-discuss 2019-09-28: "Symbol collision via MEVAL in integration, was: Problem with fourier"
 
@@ -809,6 +908,32 @@ Renaming f to f% throughout fourie.mac causes fourier to give the
 expected for fourier(f(t+(t1+T/2)),t,T). I've pushed commit 4650d2d to
 implement that.
  */
+
+/* verify that global f and local f are distinguished
+ * assume that 4650d2d is reverted
+ */
+
+(kill(a, b, f, g, t, t1, T),
+ load(fourie),
+ fourier(g(t+(t1+T/2)),t,T),
+ ev(%%));
+[a[0] = ('limit('integrate(g(t1+t+T/2),t),t,T,minus)-'limit('integrate(g(t1+t+T/2),t),t,-T,plus))/(2*T),
+ a[n] = ('limit('integrate(cos((%pi*n*t)/T)*g(t1+t+T/2),t),t,T,minus)
+      -'limit('integrate(cos((%pi*n*t)/T)*g(t1+t+T/2),t),t,-T,plus))
+      /T,
+ b[n] = ('limit('integrate(sin((%pi*n*t)/T)*g(t1+t+T/2),t),t,T,minus)
+      -'limit('integrate(sin((%pi*n*t)/T)*g(t1+t+T/2),t),t,-T,plus))
+      /T]$
+
+(fourier(f(t+(t1+T/2)),t,T),
+ ev(%%));
+[a[0] = ('limit('integrate(f(t1+t+T/2),t),t,T,minus)-'limit('integrate(f(t1+t+T/2),t),t,-T,plus))/(2*T),
+ a[n] = ('limit('integrate(cos((%pi*n*t)/T)*f(t1+t+T/2),t),t,T,minus)
+      -'limit('integrate(cos((%pi*n*t)/T)*f(t1+t+T/2),t),t,-T,plus))
+      /T,
+ b[n] = ('limit('integrate(sin((%pi*n*t)/T)*f(t1+t+T/2),t),t,T,minus)
+      -'limit('integrate(sin((%pi*n*t)/T)*f(t1+t+T/2),t),t,-T,plus))
+      /T]$
 
 /* maxima-discuss 2019-11-06: "Interference of a forrmal parameter of a function and a global variable of the same name"
 
@@ -941,4 +1066,5 @@ gg(f,g):=gradef(f(x),g(x));
 
 gg(foo,bar)   /* fails, define gradient for f, not foo */
  */
-
+ 
+/* #summationindexscope */
