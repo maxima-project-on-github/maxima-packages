@@ -1,0 +1,28 @@
+slurp_exprs (f) :=
+  block ([s: openr(f), l: [], l1],
+         while (l1: ?mread(s)) # false do push(l1, l),
+         close (s),
+         reverse (l));
+
+facexp_exprs: map (second, slurp_exprs (file_search ("facexp.mac")));
+genut_exprs: map (second, slurp_exprs (file_search ("genut.mac")));
+all_exprs: append (facexp_exprs, genut_exprs);
+
+all_functions: sublist (all_exprs, lambda ([e], not atom(e) and op(e) = ":="));
+
+listofvars_try_harder (expr) :=
+  unique (flatten (map (lambda ([e], if not atom(e) then [op(e), listofvars (args(e))] else e), listofvars (expr))));
+
+listofvars_global ([e]) := sublist (listofvars_try_harder (e), lambda ([x], ?symbol\-package(x) # false));
+listofvars_lexical ([e]) := sublist (listofvars_try_harder (e), lambda ([x], ?symbol\-package(x) = false));
+get_global_name (x) := if ?symbol\-package(x) = false then ?get (x, ?reversealias);
+
+defstruct (finfo (op, lexicals, globals));
+
+make_finfo (e) := finfo (op(lhs(e)), map (get_global_name, listofvars_lexical(lhs(e), rhs(e))), listofvars_global(rhs(e)));
+all_functions_globals_refs: map (make_finfo, all_functions);
+
+find_possible_callers (x) := sublist (all_functions_globals_refs, lambda ([e], member (x, e@lexicals)));
+
+fullmap (lambda ([x], possible_callers(x) = find_possible_callers(x)),
+         map (lambda ([e], e@globals), all_functions_globals_refs));
