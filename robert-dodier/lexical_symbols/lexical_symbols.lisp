@@ -66,11 +66,11 @@
      (header (mheader 'mprog)))
     (cons '$any (maybe-subst-lexical-symbols-into-mprog (cons header right)))))
 
-;; Lexicalize MDEFINE (i.e. f(a, b, c, ...) := ...)
+;; Lexicalize MDEFINE (i.e. f(a, b, c, ...) := ..., also f[a, b, c, ...] := ..., and f[a, b, c, ...](x, y, z, ...) := ...)
 
 (defun subst-lexical-symbols-into-mdefine-or-lambda (e)
   (let*
-    ((args (remove-if #'(lambda (x) (kindp x '$special)) (rest ($listofvars (second e)))))
+    ((args (remove-if #'(lambda (x) (kindp x '$special)) (extract-arguments-symbols e)))
      (args-gensyms (mapcar
                      #'(lambda (s)
                          (let ((s1 (gensym)))
@@ -83,6 +83,16 @@
 (def-led (|$:=| 180. 20.) (op left)
   (let ((e (parse-infix op left)))
     (cons (first e) (subst-lexical-symbols-into-mdefine-or-lambda (rest e)))))
+
+(defun extract-arguments-symbols (e)
+  (let*
+    ((e-lhs (second e))
+     (is-mqapply (eq (caar e-lhs) 'mqapply))
+     (e-lhs-op ($op e-lhs))
+     (e-lhs-args ($args e-lhs)))
+    (if is-mqapply
+      (rest ($listofvars ($append ($args e-lhs-op) e-lhs-args)))
+      (rest ($listofvars e-lhs-args)))))
 
 ;; Lexicalize LAMBDA (i.e., lambda([a, b, c, ...], ...))
 
