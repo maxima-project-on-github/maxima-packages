@@ -1,3 +1,5 @@
+load ("lexical_symbols.lisp");
+
 slurp_exprs (f) :=
   block ([s: openr(f), l: [], l1],
          while (l1: ?mread(s)) # false do push(l1, l),
@@ -25,13 +27,21 @@ all_finfo: map (make_finfo, all_functions);
 defstruct (callinfo (callee, globalvar, callers));
 
 find_possible_callers (i) :=
-  map (lambda ([x], (find_possible_callers1 (x), if %% # [] then callinfo (i@op, x, map (lambda ([y], y@op), %%)))), i@globals);
+  map (lambda ([x], callinfo (i@op, x, map (lambda ([y], y@op), find_possible_callers1 (x)))), i@globals);
 
 find_possible_callers1 (x) := sublist (all_finfo, lambda ([e], member (x, e@lexicals)));
 
 all_possible_callers1: map (find_possible_callers, all_finfo);
 all_possible_callers2: map (lambda ([l], delete (false, l)), all_possible_callers1);
-all_possible_callers: sublist (all_possible_callers2, lambda ([l], l # []));
+all_possible_callers3: sublist (all_possible_callers2, lambda ([l], l # []));
+all_possible_callers4: flatten (all_possible_callers3);
+all_possible_callers: sublist (all_possible_callers4, lambda ([x], x@callers # []));
+no_callers: sublist (all_possible_callers4, lambda ([x], x@callers = []));
 
+linel:200;
 for x in all_possible_callers
-  do (for x1 in x do (print (x1), print ("")), print (""));
+  do (print (x), print (""));
+
+maybe_needs_special_declaration: unique (map (lambda ([x], x@globalvar), all_possible_callers));
+
+global_with_no_refs: map (lambda ([x], [x@callee, x@globalvar]), no_callers);
