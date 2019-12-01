@@ -20,9 +20,18 @@ get_global_name (x) := if ?symbol\-package(x) = false then ?get (x, ?reversealia
 defstruct (finfo (op, lexicals, globals));
 
 make_finfo (e) := finfo (op(lhs(e)), map (get_global_name, listofvars_lexical(lhs(e), rhs(e))), listofvars_global(rhs(e)));
-all_functions_globals_refs: map (make_finfo, all_functions);
+all_finfo: map (make_finfo, all_functions);
 
-find_possible_callers (x) := sublist (all_functions_globals_refs, lambda ([e], member (x, e@lexicals)));
+defstruct (callinfo (callee, globalvar, callers));
 
-fullmap (lambda ([x], possible_callers(x) = find_possible_callers(x)),
-         map (lambda ([e], e@globals), all_functions_globals_refs));
+find_possible_callers (i) :=
+  map (lambda ([x], (find_possible_callers1 (x), if %% # [] then callinfo (i@op, x, map (lambda ([y], y@op), %%)))), i@globals);
+
+find_possible_callers1 (x) := sublist (all_finfo, lambda ([e], member (x, e@lexicals)));
+
+all_possible_callers1: map (find_possible_callers, all_finfo);
+all_possible_callers2: map (lambda ([l], delete (false, l)), all_possible_callers1);
+all_possible_callers: sublist (all_possible_callers2, lambda ([l], l # []));
+
+for x in all_possible_callers
+  do (for x1 in x do (print (x1), print ("")), print (""));
