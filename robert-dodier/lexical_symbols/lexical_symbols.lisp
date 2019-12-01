@@ -13,6 +13,14 @@
 
 (mfuncall '$declare '$special '$feature)
 
+;; Declare all DEFMVAR symbols as special.
+;; Assume the keys of the hash table *VARIABLE-INITIAL-VALUES*
+;; is exactly the set of such symbols.
+
+(let (defmvars-list)
+  (maphash #'(lambda (k v) (push k defmvars-list)) *variable-initial-values* )
+  (declare1 defmvars-list t '$special 'kind))
+
 (let ((prev-mfexpr* (get '$define_variable 'mfexpr*)))
   (setf (get '$define_variable 'mfexpr*)
         #'(lambda (e)
@@ -44,7 +52,7 @@
     (var-inits-gensyms (mapcar #'(lambda (s) (let ((s1 (gensym))) (setf (get s1 'reversealias) (or (get s 'reversealias) s)) s1)) var-inits-vars-lexical))
     (gensyms-all (append vars-only-gensyms var-inits-gensyms))
     (subst-eqns (mapcar #'(lambda (x y) `((mequal) ,x ,y)) vars-all-lexical gensyms-all))
-    (gensym-mprogn ($psubstitute `((mlist) ,@ subst-eqns) `((mprogn) ,@ exprs)))
+    (gensym-mprogn (let (($simp nil)) ($psubstitute `((mlist) ,@ subst-eqns) `((mprogn) ,@ exprs))))
     (gensym-inits (mapcar #'(lambda (e y) (list (first e) y (third e))) var-inits-lexical var-inits-gensyms))
     (gensym-mprog `(,mprog-op ((mlist) ,@ (append vars-only-gensyms gensym-inits vars+var-inits-special)) ,@ (cdr gensym-mprogn))))
    gensym-mprog))
@@ -68,7 +76,7 @@
                          (let ((s1 (gensym)))
                            (setf (get s1 'reversealias) (or (get s 'reversealias) s)) s1)) args))
      (subst-eqns (mapcar #'(lambda (x y) `((mequal) ,x ,y)) args args-gensyms))
-     (substituted-definition ($psubstitute `((mlist) ,@ subst-eqns) e))
+     (substituted-definition (let (($simp nil)) ($psubstitute `((mlist) ,@ subst-eqns) e)))
      (function-header (first (second e))))
     (list (first e) (cons function-header (rest (second substituted-definition))) (third substituted-definition))))
 
@@ -101,9 +109,10 @@
        (body (ninth do-expr)))
       (setf (get var-subst 'reversealias) (or (get var 'reversealias) var))
       (setf (third do-expr) var-subst)
-      (setf (sixth do-expr) (maxima-substitute var-subst var next))
-      (setf (eighth do-expr) (maxima-substitute var-subst var unless))
-      (setf (ninth do-expr) (maxima-substitute var-subst var body))
+      (let (($simp nil))
+        (setf (sixth do-expr) (maxima-substitute var-subst var next))
+        (setf (eighth do-expr) (maxima-substitute var-subst var unless))
+        (setf (ninth do-expr) (maxima-substitute var-subst var body)))
       do-expr)))
 
 (setf (get '$for 'nud) #'parse-$do)
