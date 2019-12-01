@@ -87,3 +87,24 @@
          (header (mheader 'lambda)))
         (cons '$any (subst-lexical-symbols-into-mdefine-or-lambda (cons header right)))))
     `($any . ,op)))
+
+;; Lexicalize MDO and MDOIN (i.e., for x: ... do ..., and for x in ... do ...)
+
+(let ((parse-$do-prev #'parse-$do))
+  (defun parse-$do (&rest a)
+    (let*
+      ((do-expr (apply parse-$do-prev a))
+       (var (third do-expr))
+       (var-subst (gensym))
+       (next (sixth do-expr))
+       (unless (eighth do-expr))
+       (body (ninth do-expr)))
+      (setf (get var-subst 'reversealias) (or (get var 'reversealias) var))
+      (setf (third do-expr) var-subst)
+      (setf (sixth do-expr) (maxima-substitute var-subst var next))
+      (setf (eighth do-expr) (maxima-substitute var-subst var unless))
+      (setf (ninth do-expr) (maxima-substitute var-subst var body))
+      do-expr)))
+
+(setf (get '$for 'nud) #'parse-$do)
+
