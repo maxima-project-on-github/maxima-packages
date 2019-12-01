@@ -914,6 +914,7 @@ implement that.
  */
 
 (kill(a, b, f, g, t, t1, T),
+ declare (n, special), /* FOURIER LEAKS N !! ASSUMING THAT'S ACCEPTABLE, WHOSE RESPONSIBILITY IS IT TO DECLARE N SPECIAL ?? */
  load(fourie),
  fourier(g(t+(t1+T/2)),t,T),
  ev(%%));
@@ -938,33 +939,30 @@ implement that.
 /* maxima-discuss 2019-11-06: "Interference of a forrmal parameter of a function and a global variable of the same name"
 
 Apply2Part(f, [subexpr]):=block(
-
     local(f, subexpr),
-
     apply(substpart, cons(apply(f, [apply(part, subexpr)]), subexpr))
-
 )$
-
-
 
 Example:
 
-
-
 expr: u=m*r^2*d+m*s^2*g+m*t^2*h;    =>    u=h*m*t^2+g*m*s^2+d*m*r^2
-
-
-
 Apply2Part(factor, expr, 2, [1,2]);    =>    u=m*(h*t^2+g*s^2)+d*m*r^2
-
-
-
 expr1: u=m*r^2*f+m*s^2*g+m*t^2*h;    =>    u=h*m*t^2+g*m*s^2+f*m*r^2
-
-
-
 Apply2Part(factor, expr1, 2, [1,2]);    =>    u=m*(h*t^2+g*s^2)+factor*m*r^2
  */
+
+/* verify that global f and local f are distinguished */
+
+(kill(u, m, r, d, s, g, t, h, f),
+ Apply2Part(f, [subexpr]):=block(
+     apply(substpart, cons(apply(f, [apply(part, subexpr)]), subexpr))),
+ expr: u=m*r^2*d+m*s^2*g+m*t^2*h,
+ Apply2Part(factor, expr, 2, [1,2]));
+u=m*(h*t^2+g*s^2)+d*m*r^2;
+
+(expr1: u=m*r^2*f+m*s^2*g+m*t^2*h,
+ Apply2Part(factor, expr1, 2, [1,2]));
+u=m*(h*t^2+g*s^2)+f*m*r^2;
 
 /* maxima-discuss 2019-11-20: "Strange behavior of a simple function"
 
@@ -984,6 +982,29 @@ y[1] + a[2]
 
 Worse, calling foo(y,x) will make Maxima hang.
  */
+
+/* verify that global x and y are distinguished from local x and y */
+
+(kill(x, y, a, b),
+ foo(x,y) := x[1] + y[2],
+ foo(a, b));
+a[1] + b[2];
+
+foo(y, a);
+y[1] + a[2];
+
+foo(y, x);
+y[1] + x[2];
+
+(bar(x, y) := x(1) + y(2), /* with dynamic scope, same problem observed for functions instead of arrays */
+ bar(a, b));
+a(1) + b(2);
+
+bar(y, b);
+y(1) + b(2);
+
+bar(y, x);
+y(1) + x(2);
 
 /* maxima-discuss 2019-11-19: "general proposal to implement lexical scope + path to Maxima 6.0 version"
 
