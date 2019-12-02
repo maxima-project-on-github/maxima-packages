@@ -78,8 +78,9 @@
                            (setf (get s1 'reversealias) (or (get s 'reversealias) s)) s1)) args))
      (subst-eqns (mapcar #'(lambda (x y) `((mequal) ,x ,y)) args args-gensyms))
      (substituted-definition (let (($simp nil)) ($substitute `((mlist) ,@ subst-eqns) e)))
-     (function-header (first (second e))))
-    (list (first e) (cons function-header (rest (second substituted-definition))) (third substituted-definition))))
+     (function-header (first (second e)))
+     (function-header-new (cons function-header (rest (second substituted-definition)))))
+    (append (list (first e) function-header-new) (cddr substituted-definition))))
 
 (def-led (|$:=| 180. 20.) (op left)
   (let ((e (parse-infix op left)))
