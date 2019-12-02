@@ -17,9 +17,10 @@
 ;; Assume the keys of the hash table *VARIABLE-INITIAL-VALUES*
 ;; is exactly the set of such symbols.
 
-(let (defmvars-list)
+(let (defmvars-list (save-$props (copy-list $props)))
   (maphash #'(lambda (k v) (push k defmvars-list)) *variable-initial-values* )
-  (declare1 defmvars-list t '$special 'kind))
+  (declare1 defmvars-list t '$special 'kind)
+  (setq $props save-$props))
 
 (let ((prev-mfexpr* (get '$define_variable 'mfexpr*)))
   (setf (get '$define_variable 'mfexpr*)
