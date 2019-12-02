@@ -711,7 +711,7 @@ And of course it doesn't matter if there are other variables named
 [f(), f(), f()];
 [1, 2, 3];
 
-block( [private:100], [f(),private:200,f()]) => [4,200,5]
+block( [private:100], [f(),private:200,f()]);
 [4, 200, 5];
 
 (private: 300,
@@ -1034,7 +1034,7 @@ f(x) - f(x);
 
 (kill(u, v, x),
  f(ex,x):=diff(ex,x),
- f(sin(2*u), u))
+ f(sin(2*u), u));
 2*cos(2*u);
 
 (u: 'v,
