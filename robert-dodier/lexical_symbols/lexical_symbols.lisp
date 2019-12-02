@@ -16,10 +16,13 @@
 ;; Declare all DEFMVAR symbols as special.
 ;; Assume the keys of the hash table *VARIABLE-INITIAL-VALUES*
 ;; is exactly the set of such symbols.
+;; Make these declarations in the global context to protect them from kill.
 
-(let (defmvars-list (save-$props (copy-list $props)))
+(let (defmvars-list (save-$props (copy-list $props)) (save-$context $context))
   (maphash #'(lambda (k v) (push k defmvars-list)) *variable-initial-values* )
+  (mset '$context '$global)
   (declare1 defmvars-list t '$special 'kind)
+  (mset '$context save-$context)
   (setq $props save-$props))
 
 (let ((prev-mfexpr* (get '$define_variable 'mfexpr*)))
