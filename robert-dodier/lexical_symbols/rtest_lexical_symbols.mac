@@ -152,7 +152,7 @@ g(4)(5);
 
 /* reimplement w/ lexical scope */
 (g(x) := lambda([y], x + y), string(%%))$
-"lambda([y],y+4)";
+"g(x):=lambda([y],x+y)";
 
 string(g(4));
 "closure([x:4],lambda([y],x+y))";
