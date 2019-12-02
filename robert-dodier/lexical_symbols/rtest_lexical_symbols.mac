@@ -1017,8 +1017,38 @@ A couple of possibly confusing cases:
 
  */
 
-/* maxima-discuss 2019-11-20: "Re: [Maxima-discuss] general proposal to implement lexical"
+/* verify that global x and local x are distinguished
+ * whether that's surprising or unsurprising is not examined here !!
+ */
 
+(f(x):='x,
+ string (x - f(x)));
+"x-x";
+
+f(x) - f(x);
+0;
+
+(g(x) := 'x,
+ string (g(x) - f(x)));
+"x-x";
+
+(kill(u, v, x),
+ f(ex,x):=diff(ex,x),
+ f(sin(2*u), u))
+2*cos(2*u);
+
+(u: 'v,
+ f(cos(3*u), u));
+-3*sin(3*v);
+
+f(cosh(x), x);
+sinh(x);
+
+(f(ex,x):=diff(ex,'x),
+ f(cosh(x), x));
+0;
+
+/* maxima-discuss 2019-11-20: "Re: [Maxima-discuss] general proposal to implement lexical"
 
 (%i4) bob(a,b,c,x) := block([p : [a,b], q : [c]],hypergeometric(p,q,x));
 warning: The first two arguments to 'hypergeometric' must be lists.
@@ -1030,6 +1060,26 @@ But function bob seems to work OK
 
  */
 
+/* verify that function body is not simplified via gensym substitution
+ * try to capture warning message; message is printed by MTELL so it seems like it should work
+ */
+
+block ([s: make_string_output_stream ()],
+       with_stdout (s, parse_string ("bob(a,b,c,x) := block([p : [a,b], q : [c]],hypergeometric(p,q,x))")),
+       get_output_stream_string (s));
+"";
+ 
+(bob(a,b,c,x) := block([p : [a,b], q : [c]],hypergeometric(p,q,x)),
+ bob(2,3,1/2,x));
+hypergeometric([2,3],[1/2],x);
+
+/* warning from hypergeometric comes from bug in commit 14d8251;
+ * not supposed to simplify stuff in function body.
+ * bug caused by (LET (($SIMP T)) (RESIMPLIFY Z)) in psubstitute -- seems questionable, oh well !!
+ */
+
+string (f():=block([x,y],0+x+y));
+"f():=block([x,y],0+x+y)";
 
 /* maxima-discuss 2019-11-19: "concepts vs implementation, was: general proposal to implement lexical"
 
