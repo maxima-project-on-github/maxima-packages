@@ -1,4 +1,5 @@
-load ("lexical_symbols.lisp");
+if not member (special, features)
+  then load ("lexical_symbols.lisp");
 
 slurp_exprs (f) :=
   block ([s: openr(f), l: [], l1],
@@ -53,3 +54,27 @@ for x in all_possible_callers
 global_with_no_refs: map (lambda ([x], [x@callee, x@globalvar]), no_callers);
  */
 
+/* a different but related problem -- there exist some constructs like
+ * block([foo], foo: foo(x), ...) which makes use of the Lisp-2 concept
+ * of function vs value slots on the same symbol, but in a lexical world,
+ * foo(x) does not refer to the global function foo.
+ */
+
+block
+ ([e, b, foolist, barlist, r0, r1],
+  matchdeclare (e, lambda ([x], not mapatom(x) and member (op(x), foolist))),
+  /* JUST BLOCK BY ITSELF CONFUSES PARSER, ALTHOUGH IT SHOULD BE OK; VERBIFY("BLOCK") IS A WORKAROUND !! */
+  matchdeclare (b, lambda ([x], not mapatom(x) and op(x) = verbify("block"))),
+  defrule (r0, b, (if listp (first (b))
+                     then (foolist: map (lambda ([x], if atom(x) then x else first(x)), first(b)),
+                           applyb1 (rest (args (b)), r1)),
+                   false)),
+  defrule (r1, e, push(e, barlist)),
+
+  find_possible_shadowed_functions ([filenames]) :=
+   (exprs_lists: map (lambda ([f], map (second, slurp_exprs (file_search (f)))), filenames),
+    all_exprs: apply (append, exprs_lists),
+    barlist: [],
+    map (lambda ([x], apply1 (x, r0)), all_exprs),
+    barlist));
+  
