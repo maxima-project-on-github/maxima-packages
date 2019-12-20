@@ -12,6 +12,9 @@
 ;; Any symbols declared special are excluded from gensym substitution.
 
 (mfuncall '$declare '$special '$feature)
+;; Ensure that special feature isn't removed by reset()
+;; by saving current list of features.
+(setf (gethash '$features *variable-initial-values*) $features)
 
 ;; Declare all DEFMVAR symbols as special.
 ;; Assume the keys of the hash table *VARIABLE-INITIAL-VALUES*
