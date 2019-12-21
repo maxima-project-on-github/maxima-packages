@@ -1,0 +1,45 @@
+/* subst_floats.mac
+ * copyright 2019 by Robert Dodier
+ * I release this work under terms of the GNU GPL v2
+ */
+
+use_fast_arrays: true $
+float_substitutions: make_array (hashed, 1);
+
+matchdeclare (xx, floatnump);
+defrule (subst_floats, xx,
+         if float_substitutions[xx] # false
+           then float_substitutions[xx]
+         elseif float_substitutions[- xx] # false
+           then - float_substitutions[- xx]
+         else block ([yy: gensym ()],
+                      float_substitutions[xx]: yy,
+                      assume (equal (yy, xx)),
+                      yy));
+
+resubst_floats (e) :=
+  block ([keys: rest (arrayinfo (float_substitutions), 2), eqs],
+         eqs: makelist (float_substitutions[key] = key, key, keys),
+         subst (eqs, e));
+
+/* SF bug report #3030: "solve entering endless loop on a kind of simple task"
+ * https://sourceforge.net/p/maxima/bugs/3030/
+ */
+
+m1:0.1593017578125;
+m2:78.84375;
+c1:0.8359375;
+c2:18.8515625;
+c3:18.6875;
+
+assume(L>0);
+assume(N>0);
+
+eq: L= ((N^(1/m2)-c1) / (c2-c3*N^(1/m2)))^(1/m1);
+
+apply1 (eq, subst_floats);
+solve (%, N);
+resubst_floats (%);
+
+arrayinfo (float_substitutions);
+listarray (float_substitutions);
