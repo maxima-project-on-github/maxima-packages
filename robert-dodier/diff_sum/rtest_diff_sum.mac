@@ -27,17 +27,17 @@ while_assuming ([j >= 1, j <= n],
 'diff((m*'sum(xdot[i](t)^2,i,1,n))/2+e*'sum(A[i]*xdot[i](t),i,1,n)
                                           +Phi*e,xdot[j](t),1);
 
-(declare (nounify(sum), linear),
- bar : ev (foo, simp));
+while_declaring ([nounify(sum), linear],
+  bar : ev (foo, simp));
 'diff((m*'sum(xdot[i](t)^2,i,1,n))/2+e*'sum(A[i]*xdot[i](t),i,1,n)
                                            +Phi*e,xdot[j](t),1);
 
 ev (bar, nouns);
 0;
 
-(declare (nounify(diff), linear),
- baz : ev (foo, simp),
- string (baz));
+while_declaring ([nounify(diff), linear],
+  (baz : ev (foo, simp),
+   string (baz)));
 "m*(if 1 <= j and j <= n and %elementp(j,integers) then xdot[j](t) else 0)\
 +e*(if 1 <= j and j <= n and %elementp(j,integers) then A[j] else 0)";
 
@@ -46,3 +46,13 @@ ev (bar, nouns);
  ev (baz, simp));
 m*xdot[j](t)+e*A[j];
 
+/* diff wrt specific index */
+
+'diff('sum(f(x[i]), i, 1, n), x[1]);
+if true then 'diff(f(x[1]),x[1],1) else 0; /* package boolsimp can simplify this to the 'then' clause */
+
+'diff('sum(f(x[i]), i, 1, n), x[2]);
+if 2 <= n then 'diff(f(x[2]),x[2],1) else 0;
+
+'diff('sum((x[i])^i, i, 1, n), x[2]);
+if 2 <= n then 2*x[2] else 0;
