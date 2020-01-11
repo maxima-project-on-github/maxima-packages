@@ -1083,7 +1083,6 @@ string (f():=block([x,y],0+x+y));
 
 /* maxima-discuss 2019-11-19: "concepts vs implementation, was: general proposal to implement lexical"
 
-
 matchdeclare(p1, true);
 defrule(r1,m(p1,p1), double(p1));
 apply1(m(3,3),r1)  ;
