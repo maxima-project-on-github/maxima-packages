@@ -15,7 +15,7 @@
     (mbind symbols vals nil)
     (unwind-protect
       (let ((result ,@body))
-        (list '($bubble) (cons '(mlist) env-name-list) result))
+        (list '($closure) (cons '(mlist) env-name-list) result))
       (mapcar #'(lambda (env-name)
                   (let ((env (get env-name 'env)))
                     (maphash #'(lambda (s v) (setf (gethash s env) (symbol-value s))) env))) ,env-name-list)
@@ -28,7 +28,7 @@
     ($lfreeof (cons '(mlist) symbols) x)))
 
 ;; HOW IS Z SUPPOSED TO BE USED HERE ??
-(defun simplify-$bubble (x vestigial z)
+(defun simplify-$closure (x vestigial z)
   (declare (ignore vestigial))
   (let
     ((env-name-list (rest (second x)))
@@ -36,9 +36,9 @@
     (let ((new-env-name-list (remove-if #'(lambda (e) (freeof-env (get e 'env) result)) env-name-list)))
       (if (null new-env-name-list)
         result
-        (list '($bubble simp) (cons '(mlist simp) new-env-name-list) result)))))
+        (list '($closure simp) (cons '(mlist simp) new-env-name-list) result)))))
 
-(setf (get '$bubble 'operators) 'simplify-$bubble)
+(setf (get '$closure 'operators) 'simplify-$closure)
 
 (defun extract-env-name-list (car-expr)
   (let (env-name-list)
