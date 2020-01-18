@@ -15,7 +15,7 @@
     (mbind symbols vals nil)
     (unwind-protect
       (let ((result ,@body))
-        (list '($closure) (cons '(mlist) env-name-list) result))
+        (list '($closure) (cons '(mlist) ,env-name-list) result))
       (mapcar #'(lambda (env-name)
                   (let ((env (get env-name 'env)))
                     (maphash #'(lambda (s v) (setf (gethash s env) (symbol-value s))) env))) ,env-name-list)
@@ -70,6 +70,29 @@
     ;; FOR NOW JUST POP WITHOUT INSPECTING IT !!
     (pop *active-lexical-environments*)
     (funcall munbind-prev vars)))
+
+(defun extract-local-vars (e)
+  (if (and (rest e) ($listp (second e)))
+    (let ((vars+var-inits (rest (second e))))
+      (mapcar #'(lambda (e1) (if (consp e1) (list (second e1) (third e1)) (list e1 e1))) vars+var-inits))))
+
+(defun extract-body (e)
+  (if (and (rest e) ($listp (second e)))
+    (rest (rest e))
+    (rest e)))
+
+(let ((prev-mfexpr* (get 'mprog 'mfexpr*)))
+  (setf (get 'mprog 'mfexpr*)
+        #'(lambda (e)
+            (let
+              ((vars+var-inits-pairs (extract-local-vars e))
+               (body (extract-body e))
+               (new-env (make-hash-table))
+               (new-env-id (gensym "ENV")))
+              ;; EXCLUDE NON-LEXICAL VARIABLES HERE ?? I DUNNO !!
+              (mapcar #'(lambda (vv) (setf (gethash (first vv) new-env) (second vv))) vars+var-inits-pairs)
+              (setf (get new-env-id 'env) new-env)
+              (with-lexical-environment (list new-env-id) (funcall (get 'mprogn 'mfexpr*) (cons '(mprogn) body)))))))
 
 ;; example
 
