@@ -1,3 +1,6 @@
+(when (not ($featurep '$special '$feature))
+  (load "lexical_symbols.lisp"))
+
 ;; List of active lexical environments;
 ;; the innermost environment is the first element.
 ;; Each environment is a hash table.
@@ -33,10 +36,18 @@
   (let
     ((env-name-list (rest (second x)))
      (result (third x)))
+    ;; PROBABLY NEED TO LOOK AT VALUES IN INNER ENVIROMENTS BEFORE SAYING OUTER ENVIRONMENT CAN GO AWAY !!
     (let ((new-env-name-list (remove-if #'(lambda (e) (freeof-env (get e 'env) result)) env-name-list)))
       (if (null new-env-name-list)
         result
-        (list '($closure simp) (cons '(mlist simp) new-env-name-list) result)))))
+        (if (and (consp result) (eq (caar result) 'lambda))
+          ;; Smash list of environments into expression car
+          ;; and throw away $CLOSURE.
+          ;; DOES NEW-ENV-NAME-LIST NEED TO GO BEFORE OR AFTER ANY ENVIRONMENTS ALREADY PRESENT IN CAR ??
+          ;; OR MAYBE IT DOESN'T MATTER ??
+          (cons (append (car result) new-env-name-list) (cdr result))
+          ;; Otherwise RESULT is a general expression, wrap it in $CLOSURE.
+          (list '($closure simp) (cons '(mlist simp) new-env-name-list) result))))))
 
 (setf (get '$closure 'operators) 'simplify-$closure)
 
