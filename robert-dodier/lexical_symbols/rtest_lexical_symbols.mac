@@ -1138,3 +1138,24 @@ gg(foo,bar)   /* fails, define gradient for f, not foo */
  */
  
 /* #summationindexscope */
+
+/* inspired by
+
+     (let ((name '+))
+       (let ((+ *))
+         (evaluate (list name 2 3))))
+
+   in: https://en.wikipedia.org/wiki/Scheme_(programming_language)#Lambda_calculus
+ */
+
+(kill (plus, times, name),
+ plus: lambda ([a, b], a + b),
+ times: lambda ([a, b], a * b),
+ block ([name: 'plus], block ([plus: 'times], ?meval (funmake (name, [2, 3])))));
+5;
+
+/* substitution into lambda should fail
+ * e.g. block([a], lambda([v], subst('v=v, lambda([v],a*v))));
+ * doesn't change inner lambda
+ */
+
