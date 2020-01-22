@@ -15,14 +15,14 @@
     ;; Hpwever, that's doesn't change the behavior of WITH-LEXICAL-ENVIRONMENT,
     ;; so let's do it the simpler way for now. !!
     (mapcar #'(lambda (env-name) (maphash #'(lambda (s v) (push s symbols) (push v vals)) (get env-name 'env))) ,env-name-list)
-    (mbind symbols vals nil)
+    (when symbols (mbind symbols vals nil))
     (unwind-protect
       (let ((result ,@body))
         (list '($closure) (cons '(mlist) ,env-name-list) result))
       (mapcar #'(lambda (env-name)
                   (let ((env (get env-name 'env)))
                     (maphash #'(lambda (s v) (setf (gethash s env) (symbol-value s))) env))) ,env-name-list)
-      (munbind symbols))))
+      (when symbols (munbind symbols)))))
 
 ;; NOT SURE IF FREEOF IS THE APPROPRIATE TEST HERE !!
 (defun freeof-env (e x)
@@ -77,9 +77,10 @@
 
 (let ((munbind-prev (symbol-function 'munbind)))
   (defun munbind (vars)
-    ;; COULD COMPARE VARS AGAINST (CAR *ACTIVE-LEXICAL-ENVIRONMENTS*) HERE !!
-    ;; FOR NOW JUST POP WITHOUT INSPECTING IT !!
-    (pop *active-lexical-environments*)
+    (let*
+      ((current-env-name (pop *active-lexical-environments*))
+       (current-env (get current-env-name 'env)))
+      (mapcar #'(lambda (s) (setf (gethash s current-env) (if (boundp s) (symbol-value s) s))) vars))
     (funcall munbind-prev vars)))
 
 (defun extract-local-vars (e)
