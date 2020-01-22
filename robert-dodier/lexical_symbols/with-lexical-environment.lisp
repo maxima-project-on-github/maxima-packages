@@ -52,7 +52,7 @@
           ((and (consp result) (eq (caar result) '$closure))
            ;; Nested closure -- flatten.
            (let ((inner-env-name-list (rest (second result))))
-             (cons (append '($closure) new-env-name-list inner-env-name-list) (rest result))))
+             (cons '($closure) (list (cons '(mlist) (append new-env-name-list inner-env-name-list)) (third result)))))
           ;; Otherwise RESULT is a general expression, wrap it in $CLOSURE.
           (t (list '($closure simp) (cons '(mlist simp) new-env-name-list) result)))))))
 
