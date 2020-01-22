@@ -1,5 +1,7 @@
+;; REPLACE THIS STUFF WITH ASDF INCANTATION !!
 (when (not ($featurep '$special '$feature))
   (load "lexical_symbols.lisp"))
+(load "mlambda.lisp")
 
 ;; List of active lexical environments;
 ;; the innermost environment is the first element.
@@ -15,14 +17,14 @@
     ;; Hpwever, that's doesn't change the behavior of WITH-LEXICAL-ENVIRONMENT,
     ;; so let's do it the simpler way for now. !!
     (mapcar #'(lambda (env-name) (maphash #'(lambda (s v) (push s symbols) (push v vals)) (get env-name 'env))) ,env-name-list)
-    (mbind symbols vals nil)
+    (when symbols (mbind symbols vals nil))
     (unwind-protect
       (let ((result ,@body))
         (list '($closure) (cons '(mlist) ,env-name-list) result))
       (mapcar #'(lambda (env-name)
                   (let ((env (get env-name 'env)))
-                    (maphash #'(lambda (s v) (setf (gethash s env) (symbol-value s))) env))) ,env-name-list)
-      (munbind symbols))))
+                    (maphash #'(lambda (s v) (setf (gethash s env) (if (boundp s) (symbol-value s) s))) env))) ,env-name-list)
+      (when symbols (munbind symbols)))))
 
 ;; NOT SURE IF FREEOF IS THE APPROPRIATE TEST HERE !!
 (defun freeof-env (e x)
@@ -40,14 +42,19 @@
     (let ((new-env-name-list (remove-if #'(lambda (e) (freeof-env (get e 'env) result)) env-name-list)))
       (if (null new-env-name-list)
         result
-        (if (and (consp result) (eq (caar result) 'lambda))
-          ;; Smash list of environments into expression car
-          ;; and throw away $CLOSURE.
-          ;; DOES NEW-ENV-NAME-LIST NEED TO GO BEFORE OR AFTER ANY ENVIRONMENTS ALREADY PRESENT IN CAR ??
-          ;; OR MAYBE IT DOESN'T MATTER ??
-          (cons (append (car result) new-env-name-list) (cdr result))
+        (cond
+          ((and (consp result) (eq (caar result) 'lambda))
+           ;; Smash list of environments into expression car
+           ;; and throw away $CLOSURE.
+           ;; DOES NEW-ENV-NAME-LIST NEED TO GO BEFORE OR AFTER ANY ENVIRONMENTS ALREADY PRESENT IN CAR ??
+           ;; OR MAYBE IT DOESN'T MATTER ??
+           (cons (append (car result) new-env-name-list) (cdr result)))
+          ((and (consp result) (eq (caar result) '$closure))
+           ;; Nested closure -- flatten.
+           (let ((inner-env-name-list (rest (second result))))
+             (cons '($closure) (list (cons '(mlist) (append new-env-name-list inner-env-name-list)) (third result)))))
           ;; Otherwise RESULT is a general expression, wrap it in $CLOSURE.
-          (list '($closure simp) (cons '(mlist simp) new-env-name-list) result))))))
+          (t (list '($closure simp) (cons '(mlist simp) new-env-name-list) result)))))))
 
 (setf (get '$closure 'operators) 'simplify-$closure)
 
@@ -66,20 +73,21 @@
 
 (let ((mbind-doit-prev (symbol-function 'mbind-doit)))
   (defun mbind-doit (lamvars fnargs fnname)
-    (let
-      ((new-env (make-hash-table))
-       (new-env-id (gensym "ENV")))
-      ;; EXCLUDE NON-LEXICAL VARIABLES HERE ?? I DUNNO !!
-      (mapcar #'(lambda (s v) (setf (gethash s new-env) v)) lamvars fnargs)
-      (setf (get new-env-id 'env) new-env)
-      (push new-env-id *active-lexical-environments*))
+    (when lamvars
+      (let
+        ((new-env (make-hash-table))
+         (new-env-id (gensym "ENV")))
+        ;; EXCLUDE NON-LEXICAL VARIABLES HERE ?? I DUNNO !!
+        (mapcar #'(lambda (s v) (setf (gethash s new-env) v)) lamvars fnargs)
+        (setf (get new-env-id 'env) new-env)
+        (push new-env-id *active-lexical-environments*)))
     (funcall mbind-doit-prev lamvars fnargs fnname)))
 
 (let ((munbind-prev (symbol-function 'munbind)))
   (defun munbind (vars)
     ;; COULD COMPARE VARS AGAINST (CAR *ACTIVE-LEXICAL-ENVIRONMENTS*) HERE !!
     ;; FOR NOW JUST POP WITHOUT INSPECTING IT !!
-    (pop *active-lexical-environments*)
+    (when vars (pop *active-lexical-environments*))
     (funcall munbind-prev vars)))
 
 (defun extract-local-vars (e)
@@ -97,13 +105,16 @@
         #'(lambda (e)
             (let
               ((vars+var-inits-pairs (extract-local-vars e))
-               (body (extract-body e))
-               (new-env (make-hash-table))
-               (new-env-id (gensym "ENV")))
-              ;; EXCLUDE NON-LEXICAL VARIABLES HERE ?? I DUNNO !!
-              (mapcar #'(lambda (vv) (setf (gethash (first vv) new-env) (second vv))) vars+var-inits-pairs)
-              (setf (get new-env-id 'env) new-env)
-              (with-lexical-environment (list new-env-id) (funcall (get 'mprogn 'mfexpr*) (cons '(mprogn) body)))))))
+               (body (extract-body e)))
+              (if vars+var-inits-pairs
+                (let
+                  ((new-env (make-hash-table))
+                   (new-env-id (gensym "ENV")))
+                  ;; EXCLUDE NON-LEXICAL VARIABLES HERE ?? I DUNNO !!
+                  (mapcar #'(lambda (vv) (setf (gethash (first vv) new-env) (second vv))) vars+var-inits-pairs)
+                  (setf (get new-env-id 'env) new-env)
+                  (with-lexical-environment (list new-env-id) (funcall (get 'mprogn 'mfexpr*) (cons '(mprogn) body))))
+                (funcall prev-mfexpr* e))))))
 
 ;; example
 
