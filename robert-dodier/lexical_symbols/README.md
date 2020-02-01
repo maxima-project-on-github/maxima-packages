@@ -1,5 +1,19 @@
 ## Implementation of lexical symbols in Maxima language
 
+### Status of this proposal
+
+This package, maxima-packages/robert-dodier/lexical\_symbols,
+is an unofficial, optional package to reimplement local variables as lexical symbols.
+
+I hope that the policies outlined here will be someday incorporated into Maxima,
+perhaps in the same way as they are implemented here, perhaps implemented in a way
+that differs in a small or large way.
+
+Everything here is subject to change, although some items seem more fixed than others.
+At this point, it seems unlikely that the large-scale policies
+(local variables are lexical symbols and functions and expressions are tied to their lexical environment)
+will change, but it's too soon to say so for sure.
+
 ### Outline
 
  * A lexical symbol is a symbol defined in a lexical extent.
