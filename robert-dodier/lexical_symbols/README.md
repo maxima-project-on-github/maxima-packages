@@ -14,6 +14,13 @@ At this point, it seems unlikely that the large-scale policies
 (local variables are lexical symbols and functions and expressions are tied to their lexical environment)
 will change, but it's too soon to say so for sure.
 
+### How to use this package
+
+```
+(%i1) push ("path/to/maxima-packages/robert-dodier/lexical_symbols/###.lisp", file_search_lisp) $
+(%i2) load ("with-lexical-environment.lisp");
+```
+
 ### Outline
 
  * A lexical symbol is a symbol defined in a lexical extent.
@@ -29,7 +36,7 @@ will change, but it's too soon to say so for sure.
   * `makelist` (*not implemented yet*)
   * `create_list` (*not implemented yet*)
 
- * Lexical symbols in different lexical extents are distinct, even if they have the same name.
+ * Lexical symbols defined in different lexical extents are distinct, even if they have the same name.
 
  * Any symbol which is not a lexical symbol is a global symbol.
   * There is a unique global symbol for any given name.
@@ -50,7 +57,7 @@ will change, but it's too soon to say so for sure.
    is wrapped in an object, called a closure, comprising the lexical environment and the expression.
 
  * A closure is evaluated by evaluating its contained expression with the symbols
-   in its contained environment bound to their current values.
+   in its contained environment bound to their current values. (*not implemented yet*)
 
  * A closure is simplified according to some rules specifically for closures.
   * closure([], expr) --> expr
