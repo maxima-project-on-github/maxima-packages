@@ -35,6 +35,8 @@ batch ("rtest_lexical_symbols.mac", test);
 ```
 
 ### Outline
+ 
+ LEXICAL SYMBOLS
 
  * A lexical symbol is a symbol defined in a lexical extent.
 
@@ -51,9 +53,15 @@ batch ("rtest_lexical_symbols.mac", test);
 
  * Lexical symbols defined in different lexical extents are distinct, even if they have the same name.
 
- * Any symbol which is not a lexical symbol is a global symbol.
+ * Every symbol which is not a lexical symbol is a global symbol.
   * There is a unique global symbol for any given name.
   * Dynamic binding is applied to global symbols.
+
+ * In addition, a symbol may be declared `global` so that it is a global symbol
+   even if it is defined in a lexical extent.
+  * A `global` declaration applies to any lexical extents parsed after the declaration is evaluated. (*subject to change*)
+
+ EVALUATION IN A LEXICAL ENVIRONMENT
 
  * Function calls (named and unnamed) are evaluated in the lexical environment in which they were defined.
 
