@@ -7,16 +7,16 @@
 ;; with_lexical_symbols ([f], f(x) := 2*x);
 ;; with_lexical_symbols ([a], h(x) := a[x] : 1, i() := arrayinfo(a));
 
-;; After this, one can say declare(foo, special) and then featurep(foo, special) => true,
-;; or, equivalently, (KINDP '$FOO '$SPECIAL) => T.
-;; Any symbols declared special are excluded from gensym substitution.
+;; After this, one can say declare(foo, global) and then featurep(foo, global) => true,
+;; or, equivalently, (KINDP '$FOO '$GLOBAL) => T.
+;; Any symbols declared global are excluded from gensym substitution.
 
-(mfuncall '$declare '$special '$feature)
-;; Ensure that special feature isn't removed by reset()
+(mfuncall '$declare '$global '$feature)
+;; Ensure that global feature isn't removed by reset()
 ;; by saving current list of features.
 (setf (gethash '$features *variable-initial-values*) $features)
 
-;; Declare all DEFMVAR symbols as special.
+;; Declare all DEFMVAR symbols as global.
 ;; Assume the keys of the hash table *VARIABLE-INITIAL-VALUES*
 ;; is exactly the set of such symbols.
 ;; Make these declarations in the global context to protect them from kill.
@@ -24,7 +24,7 @@
 (let (defmvars-list (save-$props (copy-list $props)) (save-$context $context))
   (maphash #'(lambda (k v) (push k defmvars-list)) *variable-initial-values* )
   (mset '$context '$global)
-  (declare1 defmvars-list t '$special 'kind)
+  (declare1 defmvars-list t '$global 'kind)
   (mset '$context save-$context)
   (setq $props save-$props))
 
@@ -32,7 +32,7 @@
   (setf (get '$define_variable 'mfexpr*)
         #'(lambda (e)
             (let ((var (second e)))
-              (declare1 (list var) t '$special 'kind)
+              (declare1 (list var) t '$global 'kind)
               (funcall prev-mfexpr* e)))))
 
 ;; Lexicalize MPROG (i.e., block([a, b, c, ...], ...))
@@ -49,8 +49,8 @@
 
 (defun subst-lexical-symbols-into-mprog (mprog-op vars+var-inits exprs)
   (let*
-   ((vars+var-inits-lexical (remove-if #'(lambda (x) (kindp (if (symbolp x) x (second x)) '$special)) vars+var-inits))
-    (vars+var-inits-special (remove-if-not #'(lambda (x) (kindp (if (symbolp x) x (second x)) '$special)) vars+var-inits))
+   ((vars+var-inits-lexical (remove-if #'(lambda (x) (kindp (if (symbolp x) x (second x)) '$global)) vars+var-inits))
+    (vars+var-inits-global (remove-if-not #'(lambda (x) (kindp (if (symbolp x) x (second x)) '$global)) vars+var-inits))
     (vars-only-lexical (remove-if-not #'symbolp vars+var-inits-lexical))
     (var-inits-lexical (remove-if #'symbolp vars+var-inits-lexical))
     (var-inits-vars-lexical (mapcar #'second var-inits-lexical))
@@ -61,7 +61,7 @@
     (subst-eqns (mapcar #'(lambda (x y) `((mequal) ,x ,y)) vars-all-lexical gensyms-all))
     (gensym-mprogn (let (($simp nil)) ($substitute `((mlist) ,@ subst-eqns) `((mprogn) ,@ exprs))))
     (gensym-inits (mapcar #'(lambda (e y) (list (first e) y (third e))) var-inits-lexical var-inits-gensyms))
-    (gensym-mprog `(,mprog-op ((mlist) ,@ (append vars-only-gensyms gensym-inits vars+var-inits-special)) ,@ (cdr gensym-mprogn))))
+    (gensym-mprog `(,mprog-op ((mlist) ,@ (append vars-only-gensyms gensym-inits vars+var-inits-global)) ,@ (cdr gensym-mprogn))))
    gensym-mprog))
 
 (defvar right-paren-symbol '|$)|)
@@ -77,7 +77,7 @@
 
 (defun subst-lexical-symbols-into-mdefine-or-lambda (e)
   (let*
-    ((args (remove-if #'(lambda (x) (kindp x '$special)) (extract-arguments-symbols e)))
+    ((args (remove-if #'(lambda (x) (kindp x '$global)) (extract-arguments-symbols e)))
      (args-gensyms (mapcar
                      #'(lambda (s)
                          (let ((s1 (gensym)))
