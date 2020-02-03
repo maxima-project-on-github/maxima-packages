@@ -1,8 +1,3 @@
-;; REPLACE THIS STUFF WITH ASDF INCANTATION !!
-(when (not ($featurep '$special '$feature))
-  (load "lexical_symbols.lisp"))
-(load "mlambda.lisp")
-
 ;; List of active lexical environments;
 ;; the innermost environment is the first element.
 ;; Each environment is a hash table.

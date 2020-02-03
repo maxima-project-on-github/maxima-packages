@@ -1,0 +1,118 @@
+"A lexical symbol is a symbol defined in a lexical extent.
+A lexical extent is one of the following operators and its arguments:
+block, lambda, named function, array function (both f[x] and f[x](y)), for loop." $
+
+"The lexical symbols defined in this lexical extent are a, b, and c." $
+
+block([a, b, c], a: 11, b: 22, c: 44, a + b + c);
+
+"The lexical symbols defined in this lexical extent are x and y." $
+
+lambda([x, y], x*y + 1);
+
+"The lexical symbols defined in this lexical extent are u, v, and w." $
+
+foo(u, v, w) := u/v - w;
+
+"The lexical symbols defined in this lexical extent are baz and quux." $
+
+bar[baz, quux] := quux - 2*baz;
+
+"The lexical symbols defined in this lexical extent are blurf, m, and n." $
+
+mumble[blurf](m, n) := blurf^m - blurf^n;
+
+"The lexical symbol defined in this lexical extent is i." $
+
+for i thru 3 do print(i);
+
+"The lexical symbol defined in this lexical extent is a." $
+
+for a in [3, 4, 5] do print(a);
+
+"The lexical symbols defined in this lexical extent are a, b, and c.
+The symbols x, y, and z are not defined in this lexical extent." $
+
+block([a: x, b: y - 1, c: 44], a + b + c + z);
+
+"The lexical symbols defined in this lexical extent are x and y.
+The symbols A and Z are not defined in this lexical extent." $
+
+lambda([x, y], A*x*y + Z);
+
+"The lexical symbols defined in this lexical extent are u, v, and w.
+The symbol omega is not defined in this lexical extent." $
+
+foo(u, v, w) := u*v^(-omega) - w;
+
+"The lexical symbols defined in this lexical extent are baz and quux.
+The symbols red and green are not defined in this lexical extent." $
+
+bar[baz, quux] := red*quux - green*baz;
+
+"The lexical symbols defined in this lexical extent are blurf, m, and n.
+The symbols snort and sneeze are not defined in this lexical extent." $
+
+mumble[blurf](m, n) := (blurf - snort)^m - (blurf - sneeze)^n;
+
+"The lexical symbol defined in this lexical extent is i.
+The symbols i0 and i1 are not defined in this lexical extent." $
+
+'for i:i0 thru i1 do print(i);
+
+"The lexical symbol defined in this lexical extent is a.
+The symbols b, c, and d are not defined in this lexical extent." $
+
+for a in [b, c, d] do print(a);
+
+"Lexical symbols defined in different lexical extents are distinct, even if they have the same name." $
+
+"a1 in the outer block is distinct from a1 in the inner block,
+so is('a1 = b1) is false." $
+
+block([a1, b1], b1: 'a1, block([a1], is('a1 = b1)));
+
+"Any symbol which is not a lexical symbol is a global symbol.
+There is a unique global symbol for any given name.
+Dynamic binding is applied to global symbols." $
+
+"a1 is a global symbol, so is('a1 = b1) is true." $
+
+block([b1], b1: 'a1, block(is('a1 = b1)));
+
+"a1 is a global symbol, but a1 in the inner block is distinct, so is('a1 = b1) is false." $
+
+block([b1], b1: 'a1, block([a1], is('a1 = b1)));
+
+"Function calls (named and unnamed) are evaluated in the lexical environment in which they were defined.
+All functions (named and unnamed) defined in a lexical extent share the same lexical environment." $
+
+block([a], set_a(b) := a: b, inc_a() := a: a + 1, get_a() := a);
+
+set_a(100);
+get_a();
+inc_a();
+a: 999;
+get_a();
+
+/* smashing lexical environment into lambda not implemented yet !!
+kill(set_a, inc_a, get_a);
+block([a], set_a: lambda([b], a: b), inc_a: lambda([], a: a + 1), get_a: lambda([], a));
+
+set_a(200);
+get_a();
+inc_a();
+a: 999;
+get_a();
+ */
+
+"A lexical environment is a list of pairs of symbols and values.
+An expression containing lexical symbols returned from a lexical extent
+is wrapped in an object, called a closure, comprising the lexical environment and the expression." $
+
+block([a], set_a(b) := a: b, foo(x) := a*x);
+
+foo(z);
+set_a(1234);
+foo(z);
+
