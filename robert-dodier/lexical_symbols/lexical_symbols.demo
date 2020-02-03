@@ -80,6 +80,10 @@ Dynamic binding is applied to global symbols." $
 
 block([b1], b1: 'a1, block(is('a1 = b1)));
 
+"a1 is a global symbol, but a1 in the inner block is distinct, so is('a1 = b1) is false." $
+
+block([b1], b1: 'a1, block([a1], is('a1 = b1)));
+
 "Function calls (named and unnamed) are evaluated in the lexical environment in which they were defined.
 All functions (named and unnamed) defined in a lexical extent share the same lexical environment." $
 
@@ -91,6 +95,7 @@ inc_a();
 a: 999;
 get_a();
 
+/* smashing lexical environment into lambda not implemented yet !!
 kill(set_a, inc_a, get_a);
 block([a], set_a: lambda([b], a: b), inc_a: lambda([], a: a + 1), get_a: lambda([], a));
 
@@ -99,6 +104,7 @@ get_a();
 inc_a();
 a: 999;
 get_a();
+ */
 
 "A lexical environment is a list of pairs of symbols and values.
 An expression containing lexical symbols returned from a lexical extent
