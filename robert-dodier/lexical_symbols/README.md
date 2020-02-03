@@ -17,8 +17,21 @@ will change, but it's too soon to say so for sure.
 ### How to use this package
 
 ```
-(%i1) push ("path/to/maxima-packages/robert-dodier/lexical_symbols/###.lisp", file_search_lisp) $
-(%i2) load ("with-lexical-environment.lisp");
+d: "path/to/maxima-packages/robert-dodier/lexical_symbols" $
+push (sconcat (d, "/###.lisp"), file_search_lisp) $
+push (sconcat (d, "/###.mac"), file_search_maxima) $
+push (sconcat (d, "/###.demo"), file_search_demo) $
+load ("lexical_symbols.mac");
+```
+
+To get an overview, take a look at:
+```
+demo ("lexical_symbols.demo");
+```
+
+To see the test cases, try:
+```
+batch ("rtest_lexical_symbols.mac", test);
 ```
 
 ### Outline

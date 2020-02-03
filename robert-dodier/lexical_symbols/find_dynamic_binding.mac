@@ -1,5 +1,4 @@
-if not member (special, features)
-  then load ("lexical_symbols.lisp");
+load ("lexical_symbols.mac");
 
 slurp_exprs (f) :=
   block ([s: openr(f), l: [], l1],
