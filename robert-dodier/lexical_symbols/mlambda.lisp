@@ -40,7 +40,7 @@
              (setq finish2033 t)
              (let ((aexprp (and aexprp (not (atom (caddr fn))) (eq (caar (caddr fn)) 'lambda))))
                (declare (special *active-lexical-environments*))
-               (with-lexical-environment (list (car *active-lexical-environments*))
+               (with-lexical-environment *active-lexical-environments*
                  (cond ((null (cddr fn)) (merror (intl:gettext "lambda: no body present.")))
                        ((cdddr fn) (mevaln (cddr fn)))
                        (t (meval (caddr fn)))))))
