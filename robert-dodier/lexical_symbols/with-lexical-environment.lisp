@@ -8,7 +8,7 @@
 (defun get-lexical-environments-symbols+values (env-name-list)
   (let (symbols vals)
     (mapcar #'(lambda (env-name) (maphash #'(lambda (s v) (push s symbols) (push v vals)) (get env-name 'env))) env-name-list)
-    (values symbols vals)))
+    (values (reverse symbols) (reverse vals))))
 
 (defun update-lexical-environment-symbol-value (env s)
   (setf (gethash s env) (if (boundp s) (symbol-value s) s)))
