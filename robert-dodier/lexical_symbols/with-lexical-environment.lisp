@@ -15,7 +15,7 @@
     (when symbols (mbind symbols vals nil))
     (unwind-protect
       (let ((result ,@body))
-        (list '($closure) (cons '(mlist) ,env-name-list) result))
+        (simplifya (list '($closure) (cons '(mlist) ,env-name-list) result) t))
       (mapcar #'(lambda (env-name)
                   (let ((env (get env-name 'env)))
                     (maphash #'(lambda (s v) (setf (gethash s env) (if (boundp s) (symbol-value s) s))) env))) ,env-name-list)
@@ -27,7 +27,6 @@
     (maphash #'(lambda (s v) (push s symbols)) e)
     ($lfreeof (cons '(mlist) symbols) x)))
 
-;; HOW IS Z SUPPOSED TO BE USED HERE ??
 (defun simplify-$closure (x vestigial z)
   (declare (ignore vestigial))
   (let
@@ -36,7 +35,7 @@
     ;; PROBABLY NEED TO LOOK AT VALUES IN INNER ENVIROMENTS BEFORE SAYING OUTER ENVIRONMENT CAN GO AWAY !!
     (let ((new-env-name-list (remove-if #'(lambda (e) (freeof-env (get e 'env) result)) env-name-list)))
       (if (null new-env-name-list)
-        result
+        (simplifya result z)
         (cond
           ((and (consp result) (eq (caar result) 'lambda))
            ;; Smash list of environments into expression car
@@ -47,7 +46,7 @@
           ((and (consp result) (eq (caar result) '$closure))
            ;; Nested closure -- flatten.
            (let ((inner-env-name-list (rest (second result))))
-             (cons '($closure) (list (cons '(mlist) (append new-env-name-list inner-env-name-list)) (third result)))))
+             (simplify-$closure (cons '($closure) (list (cons '(mlist) (append new-env-name-list inner-env-name-list)) (third result))) z)))
           ;; Otherwise RESULT is a general expression, wrap it in $CLOSURE.
           (t (list '($closure simp) (cons '(mlist simp) new-env-name-list) result)))))))
 
