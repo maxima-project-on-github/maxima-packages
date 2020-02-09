@@ -5,20 +5,32 @@
 
 (defvar *active-lexical-environments* nil)
 
+(defun get-lexical-environments-symbols+values (env-name-list)
+  (let (symbols vals)
+    (mapcar #'(lambda (env-name) (maphash #'(lambda (s v) (push s symbols) (push v vals)) (get env-name 'env))) env-name-list)
+    (values symbols vals)))
+
+(defun update-lexical-environment-symbol-value (env s)
+  (setf (gethash s env) (if (boundp s) (symbol-value s) s)))
+
+(defun update-lexical-environments (env-name-list)
+  (mapcar #'(lambda (env-name)
+              (let ((env (get env-name 'env)))
+                (maphash #'(lambda (s v)
+                             (declare (ignore v))
+                             (update-lexical-environment-symbol-value env s)) env))) env-name-list))
+
 (defmacro with-lexical-environment (env-name-list &rest body)
-  `(let (symbols vals)
+  `(multiple-value-bind (symbols vals) (get-lexical-environments-symbols+values ,env-name-list)
     ;; If some of the environments named by ENV-NAME-LIST are already active,
     ;; we don't need to bind those symbols. 
     ;; Hpwever, that's doesn't change the behavior of WITH-LEXICAL-ENVIRONMENT,
     ;; so let's do it the simpler way for now. !!
-    (mapcar #'(lambda (env-name) (maphash #'(lambda (s v) (push s symbols) (push v vals)) (get env-name 'env))) ,env-name-list)
     (when symbols (mbind symbols vals nil))
     (unwind-protect
       (let ((result ,@body))
         (simplifya (list '($closure) (cons '(mlist) ,env-name-list) result) t))
-      (mapcar #'(lambda (env-name)
-                  (let ((env (get env-name 'env)))
-                    (maphash #'(lambda (s v) (setf (gethash s env) (if (boundp s) (symbol-value s) s))) env))) ,env-name-list)
+      (update-lexical-environments ,env-name-list)
       (when symbols (munbind symbols)))))
 
 ;; NOT SURE IF FREEOF IS THE APPROPRIATE TEST HERE !!
