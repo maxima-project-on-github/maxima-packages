@@ -106,13 +106,14 @@
                   ((new-env (make-hash-table))
                    (new-env-id (gensym "ENV")))
                   ;; EXCLUDE NON-LEXICAL VARIABLES HERE ?? I DUNNO !!
-                  (mapcar #'(lambda (vv) (setf (gethash (first vv) new-env) (second vv))) vars+var-inits-pairs)
+                  ;; OH LOOK, THERE'S A CALL TO MEVAL !!
+                  (mapcar #'(lambda (vv) (setf (gethash (first vv) new-env) (meval (second vv)))) vars+var-inits-pairs)
                   (setf (get new-env-id 'env) new-env)
                   (with-lexical-environment (list new-env-id) (funcall (get 'mprogn 'mfexpr*) (cons '(mprogn) body))))
                 (funcall prev-mfexpr* e))))))
 
 ;; example
-
+#|
 (defvar env-1 (make-hash-table))
 (setf (gethash '$a456 env-1) 1111)
 (defvar env-id-1 (gensym))
@@ -122,3 +123,4 @@
 (setq $mylambda (list (list 'lambda env-id-1) (list '(mlist) '$x '$y) '((msetq) $a456 ((mtimes) $a456 ((mplus) $x $y)))))
 
 (mputprop '$foo $mylambda 'mexpr) ;; now you can say foo(x, y) and it's evaluated with ENV-1
+ |#
