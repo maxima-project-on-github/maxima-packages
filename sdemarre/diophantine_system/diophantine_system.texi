@@ -1,0 +1,95 @@
+\input texinfo
+
+@setfilename diophantine_system.info
+@settitle Package diophantine_system
+
+@ifinfo
+@macro var {expr}
+<\expr\>
+@end macro
+@end ifinfo
+
+@dircategory Mathematics/Maxima
+@direntry
+* Package diophantine_system: (maxima-packages/sdemarre)Maxima package for solving systems of linear Diophantine equations
+@end direntry
+
+@node Top, Introduction to package diophantine_system, (dir), (dir)
+@top
+@menu
+* Introduction to package diophantine_system::
+* Functions and Variables for package diophantine_system::
+* Function and variable index::
+@end menu
+@chapter Package diophantine_system
+
+@node Introduction to package diophantine_system, Functions and Variables for package diophantine_system, Top, Top
+@section Introduction to package diophantine_system
+
+@code{diophantine_system} is a package to solve systems of linear Diophantine equations of the form @math{A.x=b} in which @math{A,x} and @math{b} are integer matrices/vectors, and @math{A} and @math{b} are known, @math{x} is unknown.
+
+@node Functions and Variables for package diophantine_system, Introduction to package diophantine_system, Top
+@section Functions and Variables for package diophantine
+
+@deffn {Function} solve_diophantine_system (@var{equations})
+
+Computes solutions for the @code{equations}, which has to be a list of linear equations with integer coefficients. Every equation is @math{a_{1i}x_1+a_{2i}x_2+\cdots+a_{ni}x_n+c_i=0} with @math{a_{ij}} and @math{c_i} integer coefficients, @math{x_i} the variables which can only take integer values. The result is always a list. If an empty list is returned, it means no solutions exist. Sometimes, there are infinitely many solutions, but those infinite solutions can be described by a parametrized representation. The parameter is of the form @math{%zi} for an integer parameter, suitably declared with @code{new_variable('integer)} from the @code{to_poly_solve} package.
+
+Examples:
+
+@c ===beg===
+@c load(diophantine_system)$
+@c eq: [(-8*x5)+22*x4+4*x2+3*x1 = 25, (-12*x5)+46*x4+6*x1 = 2, 9*x5-x4+3*x3+4*x2 = 26]$
+@c solve_diophantine_system(eq);
+@c ===end===
+@example
+(%i1) load(diophantine_system)$
+@group
+(%i2) eq: [(-8*x5)+22*x4+4*x2+3*x1 = 25, (-12*x5)+46*x4+6*x1 = 2, 9*x5-x4+3*x3+4*x2 = 26]$
+(%i3) solve_diophantine_system(eq);
+(%o3) [x1 = 92 %z2 + 3444 %z1 - 617,
+       x2 = (- 3 %z2) - 114 %z1 + 25,
+       x4 = (- 12 %z2) - 450 %z1 + 80,
+       x5 = (- 3 %z1) - 2,
+       x3 = 11 %z1 + 8]
+@end group
+@end deffn
+
+@deffn {Function} smith_normal_form (@var{matrix})
+
+Given an integer @code{matrix} @math{A}, computes 3 integer matrices @math{U,S,V} such that @math{A=U.S.V'}, with @math{S} a diagonal integer matrix, @math{U} an invertible integer matrix and @math{V'} an integer matrix.
+
+
+Examples:
+
+@c ===beg===
+@c load(smith_normal_form)$
+@c m:matrix([-3,4,4,0,-4],[1,4,-5,-4,5],[3,3,-2,3,-1])$
+@c smith_normal_form(m);
+@c ===end===
+@example
+(%i1) load(smith_normal_form)$
+@group
+(%i2) m:matrix([-3,4,4,0,-4],[1,4,-5,-4,5],[3,3,-2,3,-1])$
+(%i3) smith_normal_form(m);
+                                                        [  2      1    - 1    0    0 ]
+                                                        [                            ]
+              [  20   - 7  - 36 ]  [ 1  0   0   0  0 ]  [  7      4    - 3    0    0 ]
+              [                 ]  [                 ]  [                            ]
+(%o3)        [[  1     0   - 1  ], [ 0  1   0   0  0 ], [ - 57   104    52   - 19  0 ]]
+              [                 ]  [                 ]  [                            ]
+              [ - 10   4    19  ]  [ 0  0  - 1  0  0 ]  [ - 65   128    61   - 23  0 ]
+                                                        [                            ]
+                                                        [  78   - 152  - 73   0    1 ]
+
+@end group
+@end example
+
+@end deffn
+
+@node Function and variable index,  , Functions and Variables for package diophantine, Top
+@appendix Function and variable index
+@printindex fn
+@printindex vr
+
+@bye

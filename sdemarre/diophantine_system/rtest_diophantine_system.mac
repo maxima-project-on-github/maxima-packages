@@ -1,0 +1,84 @@
+kill(all)$
+done$
+
+(load("diophantine_system.mac"),0)$
+0$
+
+block([m,u,s,v],
+  m:matrix([1,2,3,4,5,6,7],[1,0,1,0,1,0,1],[2,4,5,6,1,1,1],[1,4,2,5,2,0,0],[0,0,1,1,2,2,3]),
+  [u,s,v]:smith_normal_form(m),
+  zeromatrixp(u.s.transpose(v)-m))$
+true$
+
+block([m,u,s,v],
+  m:matrix([-6,  111, -36,   6],[ 5, -672, 210,  74],[ 0, -255,  81,  24],[-7,  255, -81, -10]),
+  [u,s,v]:smith_normal_form(m),
+  zeromatrixp(u.s.transpose(v)-m))$
+true$
+
+block([m,u,s,v],
+  m:matrix([9,23,1,0],[3,4,-40,33],[1,0,-28,23],[31,79,1,2]),
+  [u,s,v]:smith_normal_form(m),
+  zeromatrixp(u.s.transpose(v)-m))$
+true$
+
+block([eq:[9*x+3=21],sol],
+  sol:solve_linear_diophantine(eq),
+  every(subst(sol,eq)))$
+true$
+
+block([eq:[9*M+16*L+10*K+36*J-624,113*M+152*L+80*K+102*J-4818, 147*M+188*L+95*K+63*J-5667],sol],
+  sol:solve_linear_diophantine(eq),
+  every(subst(sol,eq)))$
+true$
+
+block([eq:[(-2*x3)+3*x2-1,(-5*x3)-4],sol],
+  sol:solve_linear_diophantine(eq))$
+[]$
+
+/* not handled yet: more equations than unknowns.
+  solution could exist if equations are not contradictory
+block([eq:[x2-x1+2,(-3*x2)+2*x1-1,(-5*x2)+x1-1,2*x2-2*x1,(-4*x2)-2*x1],sol],
+  sol:solve_linear_diophantine(eq),
+  every(subst(sol,eq)))$
+true$ */
+
+block([eq:[(-4*x3)-x2-4],sol],
+  sol:solve_linear_diophantine(eq),
+  every(subst(sol,eq)))$
+true$
+
+block([eq:[23*k2+9*k1+7 = 12-%z1,4*k2+3*k1+2 = (-33*%z2)+40*%z1-660, k1 = (-23*%z2)+28*%z1-462,79*k2+31*k1+23 = (-2*%z2)-%z1],sol],
+  sol:solve_linear_diophantine(eq),
+  every(subst(sol,eq)))$
+true$
+
+block([eq:[(10*z-7*y+17*x = -12)],sol],
+  sol:solve_linear_diophantine(eq),
+  every(subst(sol,eq)))$
+true$
+
+block([eq:[(-2*z)-7*y+5*x+6*w = 6,(-3*z)+6*y-4*x+11*w = 0],sol],
+  sol:solve_linear_diophantine(eq),
+  every(subst(sol,eq)))$
+true$
+
+block([eq:[9*z-7*y+12*x = 12,8*z-5*y+10*w = 0,21*z+15*x+69*w = 3],sol],
+  sol:solve_linear_diophantine(eq),
+  every(subst(sol,eq)))$
+true$
+
+block([eq:[(-8*x5)+22*x4+4*x2+3*x1 = 25,(-12*x5)+46*x4+6*x1 = 2,9*x5-x4+3*x3+4*x2 = 26],sol],
+  sol:solve_linear_diophantine(eq),
+  every(subst(sol,eq)))$
+true$
+
+block([eq:[6*x4-7*x3+3*x1 = -2,(-5*x5)+6*x4+3*x2+4*x1 = 19],sol],
+  sol:solve_linear_diophantine(eq),
+  every(subst(sol,eq)))$
+true$
+
+block([eq:[2*x4+6*x3+3*x1 = 0,(-7*x5)-2*x3+4*x2 = -1],sol],
+  sol:solve_linear_diophantine(eq),
+  every(subst(sol,eq)))$
+true$

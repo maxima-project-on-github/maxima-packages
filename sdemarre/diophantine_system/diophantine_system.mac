@@ -1,0 +1,110 @@
+
+/* solves a system of linear diophantine equations by using the smith normal form decomposition */
+
+load("smith_normal_form.mac");
+
+has_impossible_equations(tosolve):=block([],
+  if is(tosolve=[]) then
+  false
+  else
+  (numberp(first(tosolve)) and is(first(tosolve)#0)) or has_impossible_equations(rest(tosolve)));
+
+remove_zero_equations(tosolve):=block([result:[]],
+  for eq in tosolve do
+  if is(eq#0) then result:cons(eq, result),
+  result);
+
+has_rational_solutions(sols):=block([],
+  some(lambda([s],is(denom(rhs(s))#1)),sols));
+
+variable_name(v):=block([o:make_string_output_stream()],
+  with_stdout(o,grind(v)),
+  block([s:get_output_stream_string(o)],
+    substring(s,1,slength(s)-1)));
+
+is_zi_name(varname):=block([],
+  if is(slength(varname)>2) and is(substring(varname, 1,3)="%z") then
+  block([toks:tokens(substring(varname, 3), 'digitcharp)],
+    is(length(toks)=1) and is(slength(toks[1])=slength(varname) - 2))
+  else
+  false);
+
+get_zi_value(varname):=block([],parse_string(tokens(varname, 'digitcharp)[1]));
+
+/* input: a list of variables, some of which are named %zi, with i a number
+   output: the highest i that was found, or 0 if none (or %z0) was found
+   */
+   get_max_zi_value(vars):=block([varnames:map('variable_name, vars), zavlues],
+     zvalues:[],
+     for varname in varnames do (
+       if is_zi_name(varname) then push(get_zi_value(varname), zvalues)),
+     if length(zvalues)>0 then apply(max,zvalues) else 0);
+
+
+solve_linear_diophantine(system):=block([],
+  if matrixp(system) and is(matrix_size(system)[2]=1) then
+  transpose(solve_linear_diophantine_helper(flatten(args(system))))
+  else
+  solve_linear_diophantine_helper(system));
+
+solve_linear_diophantine_helper(eqs):=block([vars, aug, A, b, U, S, V, nvars, Um1, neqs, nsols, e, sols],
+  if not listp(eqs) then (eqs:[eqs]),
+  vars:listofvars(eqs),
+  aug:augcoefmatrix(eqs, vars),
+  if not every(numberp, aug) then error("Should be linear equations in unknowns"),
+  A:submatrix(aug, length(vars) + 1),
+  b:-1*transpose(row(transpose(aug), length(vars) + 1)),
+  /* we now have A . vars = b */
+  [U,S,V]:smith_normal_form(A),
+  /* we now have U . S . transpose(V) . vars  = b
+     or
+     S . (Vt . vars) = U^^(-1) . b
+     or
+     S . nvars = U^^(-1) . b
+  */
+  nvars:makelist(concat('n, var), var, vars),
+  Um1:invert(U),
+  if not matrixp(Um1) then Um1:matrix([Um1]), /* required because invert returns a scalar when U is a 1x1 matrix */
+  neqs:S.nvars-Um1.b,
+  if not matrixp(neqs) then neqs:matrix([neqs]), /* required because multiplication creates scalars when result is a 1x1 matrix */
+  /* we should check here, before computing nsols:
+      if there are more equations than unknowns, and some equations are impossible, like 11 (=0), there is no solution
+      if some equations are just 0 (=0), we should remove them, because this is not handled by solve
+  */
+  tosolve:args(transpose(neqs))[1],
+  if has_impossible_equations(tosolve) then
+  []
+  else
+  block([],
+    tosolve:remove_zero_equations(tosolve),
+    nsols:solve(tosolve)[1],
+    e:subst(nsols, transpose(V).vars-transpose(matrix(nvars))),
+    sols:solve(args(transpose(e))[1],vars)[1],
+    block([newvars, renames, final],
+      newvars:listify(setdifference(setify(listofvars(sols)), setify(vars))),
+      renames:block([zstart:1+get_max_zi_value(vars)],
+        makelist(newvars[i-zstart+1]=concat('%z,i),i , zstart, zstart+length(newvars)-1)),
+      final:subst(renames, sols),
+      if not listp(final) then final:[final],
+      if has_rational_solutions(final) then
+      []
+      else
+      final)));
+
+sld(e):=solve_linear_diophantine(e);
+
+req(m,n):=block([mat],
+  mat:genmatrix(lambda([i,j],random(10)-5),m,n).makelist(concat('x,i),i,1,n)-genmatrix(lambda([i,j],random(10)-5),m,1),
+  args(transpose(mat))[1]);
+
+
+/* interesting? papers that could give clues to better/other algorithms
+https://arxiv.org/pdf/math/0010134.pdf
+https://link.springer.com/content/pdf/10.1007/s10559-006-0050-2.pdf
+
+*/
+
+/* issues to be solved:
+
+* NOT solved example:
+  [x2-x1+2,(-3*x2)+2*x1-1,(-5*x2)+x1-1,2*x2-2*x1,(-4*x2)-2*x1] ==> more equations than unknowns (and it is really a problem!)*/
