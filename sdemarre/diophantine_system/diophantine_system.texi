@@ -29,7 +29,7 @@
 @code{diophantine_system} is a package to solve systems of linear Diophantine equations of the form @math{A.x=b} in which @math{A,x} and @math{b} are integer matrices/vectors, and @math{A} and @math{b} are known, @math{x} is unknown.
 
 @node Functions and Variables for package diophantine_system, Introduction to package diophantine_system, Top
-@section Functions and Variables for package diophantine
+@section Functions and Variables for package diophantine_system
 
 @deffn {Function} solve_diophantine_system (@var{equations})
 
@@ -53,6 +53,7 @@ Examples:
        x5 = (- 3 %z1) - 2,
        x3 = 11 %z1 + 8]
 @end group
+@end example
 @end deffn
 
 @deffn {Function} smith_normal_form (@var{matrix})
@@ -87,7 +88,7 @@ Examples:
 
 @end deffn
 
-@node Function and variable index,  , Functions and Variables for package diophantine, Top
+@node Function and variable index,  , Functions and Variables for package diophantine_system, Top
 @appendix Function and variable index
 @printindex fn
 @printindex vr
