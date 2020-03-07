@@ -8,6 +8,6 @@
 	   :long-description "Maxima program to solve a system of linear diophantine equations A.x=b with integer elements of A,x and b."
 
 	   :components
-	   ((:info-index "diophantine-system-index")
+	   ((:info-index "diophantine_system-index")
 	    (:maxima-file "smith_normal_form")
 	    (:maxima-file "diophantine_system")))
