@@ -5,20 +5,32 @@
 
 (defvar *active-lexical-environments* nil)
 
+(defun get-lexical-environments-symbols+values (env-name-list)
+  (let (symbols vals)
+    (mapcar #'(lambda (env-name) (maphash #'(lambda (s v) (push s symbols) (push v vals)) (get env-name 'env))) env-name-list)
+    (values (reverse symbols) (reverse vals))))
+
+(defun update-lexical-environment-symbol-value (env s)
+  (setf (gethash s env) (if (boundp s) (symbol-value s) s)))
+
+(defun update-lexical-environments (env-name-list)
+  (mapcar #'(lambda (env-name)
+              (let ((env (get env-name 'env)))
+                (maphash #'(lambda (s v)
+                             (declare (ignore v))
+                             (update-lexical-environment-symbol-value env s)) env))) env-name-list))
+
 (defmacro with-lexical-environment (env-name-list &rest body)
-  `(let (symbols vals)
+  `(multiple-value-bind (symbols vals) (get-lexical-environments-symbols+values ,env-name-list)
     ;; If some of the environments named by ENV-NAME-LIST are already active,
     ;; we don't need to bind those symbols. 
     ;; Hpwever, that's doesn't change the behavior of WITH-LEXICAL-ENVIRONMENT,
     ;; so let's do it the simpler way for now. !!
-    (mapcar #'(lambda (env-name) (maphash #'(lambda (s v) (push s symbols) (push v vals)) (get env-name 'env))) ,env-name-list)
     (when symbols (mbind symbols vals nil))
     (unwind-protect
       (let ((result ,@body))
-        (list '($closure) (cons '(mlist) ,env-name-list) result))
-      (mapcar #'(lambda (env-name)
-                  (let ((env (get env-name 'env)))
-                    (maphash #'(lambda (s v) (setf (gethash s env) (if (boundp s) (symbol-value s) s))) env))) ,env-name-list)
+        (simplifya (list '($closure) (cons '(mlist) ,env-name-list) result) t))
+      (update-lexical-environments ,env-name-list)
       (when symbols (munbind symbols)))))
 
 ;; NOT SURE IF FREEOF IS THE APPROPRIATE TEST HERE !!
@@ -27,7 +39,6 @@
     (maphash #'(lambda (s v) (push s symbols)) e)
     ($lfreeof (cons '(mlist) symbols) x)))
 
-;; HOW IS Z SUPPOSED TO BE USED HERE ??
 (defun simplify-$closure (x vestigial z)
   (declare (ignore vestigial))
   (let
@@ -36,7 +47,7 @@
     ;; PROBABLY NEED TO LOOK AT VALUES IN INNER ENVIROMENTS BEFORE SAYING OUTER ENVIRONMENT CAN GO AWAY !!
     (let ((new-env-name-list (remove-if #'(lambda (e) (freeof-env (get e 'env) result)) env-name-list)))
       (if (null new-env-name-list)
-        result
+        (simplifya result z)
         (cond
           ((and (consp result) (eq (caar result) 'lambda))
            ;; Smash list of environments into expression car
@@ -47,7 +58,7 @@
           ((and (consp result) (eq (caar result) '$closure))
            ;; Nested closure -- flatten.
            (let ((inner-env-name-list (rest (second result))))
-             (cons '($closure) (list (cons '(mlist) (append new-env-name-list inner-env-name-list)) (third result)))))
+             (simplify-$closure (cons '($closure) (list (cons '(mlist) (append new-env-name-list inner-env-name-list)) (third result))) nil z)))
           ;; Otherwise RESULT is a general expression, wrap it in $CLOSURE.
           (t (list '($closure simp) (cons '(mlist simp) new-env-name-list) result)))))))
 
@@ -106,13 +117,14 @@
                   ((new-env (make-hash-table))
                    (new-env-id (gensym "ENV")))
                   ;; EXCLUDE NON-LEXICAL VARIABLES HERE ?? I DUNNO !!
-                  (mapcar #'(lambda (vv) (setf (gethash (first vv) new-env) (second vv))) vars+var-inits-pairs)
+                  ;; OH LOOK, THERE'S A CALL TO MEVAL !!
+                  (mapcar #'(lambda (vv) (setf (gethash (first vv) new-env) (meval (second vv)))) vars+var-inits-pairs)
                   (setf (get new-env-id 'env) new-env)
                   (with-lexical-environment (list new-env-id) (funcall (get 'mprogn 'mfexpr*) (cons '(mprogn) body))))
                 (funcall prev-mfexpr* e))))))
 
 ;; example
-
+#|
 (defvar env-1 (make-hash-table))
 (setf (gethash '$a456 env-1) 1111)
 (defvar env-id-1 (gensym))
@@ -122,3 +134,4 @@
 (setq $mylambda (list (list 'lambda env-id-1) (list '(mlist) '$x '$y) '((msetq) $a456 ((mtimes) $a456 ((mplus) $x $y)))))
 
 (mputprop '$foo $mylambda 'mexpr) ;; now you can say foo(x, y) and it's evaluated with ENV-1
+ |#
