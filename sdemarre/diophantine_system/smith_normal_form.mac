@@ -1,0 +1,98 @@
+/* decomposes a matrix A into [U, S, V] so that
+   A = U . S . V'
+   S is the smith normal form */
+
+/* TODO */
+/* handle case where there are more equations than unknowns: snf doesn't handle it, but we could just try to solve for a normal square system, and then fill it in the full system, checking if it is consistent */
+/* handle the case where some of the unknowns in the given equations are %zi that we are using as parameters describing the full solution */
+/* handle case where only a single equation is given */
+
+leftmult2(m,i0,i1,a,b,c,d):=block([num_rows,num_cols,pr],
+  [num_rows, num_cols]:matrix_size(m),
+  for j:1 thru num_cols do block([x,y],
+    [x,y]:[m[i0,j],m[i1,j]],
+    m[i0, j]: a*x+b*y,
+    m[i1, j]: c*x+d*y),
+  m);
+
+rightmult2(m, j0, j1, a, b, c, d):=block([num_rows, num_cols, pr],
+  [num_rows, num_cols]:matrix_size(m),
+  for i:1 thru num_rows do block([x,y],
+    [x,y]:[m[i, j0], m[i, j1]],
+    m[i, j0]: a*x+c*y,
+    m[i, j1]: b*x+d*y),
+  m);
+
+col_is_zero(M,j):=block([m,n,i,r],
+  [m,n]:matrix_size(M),
+  r:(for i:1 thru m do (
+    if is(M[i,j]#0) then return(true)
+    )),
+  is(r=done));
+
+find_nonzero_column(m,start,num_cols):=block([r],
+  r:(for i:start thru num_cols do (
+      if not col_is_zero(m,i) then return(i))),
+  if is(r=done) then num_cols else r);
+
+find_nonzero_element(m,column,num_rows):=block([r],
+  r:(for i:1 thru num_rows do (
+      if is(m[i,column]#0) then return(i))),
+  if is(r=done) then num_rows else r);
+
+smith_normal_form(M):=block([m,s,t, num_rows, num_cols],
+  m:copymatrix(M),
+  [num_rows, num_cols]:matrix_size(m),
+  s:ident(num_rows),
+  t:ident(num_cols),
+  block([last_j:0],
+    for i:1 thru num_rows do (
+      j:find_nonzero_column(m, last_j+1, num_cols),
+      if is(m[i,j] = 0) then block([ii],
+        ii:find_nonzero_element(m, j, num_rows),
+        leftmult2(m,i,ii,0,1,1,0),
+        rightmult2(s,i,ii,0,1,1,0)),
+      rightmult2(m,j,i,0,1,1,0),
+      leftmult2(t,j,i,0,1,1,0),
+      j:i,
+      block([upd:true, coef1, coef2, coef3, coef4, g, coef5, cnt],
+        for cnt:1 while upd do block([],
+          upd:false,
+          for ii:1+i thru num_rows do (
+            if is(m[ii,j]#0) then (
+              upd:true,
+              if is(remainder(m[ii,j],m[i,j])#0) then (
+                [coef1, coef2, g] : gcdex(m[i,j], m[ii,j]),
+                coef3: quotient(m[ii, j], g),
+                coef4: quotient(m[i, j], g),
+                leftmult2(m, i, ii, coef1, coef2, -coef3, coef4),
+                rightmult2(s, i, ii, coef4, -coef2, coef3, coef1)),
+              coef5:quotient(m[ii, j], m[i, j]),
+              leftmult2(m, i, ii, 1, 0, -coef5, 1),
+              rightmult2(s, i, ii, 1, 0, coef5, 1))),
+          for jj: j + 1 thru num_cols do (
+            if is(m[i, jj]#0) then (
+              upd:true,
+              if is(remainder(m[i, jj], m[i, j])#0) then (
+                [coef1, coef2, g]:gcdex(m[i, j], m[i, jj]),
+                coef3: quotient(m[i, jj], g),
+                coef4:quotient(m[i, j], g),
+                rightmult2(m, j, jj, coef1, -coef3, coef2, coef4),
+                leftmult2(t, j, jj, coef4, coef3, -coef2, coef1)),
+              coef5:quotient(m[i, jj], m[i, j]),
+              rightmult2(m, j, jj, 1, -coef5, 0, 1),
+              leftmult2(t, j, jj, 1, coef5, 0, 1)))),
+        last_j: j)),
+    for i1:1 thru min(num_rows, num_cols) do (
+      for i0:i1-1 step -1 thru 1 do block([coef1, coef2, g, coef3, coef4],
+        [coef1, coef2, g]: gcdex(m[i0, i0], m[i1, i1]),
+        if is(g#0) then block([],
+          coef3: quotient(m[i1, i1], g),
+          coef4: quotient(m[i0, i0], g),
+          leftmult2(m, i0, i1, 1, coef2, coef3, coef2*coef3-1),
+          rightmult2(s, i0, i1, 1-coef2*coef3, coef2, coef3, -1),
+          rightmult2(m, i0, i1, coef1, 1-coef1*coef4, 1, -coef4),
+          leftmult2(t, i0, i1, coef4, 1-coef1*coef4, 1, -coef1))))),
+    [s,m,transpose(t)]);
+
+
