@@ -1,7 +1,11 @@
-kill(all)$
+kill(values)$
 done$
 
-(load("diophantine_system.mac"),0)$
+/* This business about ?mget(..., ?mexpr) = false is to test for the presence of a function definition.
+ * It probably makes sense to have a direct way to test that.
+ * Another suboptimal way is errcatch(fundef(...)) = [].
+ */
+(if ?mget ('solve_linear_diophantine, ?mexpr) = false then load("diophantine_system.mac"),0)$
 0$
 
 block([m,u,s,v],
