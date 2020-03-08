@@ -1,6 +1,6 @@
-(defsystem diophantine-system
+(defsystem diophantine_system
 	   :defsystem-depends-on ("maxima-file" "info-index")
-	   :name "diophantine-system"
+	   :name "diophantine_system"
 	   :maintainer "Serge De Marre"
 	   :author "Serge De Marre"
 	   :licence ""
