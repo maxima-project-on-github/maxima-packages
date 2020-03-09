@@ -36,7 +36,7 @@ put the _diophantine_system.mac_ in a folder that's in your _file_search_maxima_
            (-12*x5)+46*x4+6*x1 = 2,
 		   9*x5-x4+3*x3+4*x2 = 26]$
 
-(%i3) solve_diophantine_system(eq);
+(%i3) solve_linear_diophantine(eq);
 (%o3) [x1 = 92 %z2 + 3444 %z1 - 617,
        x2 = (- 3 %z2) - 114 %z1 + 25,
        x4 = (- 12 %z2) - 450 %z1 + 80,
