@@ -1,7 +1,11 @@
 
 /* solves a system of linear diophantine equations by using the smith normal form decomposition */
 
-load("smith_normal_form.mac");
+/* ASDF loads smith_normal_form.mac first, according to the .asd file.
+ * If it's not loaded, assume we are not being loaded by ASDF, so we have to load it by hand.
+ */
+if ?mget ('smith_normal_form, '?mexpr) = false
+  then load("smith_normal_form.mac");
 
 has_impossible_equations(tosolve):=block([],
   if is(tosolve=[]) then
