@@ -6,6 +6,10 @@
 (defvar *active-lexical-environments* nil)
 
 (defun get-lexical-environments-symbols+values (env-name-list)
+  (let ((not-yet-active (remove-if #'(lambda (e) (member e *active-lexical-environments*)) env-name-list)))
+    (get-lexical-environments-symbols+values-1 not-yet-active)))
+
+(defun get-lexical-environments-symbols+values-1 (env-name-list)
   (let (symbols vals)
     (mapcar #'(lambda (env-name) (maphash #'(lambda (s v) (push s symbols) (push v vals)) (get env-name 'env))) env-name-list)
     (values (reverse symbols) (reverse vals))))
@@ -49,6 +53,7 @@
       (if (null new-env-name-list)
         (simplifya result z)
         (cond
+          #+nil ;; DISABLE CLOSURE(LAMBDA) --> LAMBDA W/ ENV IN EXPRESSION CAR !!
           ((and (consp result) (eq (caar result) 'lambda))
            ;; Smash list of environments into expression car
            ;; and throw away $CLOSURE.
@@ -64,6 +69,8 @@
 
 (setf (get '$closure 'operators) 'simplify-$closure)
 
+;; SINCE ENV LIST IS NO LONGER IN EXPRESSION CAR, THIS FUNCTION ALWAYS RETURNS NIL !!
+;; THAT WON'T BREAK ANYTHING SO LET IT BE FOR NOW !!
 (defun extract-env-name-list (car-expr)
   (let (env-name-list)
     (mapcar #'(lambda (x) (if (and (symbolp x) (hash-table-p (get x 'env))) (push x env-name-list))) car-expr)
@@ -75,7 +82,8 @@
       (with-lexical-environment env-name-list (funcall mlambda-prev fn args fnname noeval form)))))
 
 (defun mdefine1 (args body)
-  (list (append '(lambda) *active-lexical-environments*) (cons '(mlist) args) body))
+  #+nil (list (append '(lambda) *active-lexical-environments*) (cons '(mlist) args) body)
+  #-nil `((lambda) ((mlist) ,@args) (($closure) ((mlist) ,@*active-lexical-environments*) ,body)))
 
 (let ((mbind-doit-prev (symbol-function 'mbind-doit)))
   (defun mbind-doit (lamvars fnargs fnname)
