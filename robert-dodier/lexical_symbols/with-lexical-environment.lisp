@@ -81,10 +81,35 @@
     (let ((env-name-list (extract-env-name-list (car fn))))
       (with-lexical-environment env-name-list (funcall mlambda-prev fn args fnname noeval form)))))
 
+;; MAPPLY1 looks for a hook attached to the operator, let's use that.
+
+(defun mapply1-extension-$closure (fn args fnname form)
+  (with-lexical-environment (rest (second fn)) (meval `((mqapply) ,(third fn) ,@ args))))
+
+(setf (get '$closure 'mapply1-extension) 'mapply1-extension-$closure)
+
+;; adapted from MQAPPLY1 in src/mlisp.lisp.
+
+(defun mqapply1 (form)
+  (declare (special aryp))
+  (destructuring-let (((fn . argl) (cdr form)) (aexprp))
+    (unless (mquotep fn) (setq fn (meval fn)))
+    (cond ((atom fn)
+           (meval (cons (cons (amperchk fn) aryp) argl)))
+          ((eq (caar fn) '$closure) ;; NEW
+           (with-lexical-environment (rest (second fn)) (meval `((mqapply) ,(third fn) ,@ argl)))) ;; NEW
+          ((eq (caar fn) 'lambda)
+           (if aryp
+               (merror (intl:gettext "lambda: cannot apply lambda as an array function."))
+               (mlambda fn argl (cadr form) noevalargs form)))
+          (t
+           (mapply1 fn (mevalargs argl) (cadr form) form)))))
+
 (defun mdefine1 (args body)
   #+nil (list (append '(lambda) *active-lexical-environments*) (cons '(mlist) args) body)
   #-nil `((lambda) ((mlist) ,@args) (($closure) ((mlist) ,@*active-lexical-environments*) ,body)))
 
+#+nil
 (let ((mbind-doit-prev (symbol-function 'mbind-doit)))
   (defun mbind-doit (lamvars fnargs fnname)
     (when lamvars
@@ -97,6 +122,7 @@
         (push new-env-id *active-lexical-environments*)))
     (funcall mbind-doit-prev lamvars fnargs fnname)))
 
+#+nil
 (let ((munbind-prev (symbol-function 'munbind)))
   (defun munbind (vars)
     ;; COULD COMPARE VARS AGAINST (CAR *ACTIVE-LEXICAL-ENVIRONMENTS*) HERE !!
