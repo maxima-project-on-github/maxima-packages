@@ -43,6 +43,19 @@
     (maphash #'(lambda (s v) (push s symbols)) e)
     ($lfreeof (cons '(mlist) symbols) x)))
 
+(defun $get_env (e)
+  (let ((e-env (get e 'env)))
+    (if e-env
+      (let (k-equals-v)
+        (maphash #'(lambda (k v) (push (list '(mequal) k v) k-equals-v)) e-env)
+        (list '(mequal) e ($sort (cons '(mlist) k-equals-v))))
+      (merror "get_env: argument must be an environment; found: ~M" e))))
+
+(defun $get_envs (c)
+  (unless (and (consp c) (eq (caar c) '$closure))
+    (merror "get_envs: argument must be a closure; found: ~M" c))
+  (cons '(mlist) (mapcar #'$get_env (rest (first (rest c))))))
+
 (defun simplify-$closure (x vestigial z)
   (declare (ignore vestigial))
   (let
