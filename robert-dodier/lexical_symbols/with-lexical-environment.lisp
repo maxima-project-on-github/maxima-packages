@@ -26,16 +26,14 @@
 
 (defmacro with-lexical-environment (env-name-list &rest body)
   `(multiple-value-bind (symbols vals) (get-lexical-environments-symbols+values ,env-name-list)
-    ;; If some of the environments named by ENV-NAME-LIST are already active,
-    ;; we don't need to bind those symbols. 
-    ;; Hpwever, that's doesn't change the behavior of WITH-LEXICAL-ENVIRONMENT,
-    ;; so let's do it the simpler way for now. !!
-    (when symbols (mbind symbols vals nil))
-    (unwind-protect
-      (let ((result ,@body))
-        (simplifya (list '($closure) (cons '(mlist) ,env-name-list) result) t))
-      (update-lexical-environments ,env-name-list)
-      (when symbols (munbind symbols)))))
+     (let ((*active-lexical-environments* *active-lexical-environments*))
+       (dolist (e ,env-name-list) (push e *active-lexical-environments*))
+       (when symbols (mbind symbols vals nil))
+       (unwind-protect
+         (let ((result ,@body))
+           (simplifya (list '($closure) (cons '(mlist) ,env-name-list) result) t))
+         (update-lexical-environments ,env-name-list)
+         (when symbols (munbind symbols))))))
 
 ;; NOT SURE IF FREEOF IS THE APPROPRIATE TEST HERE !!
 (defun freeof-env (e x)
@@ -120,7 +118,8 @@
 
 (defun mdefine1 (args body)
   #+nil (list (append '(lambda) *active-lexical-environments*) (cons '(mlist) args) body)
-  #-nil `((lambda) ((mlist) ,@args) (($closure) ((mlist) ,@*active-lexical-environments*) ,body)))
+  #+nil `((lambda) ((mlist) ,@args) (($closure) ((mlist) ,@*active-lexical-environments*) ,body))
+  #-nil `(($closure) ((mlist) ,@*active-lexical-environments*) ((lambda) ((mlist) ,@args) ,body)))
 
 #+nil
 (let ((mbind-doit-prev (symbol-function 'mbind-doit)))

@@ -1,13 +1,16 @@
 ;; MLAMBDA COPIED VERBATIM FROM SRC/MLISP.LISP
 ;; WITH CHANGES FOR LEXICAL SYMBOLS AS NOTED
 
-(defun mlambda (fn args fnname noeval form)
+(defun mlambda (lambda-or-closure args fnname noeval form)
   ; We assume that the lambda expression handed to us has been simplified,
   ; or at least that it's well-formed.  This is because various checks are
   ; performed during simplification instead of every time lambda expressions
   ; are applied to arguments.
   (setq noevalargs nil)
-  (let ((params  (cdadr fn))( mlocp  t))
+  (let* ((closure-envs (if (eq (caar lambda-or-closure) '$closure) (rest (second lambda-or-closure))))
+         (fn (if (eq (caar lambda-or-closure) '$closure) (third lambda-or-closure) lambda-or-closure))
+         (params (cdadr fn))
+         (mlocp t))
     (setq loclist (cons nil loclist))
     (do ((a) (p))
         ((or (null params) (and (null args) (not (mdeflistp params))))
@@ -36,16 +39,22 @@
              (vector-push params ar)
              (vector-push args ar)
              (vector-push fnname ar)
-             (mbind finish2032 args fnname)
+             #+nil (mbind finish2032 args fnname)
              (setq finish2033 t)
              (let ((aexprp (and aexprp (not (atom (caddr fn))) (eq (caar (caddr fn)) 'lambda))))
-               (declare (special *active-lexical-environments*))
-               (with-lexical-environment *active-lexical-environments*
-                 (cond ((null (cddr fn)) (merror (intl:gettext "lambda: no body present.")))
-                       ((cdddr fn) (mevaln (cddr fn)))
-                       (t (meval (caddr fn)))))))
+               (let
+                 ((new-env (make-hash-table))
+                  (new-env-id (gensym "ENV")))
+                 ;; EXCLUDE NON-LEXICAL VARIABLES HERE ?? I DUNNO !!
+                 ;; DON'T BOTHER WITH NEW-ENV IF PARAMS IS EMPTY ?? MAYBE !!
+                 (mapcar #'(lambda (s v) (setf (gethash s new-env) v)) params args)
+                 (setf (get new-env-id 'env) new-env)
+                 (with-lexical-environment (cons new-env-id closure-envs)
+                   (cond ((null (cddr fn)) (merror (intl:gettext "lambda: no body present.")))
+                         ((cdddr fn) (mevaln (cddr fn)))
+                         (t (meval (caddr fn))))))))
         (if finish2033
             (progn
               (incf (fill-pointer *mlambda-call-stack*) -5)
               (munlocal)
-              (munbind finish2032)))))))
+              #+nil (munbind finish2032)))))))
