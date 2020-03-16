@@ -6,6 +6,10 @@
 (defvar *active-lexical-environments* nil)
 
 (defun get-lexical-environments-symbols+values (env-name-list)
+  (let ((not-yet-active (remove-if #'(lambda (e) (member e *active-lexical-environments*)) env-name-list)))
+    (get-lexical-environments-symbols+values-1 not-yet-active)))
+
+(defun get-lexical-environments-symbols+values-1 (env-name-list)
   (let (symbols vals)
     (mapcar #'(lambda (env-name) (maphash #'(lambda (s v) (push s symbols) (push v vals)) (get env-name 'env))) env-name-list)
     (values (reverse symbols) (reverse vals))))
@@ -22,22 +26,33 @@
 
 (defmacro with-lexical-environment (env-name-list &rest body)
   `(multiple-value-bind (symbols vals) (get-lexical-environments-symbols+values ,env-name-list)
-    ;; If some of the environments named by ENV-NAME-LIST are already active,
-    ;; we don't need to bind those symbols. 
-    ;; Hpwever, that's doesn't change the behavior of WITH-LEXICAL-ENVIRONMENT,
-    ;; so let's do it the simpler way for now. !!
-    (when symbols (mbind symbols vals nil))
-    (unwind-protect
-      (let ((result ,@body))
-        (simplifya (list '($closure) (cons '(mlist) ,env-name-list) result) t))
-      (update-lexical-environments ,env-name-list)
-      (when symbols (munbind symbols)))))
+     (let ((*active-lexical-environments* *active-lexical-environments*))
+       (dolist (e ,env-name-list) (push e *active-lexical-environments*))
+       (when symbols (mbind symbols vals nil))
+       (unwind-protect
+         (let ((result ,@body))
+           (simplifya (list '($closure) (cons '(mlist) ,env-name-list) result) t))
+         (update-lexical-environments ,env-name-list)
+         (when symbols (munbind symbols))))))
 
 ;; NOT SURE IF FREEOF IS THE APPROPRIATE TEST HERE !!
 (defun freeof-env (e x)
   (let (symbols)
     (maphash #'(lambda (s v) (push s symbols)) e)
     ($lfreeof (cons '(mlist) symbols) x)))
+
+(defun $get_env (e)
+  (let ((e-env (get e 'env)))
+    (if e-env
+      (let (k-equals-v)
+        (maphash #'(lambda (k v) (push (list '(mequal) k v) k-equals-v)) e-env)
+        (list '(mequal) e ($sort (cons '(mlist) k-equals-v))))
+      (merror "get_env: argument must be an environment; found: ~M" e))))
+
+(defun $get_envs (c)
+  (unless (and (consp c) (eq (caar c) '$closure))
+    (merror "get_envs: argument must be a closure; found: ~M" c))
+  (cons '(mlist) (mapcar #'$get_env (rest (first (rest c))))))
 
 (defun simplify-$closure (x vestigial z)
   (declare (ignore vestigial))
@@ -49,6 +64,7 @@
       (if (null new-env-name-list)
         (simplifya result z)
         (cond
+          #+nil ;; DISABLE CLOSURE(LAMBDA) --> LAMBDA W/ ENV IN EXPRESSION CAR !!
           ((and (consp result) (eq (caar result) 'lambda))
            ;; Smash list of environments into expression car
            ;; and throw away $CLOSURE.
@@ -64,6 +80,8 @@
 
 (setf (get '$closure 'operators) 'simplify-$closure)
 
+;; SINCE ENV LIST IS NO LONGER IN EXPRESSION CAR, THIS FUNCTION ALWAYS RETURNS NIL !!
+;; THAT WON'T BREAK ANYTHING SO LET IT BE FOR NOW !!
 (defun extract-env-name-list (car-expr)
   (let (env-name-list)
     (mapcar #'(lambda (x) (if (and (symbolp x) (hash-table-p (get x 'env))) (push x env-name-list))) car-expr)
@@ -74,9 +92,36 @@
     (let ((env-name-list (extract-env-name-list (car fn))))
       (with-lexical-environment env-name-list (funcall mlambda-prev fn args fnname noeval form)))))
 
-(defun mdefine1 (args body)
-  (list (append '(lambda) *active-lexical-environments*) (cons '(mlist) args) body))
+;; MAPPLY1 looks for a hook attached to the operator, let's use that.
 
+(defun mapply1-extension-$closure (fn args fnname form)
+  (with-lexical-environment (rest (second fn)) (meval `((mqapply) ,(third fn) ,@ args))))
+
+(setf (get '$closure 'mapply1-extension) 'mapply1-extension-$closure)
+
+;; adapted from MQAPPLY1 in src/mlisp.lisp.
+
+(defun mqapply1 (form)
+  (declare (special aryp))
+  (destructuring-let (((fn . argl) (cdr form)) (aexprp))
+    (unless (mquotep fn) (setq fn (meval fn)))
+    (cond ((atom fn)
+           (meval (cons (cons (amperchk fn) aryp) argl)))
+          ((eq (caar fn) '$closure) ;; NEW
+           (with-lexical-environment (rest (second fn)) (meval `((mqapply) ,(third fn) ,@ argl)))) ;; NEW
+          ((eq (caar fn) 'lambda)
+           (if aryp
+               (merror (intl:gettext "lambda: cannot apply lambda as an array function."))
+               (mlambda fn argl (cadr form) noevalargs form)))
+          (t
+           (mapply1 fn (mevalargs argl) (cadr form) form)))))
+
+(defun mdefine1 (args body)
+  #+nil (list (append '(lambda) *active-lexical-environments*) (cons '(mlist) args) body)
+  #+nil `((lambda) ((mlist) ,@args) (($closure) ((mlist) ,@*active-lexical-environments*) ,body))
+  #-nil `(($closure) ((mlist) ,@*active-lexical-environments*) ((lambda) ((mlist) ,@args) ,body)))
+
+#+nil
 (let ((mbind-doit-prev (symbol-function 'mbind-doit)))
   (defun mbind-doit (lamvars fnargs fnname)
     (when lamvars
@@ -89,6 +134,7 @@
         (push new-env-id *active-lexical-environments*)))
     (funcall mbind-doit-prev lamvars fnargs fnname)))
 
+#+nil
 (let ((munbind-prev (symbol-function 'munbind)))
   (defun munbind (vars)
     ;; COULD COMPARE VARS AGAINST (CAR *ACTIVE-LEXICAL-ENVIRONMENTS*) HERE !!
