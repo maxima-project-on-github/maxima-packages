@@ -1159,3 +1159,87 @@ gg(foo,bar)   /* fails, define gradient for f, not foo */
  * doesn't change inner lambda
  */
 
+/* mailing list 2020-01-21: "What do ya do with a leaking symbol?" (tnx Stavros Macrakis) */
+
+(kill (g, foo),
+ g(x):= block([gg], gg():=x, 'gg),
+ foo: g(23));
+closure([env27857], gg);
+
+foo();
+23;
+
+g(23)();
+23;
+
+(g(x):= block([gg], gg():=x, [gg,'gg,nounify('gg),verbify('gg)]),
+ foo: g(12));
+closure([env27880], [gg, gg, g27871, gg]);
+
+/* it would be better to say foo[1](), etc., but subscript applied to closure doesn't work yet
+ * I'll assume for now it's more important to ensure the function gets called and x gets retrieved as expected
+ */
+
+second(foo)[1]();
+12;
+
+second(foo)[2]();
+12;
+
+second(foo)[3]();
+g27871();
+
+second(foo)[3](), nouns;
+12;
+
+second(foo)[4]();
+12;
+
+(g(x) := block([gg], gg() := x, gg),
+ g(34)());
+34;
+
+(g(x) := block([gg], gg() := x, 'gg),
+ g(34)());
+34;
+
+(g(x) := block([gg], gg() := x, nounify('gg)),
+ g(34)());
+g28051();
+
+(g(x) := block([gg], gg() := x, nounify('gg)),
+ ev (g(34)(), nouns));
+34;
+
+(g(x) := block([gg], gg() := x, verbify('gg)),
+ g(34)());
+34;
+
+(g(x) := block([gg], part(gg() := x, 1, 0)),
+ g(34)());
+
+(g(x) := lambda([],x),
+ g(23)());
+23;
+
+(kill (uu),
+ uu(z) := block([z : z], lambda([], z)),
+ uu(34)());
+34;
+
+(kill (vv, globalfun),
+ vv(z):=globalfun:lambda([],z),
+ vv(42));
+closure([env28186], lambda([], z));
+
+vv(42)();
+42;
+
+/* fails test at present (March 2020) */
+globalfun;
+closure([env28186], lambda([], z));
+
+/* fails test at present (March 2020) */
+globalfun();
+42;
+
