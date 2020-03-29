@@ -126,30 +126,7 @@
            (mapply1 fn (mevalargs argl) (cadr form) form)))))
 
 (defun mdefine1 (args body)
-  #+nil (list (append '(lambda) *active-lexical-environments*) (cons '(mlist) args) body)
-  #+nil `((lambda) ((mlist) ,@args) (($closure) ((mlist) ,@*active-lexical-environments*) ,body))
-  #-nil `(($closure) ((mlist) ,@*active-lexical-environments*) ((lambda) ((mlist) ,@args) ,body)))
-
-#+nil
-(let ((mbind-doit-prev (symbol-function 'mbind-doit)))
-  (defun mbind-doit (lamvars fnargs fnname)
-    (when lamvars
-      (let
-        ((new-env (make-hash-table))
-         (new-env-id (gensym "ENV")))
-        ;; EXCLUDE NON-LEXICAL VARIABLES HERE ?? I DUNNO !!
-        (mapcar #'(lambda (s v) (setf (gethash s new-env) v)) lamvars fnargs)
-        (setf (get new-env-id 'env) new-env)
-        (push new-env-id *active-lexical-environments*)))
-    (funcall mbind-doit-prev lamvars fnargs fnname)))
-
-#+nil
-(let ((munbind-prev (symbol-function 'munbind)))
-  (defun munbind (vars)
-    ;; COULD COMPARE VARS AGAINST (CAR *ACTIVE-LEXICAL-ENVIRONMENTS*) HERE !!
-    ;; FOR NOW JUST POP WITHOUT INSPECTING IT !!
-    (when vars (pop *active-lexical-environments*))
-    (funcall munbind-prev vars)))
+  `(($closure) ((mlist) ,@*active-lexical-environments*) ((lambda) ((mlist) ,@args) ,body)))
 
 (defun extract-local-vars (e)
   (if (and (rest e) ($listp (second e)))
