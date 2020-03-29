@@ -60,7 +60,13 @@
     ((env-name-list (rest (second x)))
      (result (third x)))
     ;; PROBABLY NEED TO LOOK AT VALUES IN INNER ENVIROMENTS BEFORE SAYING OUTER ENVIRONMENT CAN GO AWAY !!
-    (let ((new-env-name-list (remove-if #'(lambda (e) (freeof-env (get e 'env) result)) env-name-list)))
+    (let ((new-env-name-list (remove-if #'(lambda (e)
+                                            ;; Return NIL if E doesn't have an ENV property,
+                                            ;; which means E won't be simplified away.
+                                            ;; I guess that's questionable !!
+                                            (let ((e-env (get e 'env)))
+                                              (if e-env (freeof-env e-env result))))
+                                        env-name-list)))
       (if (null new-env-name-list)
         (simplifya result z)
         (cond
@@ -95,7 +101,10 @@
 ;; MAPPLY1 looks for a hook attached to the operator, let's use that.
 
 (defun mapply1-extension-$closure (fn args fnname form)
-  (with-lexical-environment (rest (second fn)) (meval `((mqapply) ,(third fn) ,@ args))))
+  (let*
+    ((is-array-ref (and (consp form) (member 'array (car form)))) ;; I DUNNO; IS THIS REALLY GUARANTEED TO DETECT ARRAY REFS ??
+     (array-foo (if is-array-ref (list 'array))))
+    (with-lexical-environment (rest (second fn)) (meval `((mqapply ,@ array-foo) ,(third fn) ,@ args)))))
 
 (setf (get '$closure 'mapply1-extension) 'mapply1-extension-$closure)
 
@@ -117,30 +126,7 @@
            (mapply1 fn (mevalargs argl) (cadr form) form)))))
 
 (defun mdefine1 (args body)
-  #+nil (list (append '(lambda) *active-lexical-environments*) (cons '(mlist) args) body)
-  #+nil `((lambda) ((mlist) ,@args) (($closure) ((mlist) ,@*active-lexical-environments*) ,body))
-  #-nil `(($closure) ((mlist) ,@*active-lexical-environments*) ((lambda) ((mlist) ,@args) ,body)))
-
-#+nil
-(let ((mbind-doit-prev (symbol-function 'mbind-doit)))
-  (defun mbind-doit (lamvars fnargs fnname)
-    (when lamvars
-      (let
-        ((new-env (make-hash-table))
-         (new-env-id (gensym "ENV")))
-        ;; EXCLUDE NON-LEXICAL VARIABLES HERE ?? I DUNNO !!
-        (mapcar #'(lambda (s v) (setf (gethash s new-env) v)) lamvars fnargs)
-        (setf (get new-env-id 'env) new-env)
-        (push new-env-id *active-lexical-environments*)))
-    (funcall mbind-doit-prev lamvars fnargs fnname)))
-
-#+nil
-(let ((munbind-prev (symbol-function 'munbind)))
-  (defun munbind (vars)
-    ;; COULD COMPARE VARS AGAINST (CAR *ACTIVE-LEXICAL-ENVIRONMENTS*) HERE !!
-    ;; FOR NOW JUST POP WITHOUT INSPECTING IT !!
-    (when vars (pop *active-lexical-environments*))
-    (funcall munbind-prev vars)))
+  `(($closure) ((mlist) ,@*active-lexical-environments*) ((lambda) ((mlist) ,@args) ,body)))
 
 (defun extract-local-vars (e)
   (if (and (rest e) ($listp (second e)))

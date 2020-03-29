@@ -1,3 +1,8 @@
+(if not member (global, features)
+   then load ("lexical_symbols.mac"),
+ 0);
+0;
+
 /* maxima-discuss 2014-04-19: "How to make buildq evaluate its first argument - please help"
 
 (%i1) gen_rhs(Ex,Vars)::= block([n:length(Ex),m:length(Vars)],
@@ -1158,4 +1163,85 @@ gg(foo,bar)   /* fails, define gradient for f, not foo */
  * e.g. block([a], lambda([v], subst('v=v, lambda([v],a*v))));
  * doesn't change inner lambda
  */
+
+/* mailing list 2020-01-21: "What do ya do with a leaking symbol?" (tnx Stavros Macrakis) */
+
+(kill (g, foo),
+ g(x):= block([gg], gg():=x, 'gg),
+ foo: g(23));
+closure([env27857], gg);
+
+foo();
+23;
+
+g(23)();
+23;
+
+(g(x):= block([gg], gg():=x, [gg,'gg,nounify('gg),verbify('gg)]),
+ foo: g(12));
+closure([env27880], [gg, gg, g27871, gg]);
+
+foo[1]();
+12;
+
+foo[2]();
+12;
+
+foo[3]();
+g27871();
+
+foo[3](), nouns;
+12;
+
+foo[4]();
+12;
+
+(g(x) := block([gg], gg() := x, gg),
+ g(34)());
+34;
+
+(g(x) := block([gg], gg() := x, 'gg),
+ g(34)());
+34;
+
+(g(x) := block([gg], gg() := x, nounify('gg)),
+ g(34)());
+g28051();
+
+(g(x) := block([gg], gg() := x, nounify('gg)),
+ ev (g(34)(), nouns));
+34;
+
+(g(x) := block([gg], gg() := x, verbify('gg)),
+ g(34)());
+34;
+
+(g(x) := block([gg], part(gg() := x, 1, 0)),
+ g(34)());
+34;
+
+(g(x) := lambda([],x),
+ g(23)());
+23;
+
+(kill (uu),
+ uu(z) := block([z : z], lambda([], z)),
+ uu(34)());
+34;
+
+(kill (vv, globalfun),
+ vv(z):=globalfun:lambda([],z),
+ vv(42));
+closure([env28186], lambda([], z));
+
+vv(42)();
+42;
+
+/* fails test at present (March 2020) */
+globalfun;
+closure([env28186], lambda([], z));
+
+/* fails test at present (March 2020) */
+globalfun();
+42;
 
