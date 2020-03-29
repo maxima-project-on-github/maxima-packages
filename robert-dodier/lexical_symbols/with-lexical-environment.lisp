@@ -60,7 +60,13 @@
     ((env-name-list (rest (second x)))
      (result (third x)))
     ;; PROBABLY NEED TO LOOK AT VALUES IN INNER ENVIROMENTS BEFORE SAYING OUTER ENVIRONMENT CAN GO AWAY !!
-    (let ((new-env-name-list (remove-if #'(lambda (e) (freeof-env (get e 'env) result)) env-name-list)))
+    (let ((new-env-name-list (remove-if #'(lambda (e)
+                                            ;; Return NIL if E doesn't have an ENV property,
+                                            ;; which means E won't be simplified away.
+                                            ;; I guess that's questionable !!
+                                            (let ((e-env (get e 'env)))
+                                              (if e-env (freeof-env e-env result))))
+                                        env-name-list)))
       (if (null new-env-name-list)
         (simplifya result z)
         (cond
