@@ -101,7 +101,10 @@
 ;; MAPPLY1 looks for a hook attached to the operator, let's use that.
 
 (defun mapply1-extension-$closure (fn args fnname form)
-  (with-lexical-environment (rest (second fn)) (meval `((mqapply) ,(third fn) ,@ args))))
+  (let*
+    ((is-array-ref (and (consp form) (member 'array (car form)))) ;; I DUNNO; IS THIS REALLY GUARANTEED TO DETECT ARRAY REFS ??
+     (array-foo (if is-array-ref (list 'array))))
+    (with-lexical-environment (rest (second fn)) (meval `((mqapply ,@ array-foo) ,(third fn) ,@ args)))))
 
 (setf (get '$closure 'mapply1-extension) 'mapply1-extension-$closure)
 

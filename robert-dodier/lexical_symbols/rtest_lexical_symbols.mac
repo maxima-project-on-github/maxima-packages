@@ -1,3 +1,8 @@
+(if not member (global, features)
+   then load ("lexical_symbols.mac"),
+ 0);
+0;
+
 /* maxima-discuss 2014-04-19: "How to make buildq evaluate its first argument - please help"
 
 (%i1) gen_rhs(Ex,Vars)::= block([n:length(Ex),m:length(Vars)],
@@ -1176,23 +1181,19 @@ g(23)();
  foo: g(12));
 closure([env27880], [gg, gg, g27871, gg]);
 
-/* it would be better to say foo[1](), etc., but subscript applied to closure doesn't work yet
- * I'll assume for now it's more important to ensure the function gets called and x gets retrieved as expected
- */
-
-second(foo)[1]();
+foo[1]();
 12;
 
-second(foo)[2]();
+foo[2]();
 12;
 
-second(foo)[3]();
+foo[3]();
 g27871();
 
-second(foo)[3](), nouns;
+foo[3](), nouns;
 12;
 
-second(foo)[4]();
+foo[4]();
 12;
 
 (g(x) := block([gg], gg() := x, gg),
