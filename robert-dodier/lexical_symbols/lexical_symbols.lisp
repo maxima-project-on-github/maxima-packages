@@ -55,8 +55,8 @@
     (var-inits-lexical (remove-if #'symbolp vars+var-inits-lexical))
     (var-inits-vars-lexical (mapcar #'second var-inits-lexical))
     (vars-all-lexical (append vars-only-lexical var-inits-vars-lexical))
-    (vars-only-gensyms (mapcar #'(lambda (s) (let ((s1 (gensym))) (setf (get s1 'reversealias) (or (get s 'reversealias) s)) s1)) vars-only-lexical))
-    (var-inits-gensyms (mapcar #'(lambda (s) (let ((s1 (gensym))) (setf (get s1 'reversealias) (or (get s 'reversealias) s)) s1)) var-inits-vars-lexical))
+    (vars-only-gensyms (mapcar #'(lambda (s) (let ((s1 (gensym (symbol-name s)))) (setf (get s1 'reversealias) (or (get s 'reversealias) s)) s1)) vars-only-lexical))
+    (var-inits-gensyms (mapcar #'(lambda (s) (let ((s1 (gensym (symbol-name s)))) (setf (get s1 'reversealias) (or (get s 'reversealias) s)) s1)) var-inits-vars-lexical))
     (gensyms-all (append vars-only-gensyms var-inits-gensyms))
     (subst-eqns (mapcar #'(lambda (x y) `((mequal) ,x ,y)) vars-all-lexical gensyms-all))
     (gensym-mprogn (let (($simp nil)) ($substitute `((mlist) ,@ subst-eqns) `((mprogn) ,@ exprs))))
@@ -80,7 +80,7 @@
     ((args (remove-if #'(lambda (x) (kindp x '$global)) (extract-arguments-symbols e)))
      (args-gensyms (mapcar
                      #'(lambda (s)
-                         (let ((s1 (gensym)))
+                         (let ((s1 (gensym (symbol-name s))))
                            (setf (get s1 'reversealias) (or (get s 'reversealias) s)) s1)) args))
      (subst-eqns (mapcar #'(lambda (x y) `((mequal) ,x ,y)) args args-gensyms))
      (substituted-definition (let (($simp nil)) ($substitute `((mlist) ,@ subst-eqns) e)))
@@ -121,7 +121,7 @@
     (let*
       ((do-expr (apply parse-$do-prev a))
        (var (third do-expr))
-       (var-subst (gensym))
+       (var-subst (gensym (symbol-name var)))
        (next (sixth do-expr))
        (unless (eighth do-expr))
        (body (ninth do-expr)))
