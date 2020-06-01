@@ -1,0 +1,92 @@
+/* complex_plots.mac -- plot argument and magnitude via Gnuplot
+ *
+ * Template files adapted from examples at: http://gnuplot.sourceforge.net/demo/complex_trig.html
+ * slurp.lisp adapted from: http://sodaware.sdf.org/notes/cl-read-file-into-string/
+ *
+ * complex_plots.mac copyright 2020 by Robert Dodier
+ * I release this work under terms of the GNU General Public License.
+ *
+ * LIMITATIONS:
+ *
+ * Current working directory when Maxima is launched must be the 'complex_plots' directory.
+ *
+ * It is necessary to use 'batch' to read this file, not 'load'.
+ * This is due to the presence of :lisp in this file.
+ *
+ * Functions are specified in terms of x + %i*y, not a single variable z.
+ * 
+ * Range is fixed at (-pi/2, pi/2) in x and in y.
+ *
+ * Some Maxima functions don't have an equivalent in Gnuplot,
+ * so attempting to plot those will cause an error in Gnuplot.
+ *
+ * Maxima doesn't clean up temporary files from complex plots upon program termination.
+ *
+ * All of this is really a proof of concept, no doubt there's more work to do.
+ *
+ * EXAMPLES:
+ *
+   batch ("complex_plots.mac");
+   complex_plot_2d (atanh (x + %i*y));
+   complex_plot_3d (atanh (x + %i*y));
+   complex_plot_2d (2^(x + %i*y));
+   complex_plot_3d (2^(x + %i*y));
+   complex_plot_2d ((x + %i*y)^(5/2));
+   complex_plot_3d ((x + %i*y)^(5/2));
+ *
+ */
+
+complex_plot_2d (e) :=
+  block ([gnuplot_output_filename: complex_plot_generate_gnuplot (e, complex_plot_2d_template)],
+         system (sconcat (gnuplot_command, " -persist ", gnuplot_output_filename)),
+         gnuplot_output_filename);
+
+load ("slurp.lisp");
+complex_plot_2d_template: slurp ("complex_plot_2d.template") $
+
+complex_plot_generate_gnuplot (e, gnuplot_template) :=
+  block ([e1, gnuplot_output_filename],
+         if symbolp(e) then e: fundef(e),
+         e1: gnuplot_substitute (e),
+         gnuplot_output_filename: sconcat (maxima_tempdir, "/", "maxima_complex_plot", 100 + random(900), ".gnuplot"),
+         with_stdout (gnuplot_output_filename,
+           printf (true, gnuplot_template, e, e1)),
+         gnuplot_output_filename);
+
+gnuplot_substitute (e) :=
+ (subst (gnuplot_symbols, e),
+  apply1 (%%, rbesj0, rbesj1, rbesy0, rbesy1, rexp, rexpt));
+
+/* maybe there's more to be covered here */
+gnuplot_symbols: '[%pi = pi, %i = {0, 1}, airy_ai = airy, carg = arg,
+                   elliptic_kc = EllipticK, elliptic_e = EllipticE,
+                   elliptic_pi = EllipticPi, ceiling = ceil, expintegral_e = expint,
+                   imagpart = imag, log_gamma = lgamma, /* right? */
+                   realpart = real, signum = sgn, erf = cerf];
+
+
+defrule (rbesj0, bessel_j (0, xx), besj0(xx));
+defrule (rbesj1, bessel_j (1, xx), besj1(xx));
+defrule (rbesy0, bessel_y (0, xx), besy0(xx));
+defrule (rbesy1, bessel_y (1, xx), besy1(xx));
+
+/* it's unreasonably difficult to convince Maxima to output %e^x as exp(x) */
+/* plus a bug in parser: :lisp after comment causes error in batch(...) <sigh> */
+123;
+:lisp (setf (get '$myexp 'reversealias) '$exp)
+matchdeclare (xx, all);
+defrule (rexp, %e^xx, myexp(x));
+
+/* it's unreasonably difficult to convince Maxima to output x^y as x**y */
+infix ("myexpt");
+:lisp (setf (get '$myexpt 'dissym) '(#\* #\*))
+matchdeclare ([xx, yy], all);
+defrule (rexpt, xx^yy, xx myexpt yy);
+
+complex_plot_3d_template: slurp ("complex_plot_3d.template") $
+
+complex_plot_3d (e) :=
+  block ([gnuplot_output_filename: complex_plot_generate_gnuplot (e, complex_plot_3d_template)],
+         system (sconcat (gnuplot_command, " -persist ", gnuplot_output_filename)),
+         gnuplot_output_filename);
+
