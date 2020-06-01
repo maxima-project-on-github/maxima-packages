@@ -1245,3 +1245,30 @@ closure([env28186], lambda([], z));
 globalfun();
 42;
 
+/* not sure what this one is testing */
+integrate (r^(n - 1)*exp(1/(r^2 - 1)), r, 0, 1);
+'integrate (r^(n - 1)*exp(1/(r^2 - 1)), r, 0, 1);
+
+/* mailing list 2020-05-18: "Anonymous functions and parameter names" */
+
+/* works ok already, ensure it continues to work */
+integrate( lambda([x],x^2)(x) * lambda([x],1/sqrt(x))(x) ,x,0,1);
+
+/* works ok already, ensure it continues to work */
+ff(z):=z^2;
+gg(z):=1/sqrt(z);
+integrate( lambda([x],ff(x))(x) * lambda([x],gg(x))(x) ,x,0,1);
+
+/* as stated in email; this is incorrect for computing standard deviation */
+area(x):=x^3/3;
+incl(x):=2*x;
+one(x):=1;
+ex(f,p,a,b):=integrate(f(x)*p(x),x,a,b);
+sd(f,p,a,b):=sqrt( ex(lambda([z],f(z)), p, a, b) );
+sd(area,one,0,1);
+
+/* correct calculation of sd */
+(var (p, a, b) := ex (lambda ([x], x^2), p, a, b) - (ex (lambda ([x], x), p, a, b))^2,
+ sd (p, a, b) := sqrt (var (p, a, b)),
+ sd (one, 0, 1));
+sqrt(3)/6;

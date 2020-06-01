@@ -1,0 +1,56 @@
+# Adapted from: http://gnuplot.sourceforge.net/demo/complex_trig.11.gnu
+# No license specified.
+#
+# set terminal pngcairo  background "#ffffff" enhanced font "times" fontscale 1.0 size 640, 480 
+# set output 'complex_trig.11.png'
+set border -1 front lt black linewidth 1.000 dashtype solid
+set grid nopolar
+set grid xtics nomxtics ytics nomytics noztics nomztics nortics nomrtics \
+ nox2tics nomx2tics noy2tics nomy2tics nocbtics nomcbtics
+set grid layerdefault   lt 0 linecolor 0 linewidth 0.500,  lt 0 linecolor 0 linewidth 0.500
+unset key
+set style increment default
+set view 66, 336, 1.2, 1.2
+set view  equal xyz
+set isosamples 100, 100
+set size ratio 1 1,1
+set style data lines
+set xyplane at 0
+set xtics  norangelimit 
+set xtics   ("-π/2" -1.57080, "-π/4" -0.785398, "0" 0.00000, "π/4" 0.785398, "π/2" 1.57080)
+set ytics  norangelimit 
+set ytics   ("-π/2" -1.57080, "-π/4" -0.785398, "0" 0.00000, "π/4" 0.785398, "π/2" 1.57080)
+unset ztics
+set cbtics  norangelimit 
+set cbtics   ("0" -3.14159, "2π" 3.14159)
+set title "~a" 
+set urange [ -1.57080 : 1.57080 ] noreverse nowriteback
+set vrange [ -1.57080 : 1.57080 ] noreverse nowriteback
+set xlabel "Real" 
+set xlabel  offset character 0, -2, 0 font "" textcolor lt -1 rotate parallel
+set xrange [ -1.57080 : 1.57080 ] noreverse nowriteback
+set x2range [ * : * ] noreverse writeback
+set ylabel "Imaginary" 
+set ylabel  offset character 0, -2, 0 font "" textcolor lt -1 rotate parallel
+set yrange [ -1.57080 : 1.57080 ] noreverse nowriteback
+set y2range [ * : * ] noreverse writeback
+set zlabel "magnitude" 
+set zlabel  offset character 3, 0, 0 font "" textcolor lt -1 rotate
+set zrange [ * : * ] noreverse writeback
+set cblabel "Phase Angle" 
+set cblabel  offset character -2, 0, 0 font "" textcolor lt -1 rotate
+set cbrange [ -3.14159 : 3.14159 ] noreverse nowriteback
+set rrange [ * : * ] noreverse writeback
+set palette positive nops_allcF maxcolors 0 gamma 1.5 color model HSV 
+set palette defined ( 0 0 1 1, 1 1 1 1 )
+set colorbox user
+set colorbox vertical origin screen 0.85, 0.2 size screen 0.05, 0.6 front  noinvert bdefault
+Hue(x,y) = (pi + atan2(-y,-x)) / (2*pi)
+phase(x,y) = hsv2rgb( Hue(x,y), sqrt(x**2+y**2), 1. )
+rp(x,y) = real(f(x,y))
+f(x,y) = ~a
+ip(x,y) = imag(f(x,y))
+color(x,y) = hsv2rgb( Hue( rp(x,y), ip(x,y) ), abs(f(x,y)), 1. )
+save_encoding = "utf8"
+## Last datafile plotted: "++"
+splot '++' using 1:2:(abs(f($1,$2))):(color($1,$2)) with pm3d lc rgb variable

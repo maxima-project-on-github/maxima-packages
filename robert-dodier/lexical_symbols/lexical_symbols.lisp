@@ -2,12 +2,21 @@
 ;; copyright 2012, 2019 by Robert Dodier
 ;; I release this work under terms of the GNU GPL
 ;;
-;; examples:
-;; with_lexical_symbols ([n:100], f(x) := n : n + x, g() := display(n));
-;; with_lexical_symbols ([f], f(x) := 2*x);
-;; with_lexical_symbols ([a], h(x) := a[x] : 1, i() := arrayinfo(a));
-
-;; After this, one can say declare(foo, global) and then featurep(foo, global) => true,
+;; Constructs which have local variables, namely
+;; block, function definitions (named and unnamed), and for loops,
+;; are redefined so that the local variables are lexical symbols.
+;; That is, two local variables which have the same name in
+;; different constructs are distinct.
+;;
+;; Local variables are made lexical, via gensym substitution,
+;; when the construct (block, function, or for loop) is parsed.
+;;
+;; This file, by itself, only implements lexical local variables.
+;; Other files in this directory implement closures.
+;;
+;; This file defines a new feature, global,
+;; which makes symbols dynamic instead of lexical.
+;; One can say declare(foo, global) and then featurep(foo, global) => true,
 ;; or, equivalently, (KINDP '$FOO '$GLOBAL) => T.
 ;; Any symbols declared global are excluded from gensym substitution.
 
@@ -47,6 +56,15 @@
        (exprs (cdr mprog-args)))
       (subst-lexical-symbols-into-mprog mprog-op vars+var-inits exprs))))
 
+(defun make-lexical-gensym (s)
+  (let*
+    ((s1 (gensym (symbol-name s)))
+     (%s ($nounify s))
+     (%s1 ($nounify s1)))
+    (setf (get s1 'reversealias) (or (get s 'reversealias) s))
+    (setf (get %s1 'reversealias) (or (get %s 'reversealias) %s))
+    s1))
+
 (defun subst-lexical-symbols-into-mprog (mprog-op vars+var-inits exprs)
   (let*
    ((vars+var-inits-lexical (remove-if #'(lambda (x) (kindp (if (symbolp x) x (second x)) '$global)) vars+var-inits))
@@ -55,10 +73,13 @@
     (var-inits-lexical (remove-if #'symbolp vars+var-inits-lexical))
     (var-inits-vars-lexical (mapcar #'second var-inits-lexical))
     (vars-all-lexical (append vars-only-lexical var-inits-vars-lexical))
-    (vars-only-gensyms (mapcar #'(lambda (s) (let ((s1 (gensym))) (setf (get s1 'reversealias) (or (get s 'reversealias) s)) s1)) vars-only-lexical))
-    (var-inits-gensyms (mapcar #'(lambda (s) (let ((s1 (gensym))) (setf (get s1 'reversealias) (or (get s 'reversealias) s)) s1)) var-inits-vars-lexical))
+    (vars-only-gensyms (mapcar #'make-lexical-gensym vars-only-lexical))
+    (var-inits-gensyms (mapcar #'make-lexical-gensym var-inits-vars-lexical))
     (gensyms-all (append vars-only-gensyms var-inits-gensyms))
-    (subst-eqns (mapcar #'(lambda (x y) `((mequal) ,x ,y)) vars-all-lexical gensyms-all))
+    (subst-eqns (apply #'append (mapcar #'(lambda (x y)
+                                            (list `((mequal) ,x ,y)
+                                                  `((mequal) ,($nounify x) ,($nounify y))))
+                                        vars-all-lexical gensyms-all)))
     (gensym-mprogn (let (($simp nil)) ($substitute `((mlist) ,@ subst-eqns) `((mprogn) ,@ exprs))))
     (gensym-inits (mapcar #'(lambda (e y) (list (first e) y (third e))) var-inits-lexical var-inits-gensyms))
     (gensym-mprog `(,mprog-op ((mlist) ,@ (append vars-only-gensyms gensym-inits vars+var-inits-global)) ,@ (cdr gensym-mprogn))))
@@ -80,7 +101,7 @@
     ((args (remove-if #'(lambda (x) (kindp x '$global)) (extract-arguments-symbols e)))
      (args-gensyms (mapcar
                      #'(lambda (s)
-                         (let ((s1 (gensym)))
+                         (let ((s1 (gensym (symbol-name s))))
                            (setf (get s1 'reversealias) (or (get s 'reversealias) s)) s1)) args))
      (subst-eqns (mapcar #'(lambda (x y) `((mequal) ,x ,y)) args args-gensyms))
      (substituted-definition (let (($simp nil)) ($substitute `((mlist) ,@ subst-eqns) e)))
@@ -121,7 +142,7 @@
     (let*
       ((do-expr (apply parse-$do-prev a))
        (var (third do-expr))
-       (var-subst (gensym))
+       (var-subst (gensym (symbol-name var)))
        (next (sixth do-expr))
        (unless (eighth do-expr))
        (body (ninth do-expr)))
