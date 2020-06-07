@@ -1272,3 +1272,42 @@ sd(area,one,0,1);
  sd (p, a, b) := sqrt (var (p, a, b)),
  sd (one, 0, 1));
 sqrt(3)/6;
+
+/* mailing list 2020-06-04: "Re: How to use genmatrix in this case?" */
+
+(load (cartan),
+ /* roundabout way of ensuring "|" is defined with lexical symbols;
+  * see share/calculus/cartan.lisp for current implementation
+  */
+ lambda ([v, f],
+         block([i,j,ext101,ext102,ext103,ext104],
+               ext103:expand(f),
+               ext102:v[1]*coeff(ext103,cartan_basis[1]),
+               for i from 2 thru cartan_dim do
+                 (ext101:coeff(ext103,cartan_basis[i]),
+                  if ext101 # 0 then ext101:subst(extsub[i],ext101),
+                  ext102:ext101*v[i]+ext102),return(expand(ext102)))),
+ ?mputprop (verbify("|"), %%, '?mexpr),
+ r:[x,y,z],
+ init_cartan(r),
+ 0);
+0;
+
+(ω[1]:2*dx-2*dy-dz,
+ ω[2]:dx+4*dy,
+ v[1]:[1,2,-5],
+ v[2]:[0,3,-2],
+ M:matrix([v[1]|ω[1],v[1]|ω[2]],[v[2]|ω[1],v[2]|ω[2]]));
+matrix([3, 9], [-4, 12]);
+
+genmatrix(lambda([i,j],v[i]|ω[j]),2,2);
+matrix([3, 9], [-4, 12]);
+
+/* simpler version -- global array / local variable name collision */
+
+(kill (fooarray, foofun, z),
+ fooarray[1]: [11, 22, 33],
+ foofun (fooarray) := block ([z: fooarray], [fooarray[2], z[2]]),
+ foofun ([111, 222, 333]));
+[222, 222];
+
