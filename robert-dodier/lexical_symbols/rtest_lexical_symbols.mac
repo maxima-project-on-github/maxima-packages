@@ -611,6 +611,7 @@ Too few arguments supplied to a(x); found: []
  lambda([a], a())(lambda([], "foo")));
 "foo";
 
+/* wrong number of arguments error expected here */
 errcatch (lambda([a], a("bar"))(lambda([], "foo")));
 [];
 
@@ -1245,27 +1246,28 @@ closure([env28186], lambda([], z));
 globalfun();
 42;
 
-/* not sure what this one is testing */
-integrate (r^(n - 1)*exp(1/(r^2 - 1)), r, 0, 1);
-'integrate (r^(n - 1)*exp(1/(r^2 - 1)), r, 0, 1);
-
 /* mailing list 2020-05-18: "Anonymous functions and parameter names" */
 
 /* works ok already, ensure it continues to work */
 integrate( lambda([x],x^2)(x) * lambda([x],1/sqrt(x))(x) ,x,0,1);
+2/5;
 
 /* works ok already, ensure it continues to work */
-ff(z):=z^2;
-gg(z):=1/sqrt(z);
-integrate( lambda([x],ff(x))(x) * lambda([x],gg(x))(x) ,x,0,1);
+(kill (ff, gg),
+ ff(z):=z^2,
+ gg(z):=1/sqrt(z),
+ integrate( lambda([x],ff(x))(x) * lambda([x],gg(x))(x) ,x,0,1));
+2/5;
 
-/* as stated in email; this is incorrect for computing standard deviation */
-area(x):=x^3/3;
-incl(x):=2*x;
-one(x):=1;
-ex(f,p,a,b):=integrate(f(x)*p(x),x,a,b);
-sd(f,p,a,b):=sqrt( ex(lambda([z],f(z)), p, a, b) );
-sd(area,one,0,1);
+/* definitions as stated in email; this is incorrect for computing standard deviation */
+(kill (area, incl, one, ex, sd),
+ area(x):=x^3/3,
+ incl(x):=2*x,
+ one(x):=1,
+ ex(f,p,a,b):=integrate(f(x)*p(x),x,a,b),
+ sd(f,p,a,b):=sqrt( ex(lambda([z],f(z)), p, a, b) ),
+ sd(area,one,0,1));
+1/(2*sqrt(3));
 
 /* correct calculation of sd */
 (var (p, a, b) := ex (lambda ([x], x^2), p, a, b) - (ex (lambda ([x], x), p, a, b))^2,
@@ -1310,4 +1312,27 @@ matrix([3, 9], [-4, 12]);
  foofun (fooarray) := block ([z: fooarray], [fooarray[2], z[2]]),
  foofun ([111, 222, 333]));
 [222, 222];
+
+/* mailing list 2020-06-13: "is this a scope problem ?" */
+
+kill (g2, g3, g3a, a, b, c, k);
+done;
+
+(g2(a,b) := a * b, 0);
+0;
+
+g2(b,c);
+b*c;
+
+(g3(a,b) := a[k] * b[k], 0);
+0;
+
+g3(b,c);
+b[k]*c[k];
+
+(g3a(a,b):=a[k]*b[k], 0);
+0;
+
+g3a(b,a);
+a[k]*b[k];
 
