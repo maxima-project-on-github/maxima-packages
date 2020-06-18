@@ -39,7 +39,16 @@
 (defun freeof-env (e x)
   (let (symbols)
     (maphash #'(lambda (s v) (push s symbols)) e)
-    ($lfreeof (cons '(mlist) symbols) x)))
+    (if (and (consp x) (eq (caar x) '$closure))
+      (and (every #'(lambda (e1)
+                      (let ((e1-env (get e1 'env)))
+                        (if e1-env
+                          (let (l)
+                            (maphash #'(lambda (k v) (push v l)) e1-env)
+                            ($lfreeof (cons '(mlist) symbols) (cons '(mlist) l))))))
+                  (rest (second x)))
+           ($lfreeof (cons '(mlist) symbols) (third x)))
+      ($lfreeof (cons '(mlist) symbols) x))))
 
 (defun $get_env (e)
   (let ((e-env (get e 'env)))
@@ -59,14 +68,23 @@
   (let
     ((env-name-list (rest (second x)))
      (result (third x)))
-    ;; PROBABLY NEED TO LOOK AT VALUES IN INNER ENVIROMENTS BEFORE SAYING OUTER ENVIRONMENT CAN GO AWAY !!
-    (let ((new-env-name-list (remove-if #'(lambda (e)
-                                            ;; Return NIL if E doesn't have an ENV property,
-                                            ;; which means E won't be simplified away.
-                                            ;; I guess that's questionable !!
-                                            (let ((e-env (get e 'env)))
-                                              (if e-env (freeof-env e-env result))))
-                                        env-name-list)))
+    (let ((new-env-name-list
+            (remove-if
+              #'(lambda (e)
+                  ;; Return NIL if E doesn't have an ENV property,
+                  ;; which means E won't be simplified away.
+                  ;; I guess that's questionable !!
+                  (let ((e-env (get e 'env)))
+                    (if e-env 
+                      (and (freeof-env e-env result)
+                           (every #'(lambda (inner-env)
+                                      (every #'(lambda (inner-env-value)
+                                                 (freeof-env e-env inner-env-value))
+                                             (let (l) (maphash #'(lambda (k v) (push v l)) inner-env) l)))
+                                  ;; Assume here that the list of environments goes from outer to inner.
+                                  ;; Extract environment tables, omitting any symbols which don't have an associated table.
+                                  (remove nil (mapcar #'(lambda (e) (get e 'env)) (rest (member e-env env-name-list)))))))))
+              env-name-list)))
       (if (null new-env-name-list)
         (simplifya result z)
         (cond
@@ -152,7 +170,7 @@
                   ;; OH LOOK, THERE'S A CALL TO MEVAL !!
                   (mapcar #'(lambda (vv) (setf (gethash (first vv) new-env) (meval (second vv)))) vars+var-inits-pairs)
                   (setf (get new-env-id 'env) new-env)
-                  (with-lexical-environment (list new-env-id) (funcall (get 'mprogn 'mfexpr*) (cons '(mprogn) body))))
+                  (with-lexical-environment (list new-env-id) (funcall prev-mfexpr* (cons '(mprog) (cons '(mprogn) body)))))
                 (funcall prev-mfexpr* e))))))
 
 ;; example

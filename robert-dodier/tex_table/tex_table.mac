@@ -3,6 +3,32 @@
  * I release this work under terms of the GNU General Public License, version 2
  */
 
+tex_decimal_significant_figures: 4 $
+tex_decimal_f_threshold_upper: 1000.0 $
+tex_decimal_f_threshold_lower: 0.001 $
+
+texput (decimal, tex_decimal);
+
+tex_decimal(e):= tex_decimal1(first(e));
+
+tex_decimal1(x):=
+  if x > tex_decimal_f_threshold_upper or x < tex_decimal_f_threshold_lower
+    then tex_decimal_e(x) else tex_decimal_f(x)$
+
+tex_decimal_f(x):=
+  block ([m: tex_decimal_significant_figures,
+          n: ceiling(log(x)/log(10.0))],
+         printf(false, "~,vf", m - n, x));
+
+tex_decimal_e(x):=
+  block([m: tex_decimal_significant_figures,
+         n: floor(log(x)/log(10.0))],
+        printf(false, "~,vf \\times 10^{~d}", m - 1, x*10.0^(-n), n))$
+
+round_significant_figures(x,m):=
+  block([n: ceiling(log(x)/log(10.0))],
+        floor(x*10^(m - n))/10.0^(m - n))$
+
 defstruct (table (header = [], rows = [], outline = false, hsep = false, vsep = false));
 
 load ("tex_table.lisp");
