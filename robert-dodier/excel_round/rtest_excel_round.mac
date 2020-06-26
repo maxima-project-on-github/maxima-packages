@@ -1,0 +1,85 @@
+(if ?mget (excel_round, ?mexpr) = false
+   then load ("excel_round.mac"),
+ 0);
+0;
+
+/* function to create test cases;
+ * all values x returned by foo(r, n, m) should excel_round(x, n) to float(r)
+ * number of values returned = 2*10^m
+ */
+
+(foo (r, n, m) := makelist (float (r + k/2/10^(n + m)), k, -10^m, 10^m - 1),
+ foo (115/100, 2, 1));
+[1.145, 1.1455, 1.146, 1.1465, 1.147, 1.1475, 1.148, 1.1485, 1.149, 
+1.1495, 1.15, 1.1505, 1.151, 1.1515, 1.152, 1.1525, 1.153, 1.1535, 1.154, 
+1.1545];
+
+/*
+ * these should all excel_round to 1.15; let's verify
+ */
+
+every (lambda ([x], excel_round (x, 2) = float(115/100)), foo  (115/100, 2, 1));
+true;
+
+/* let's package it up and try some different test values */
+
+(bar (r, n, m) := every (lambda ([x], excel_round (x, n) = float(r)), foo (r, n, m)),
+ bar (5/100, 2, 2));
+true;
+
+bar (3856/1000, 3, 3);
+true;
+
+bar (3857/1000, 3, 3);
+true;
+
+bar (5666/100, 2, 2);
+true;
+
+bar (8228/100, 2, 2);
+true;
+
+bar (48995/100, 2, 2);
+true;
+
+
+bar (-5/100, 2, 2);
+true;
+
+bar (-3856/1000, 3, 3);
+true;
+
+bar (-3857/1000, 3, 3);
+true;
+
+bar (-5666/100, 2, 2);
+true;
+
+bar (-8228/100, 2, 2);
+true;
+
+bar (-48995/100, 2, 2);
+true;
+
+/* excel_round with nonnumeric argument */
+
+kill(m, baz, quux);
+done;
+
+baz: excel_round (m/1000, 2);
+excel_round (m/1000, 2);
+
+ev (baz, m = 9876);
+9.88;
+
+quux: excel_round_numerical (m/1000, 2);
+if equal(10^(integer_log10(abs(m))-16)*'round(m*10^(15-integer_log10(abs(m))))
+          -floor(10^(integer_log10(abs(m))-16)
+                  *'round(m*10^(15-integer_log10(abs(m))))),1/2)
+  then 0.01*ceiling(10^(integer_log10(abs(m))-16)
+        *'round(m*10^(15-integer_log10(abs(m)))))
+  else 0.01*'round(10^(integer_log10(abs(m))-16)
+        *'round(m*10^(15-integer_log10(abs(m)))));
+
+ev (quux, m = 9876);
+9.88;

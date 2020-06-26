@@ -1,0 +1,56 @@
+/* excel_round -- round to specified number of decimal places,
+ * rounding termminal 5 upwards, as in MS Excel, apparently.
+ * Inspired by: https://stackoverflow.com/q/62533742/871096
+ *
+ * copyright 2020 by Robert Dodier
+ * I release this work under terms of the GNU General Public License.
+ */
+
+matchdeclare (xx, numberp);
+matchdeclare (nn, integerp);
+tellsimpafter (excel_round (xx, nn), excel_round_numerical (xx, nn));
+
+matchdeclare (xx, lambda ([e], block ([v: ev (e, numer)], numberp(v))));
+tellsimpafter (excel_round (xx, nn), excel_round_numerical (ev (xx, numer), nn));
+
+excel_round_numerical (x, n) :=
+  block ([r, r1, r2, l],
+         /* rationalize returns exact rational equivalent of float */
+         r: rationalize (x),
+         /* First round to 15 significant decimal places.
+          * This is a heuristic to recover what a user "meant"
+          * to type in, since many decimal numbers are not
+          * exactly representable as floats.
+          */
+         l: integer_log10 (abs (r)),
+         r1: round (r*10^(15 - l)),
+         /* Now begin rounding to n places. */
+         r2: r1/10^((15 - l) - n),
+         /* If terminal digit is 5, then r2 is integer + 1/2.
+          * If that's the case, round upwards and rescale,
+          * otherwise, terminal digit is something other than 5,
+          * round to nearest integer and rescale.
+          */
+         if equal (r2 - floor(r2), 1/2)
+           then ceiling(r2)/10.0^n
+           else round(r2)/10.0^n);
+
+matchdeclare (xx, lambda ([e], numberp(e) and e > 0));
+tellsimpafter (integer_log10 (xx), integer_log10_numerical (xx));
+
+matchdeclare (xx, lambda ([e], block ([v: ev (e, numer)], numberp(v) and v > 0)));
+tellsimpafter (integer_log10 (xx), integer_log10_numerical (ev (xx, numer)));
+
+matchdeclare (xx, lambda ([e], not atom(e) and op(e) = "/" and numberp (denom (e)) and pow10p (denom (e))));
+pow10p (e) := integerp(e) and  e > 1 and (e = 10 or pow10p (e/10));
+tellsimpafter (integer_log10 (xx), integer_log10 (num (xx)) - integer_log10_numerical (denom (xx)));
+
+integer_log10_numerical (x) :=
+  if x >= 10
+    then (for i from 0 do
+              if x >= 10 then x:x/10 else return(i))
+  elseif x < 1
+    then (for i from 0 do
+              if x < 1 then x:x*10 else return(-i))
+  else 0;
+
