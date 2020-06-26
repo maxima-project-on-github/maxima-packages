@@ -6,7 +6,14 @@
  * I release this work under terms of the GNU General Public License.
  */
 
-excel_round (x, n) :=
+matchdeclare (xx, numberp);
+matchdeclare (nn, integerp);
+tellsimpafter (excel_round (xx, nn), excel_round_numerical (xx, nn));
+
+matchdeclare (xx, lambda ([e], block ([v: ev (e, numer)], numberp(v))));
+tellsimpafter (excel_round (xx, nn), excel_round_numerical (ev (xx, numer), nn));
+
+excel_round_numerical (x, n) :=
   block ([r, r1, r2, l],
          /* rationalize returns exact rational equivalent of float */
          r: rationalize (x),
