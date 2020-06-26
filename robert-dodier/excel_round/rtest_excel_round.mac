@@ -61,3 +61,25 @@ true;
 bar (-48995/100, 2, 2);
 true;
 
+/* excel_round with nonnumeric argument */
+
+kill(m, baz, quux);
+done;
+
+baz: excel_round (m/1000, 2);
+excel_round (m/1000, 2);
+
+ev (baz, m = 9876);
+9.88;
+
+quux: excel_round_numerical (m/1000, 2);
+if equal(10^(integer_log10(abs(m))-16)*'round(m*10^(15-integer_log10(abs(m))))
+          -floor(10^(integer_log10(abs(m))-16)
+                  *'round(m*10^(15-integer_log10(abs(m))))),1/2)
+  then 0.01*ceiling(10^(integer_log10(abs(m))-16)
+        *'round(m*10^(15-integer_log10(abs(m)))))
+  else 0.01*'round(10^(integer_log10(abs(m))-16)
+        *'round(m*10^(15-integer_log10(abs(m)))));
+
+ev (quux, m = 9876);
+9.88;
