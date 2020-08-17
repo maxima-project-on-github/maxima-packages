@@ -1,0 +1,62 @@
+/* inspired by https://stackoverflow.com/questions/48997277/standard-deviation-of-binned-values
+ * copyright 2018 by Robert Dodier
+ * I release this work under terms of the GNU General Public License
+ *
+ * This is a program for Maxima, a computer algebra system.
+ * http://maxima.sourceforge.net/
+ */
+
+/* Given histogram specified as:
+ * number of bins m
+ * list of disjoint bins [a[i], b[i]], i = 1, ..., m
+ * number of data in each bin n[i], i = 1, ..., m
+ * total number of data N = sum(n[i], i, 1, m)
+ * 
+ * It might or might not be the case that a[i] = b[i - 1];
+ * what's important is that bins are disjoint.
+ *
+ * Density in each bin is p[i] = (n[i]/N)/(b[i] - a[i])
+ * Mass fraction in each bin is n[i]/N = p[i]*(b[i] - a[i])
+ *
+ * k'th moment for density is
+ *
+ *   sum(integrate(p[i]*x^k, x, a[i], b[i]), i, 1, m)
+ *
+ * Now
+ *
+ *   integrate(p[i]*x^k, x, a[i], b[i])
+ *    = p[i]*(1/(k + 1))*(b[i]^(k + 1) - a[i]*(k + 1))
+ *    = p[i]*(b[i] - a[i])*(1/(k + 1))*(b[i]^k + ... + a[i]^k) (terms vary depending on k)
+ *    = n[i]/N*(1/(k + 1))*(b[i]^k + ... + a[i]^k)
+ *
+ * Specifically for k = 1,
+ *
+ *   integrate(p[i]*x, x, a[i], b[i])
+ *    = p[i]*(1/2)*(b[i]^2 - a[i]^2)
+ *    = n[i]/N*(a[i] + b[i])/2
+ *    = n[i]/N*(mean of i'th bin) (incidentally)
+ *
+ * and for k = 2,
+ *
+ *   integrate(p[i]*x^2, x, a[i], b[i])
+ *    = p[i]*(1/3)*(b[i]^3 - a[i]^3)
+ *    = p[i]*(1/3)*(b[i] - a[i])*(a[i]^2 + a[i]*b[i] + b[i]^2)
+ *    = n[i]/N*(a[i]^2 + a[i]*b[i] + b[i]^2)/3
+ * 
+ */
+
+histogram_mean (a, b, n) :=
+  block ([N : lsum (n1, n1, n),
+          m : length (a)], /* SHOULD ENSURE A, B, N ALL SAME LENGTH */
+         sum (n[i]/N*(a[i] + b[i])/2, i, 1, m));
+
+histogram_var (a, b, n) :=
+  histogram_mean2 (a, b, n) - (histogram_mean (a, b, n))^2;
+
+histogram_mean2  (a, b, n) := 
+  block ([N : lsum (n1, n1, n),
+          m : length (a)], /* SHOULD ENSURE A, B, N ALL SAME LENGTH */
+         sum (n[i]/N*(a[i]^2 + a[i]*b[i] + b[i]^2)/3, i, 1, m));
+
+histogram_sd (a, b, n) :=
+  sqrt (histogram_var (a, b, n));
