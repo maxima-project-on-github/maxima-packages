@@ -1336,3 +1336,10 @@ b[k]*c[k];
 g3a(b,a);
 a[k]*b[k];
 
+/* mailing list 2020-07-19: "bad evaluation" */
+
+foo: block([w:[a,b,c]],if w[1]>0 then w[2] else w[3]);
+closure([env123], if a > 0 then w[2] else w[3]);
+
+(a: -100, ev (foo));
+c;
