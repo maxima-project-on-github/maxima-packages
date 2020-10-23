@@ -20,21 +20,21 @@ foo // "bb" // "cc";
 kill(foo);
 done;
 
-flatten_json (blob ("foo" = 123, "bar" = 456), []);
+flatten_json ([], blob ("foo" = 123, "bar" = 456));
 [foo = 123, bar = 456];
 
-flatten_json (blob ("foo" = blob ("bar" = 123)), []);
+flatten_json ([], blob ("foo" = blob ("bar" = 123)));
 [[foo.bar = 123]];
 
-flatten_json (blob ("foo" = 123), [bar]);
+flatten_json ([bar], blob ("foo" = 123));
 [bar . foo = 123];
 
-flatten_json (blob ("foo" = 123), [bar, baz]);
+flatten_json ([bar, baz], blob ("foo" = 123));
 [bar . baz . foo = 123];
 
-flatten_json (blob ("mumble" = 456, "blurf" = 789), [baz, quux]);
+flatten_json ([baz, quux], blob ("mumble" = 456, "blurf" = 789));
 [baz . quux . mumble = 456, baz . quux . blurf = 789];
 
-flatten_json (blob ("foo" = blob ("bar" = 123), "mumble" = 456, "blurf" = 789), [baz, quux]);
+flatten_json ([baz, quux], blob ("foo" = blob ("bar" = 123), "mumble" = 456, "blurf" = 789));
 [[baz . quux . foo . bar = 123], baz . quux . mumble = 456, baz . quux . blurf = 789];
 

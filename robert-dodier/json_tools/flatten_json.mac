@@ -4,33 +4,33 @@
  * I release this work under terms of the GNU GPL.
  */
 
-flatten_json (e, prefix_tags) :=
+flatten_json (prefix_tags, e) :=
   if listp(e)
-    then flatten_json_list (e, prefix_tags)
+    then flatten_json_list (prefix_tags, e)
   elseif equationp(e)
-    then flatten_json_equation (e, prefix_tags)
+    then flatten_json_equation (prefix_tags, e)
   elseif blobp(e)
-    then flatten_json_blob (e, prefix_tags)
+    then flatten_json_blob (prefix_tags, e)
   else
     apply (".", prefix_tags) = e;
 
-flatten_json_list (l, prefix_tags) :=
+flatten_json_list (prefix_tags, l) :=
   if some (blobp, l)
-    then flatten_json_list_of_blobs (l, prefix_tags)
-    else flatten_json_list_of_nonblobs (l, prefix_tags);
+    then flatten_json_list_of_blobs (prefix_tags, l)
+    else flatten_json_list_of_nonblobs (prefix_tags, l);
 
-flatten_json_list_of_blobs (l, prefix_tags) :=
+flatten_json_list_of_blobs (prefix_tags, l) :=
   block ([leading_tags: rest (prefix_tags, -1),
           trailing_tag: last (prefix_tags),
           revised_tags,
           kk: gensym ()],
          revised_tags: endcons (trailing_tag(kk), leading_tags),
-         makelist (flatten_json (l[k], subst (kk = k, revised_tags)), k, 1, length(l)));
+         makelist (flatten_json (subst (kk = k, revised_tags), l[k]), k, 1, length(l)));
 
 /* assume that l is a list of numbers;
  * might want to verify that and handle other cases
  */
-flatten_json_list_of_nonblobs (l, prefix_tags) :=
+flatten_json_list_of_nonblobs (prefix_tags, l) :=
   block ([nrows, ncols],
          [nrows, ncols]: if listp(l[1])
                            then [length(l), length(l[1])]
@@ -39,8 +39,8 @@ flatten_json_list_of_nonblobs (l, prefix_tags) :=
 
 equationp (e) := not atom(e) and op(e) = "=";
 
-flatten_json_equation (e, prefix_tags) := flatten_json (rhs(e), endcons (parse_string (lhs(e)), prefix_tags));
+flatten_json_equation (prefix_tags, e) := flatten_json (endcons (parse_string (lhs(e)), prefix_tags), rhs(e));
 
 blobp (e) := not atom(e) and op(e) = 'blob;
 
-flatten_json_blob (b, prefix_tags) := maplist (lambda ([e], flatten_json (e, prefix_tags)), b);
+flatten_json_blob (prefix_tags, b) := maplist (lambda ([e], flatten_json (prefix_tags, e)), b);
