@@ -1,0 +1,58 @@
+/* query_json.mac -- select values from JSON blobs
+ *
+ * e.g.: given foo: blob("aa" = 123, "bb" = blob("cc" = [11, 22, 33]))
+ * then foo // "aa" yields 123
+ *      foo // "bb" yields blob("cc" = [11, 22, 33])
+ *      foo // "bb" // "cc" yields [11, 22, 33]
+ *
+ * given bar: [blob("xx" = 123), blob("xx" = 456), blob("xx" = 789)]
+ * then bar // "xx" yields [123, 456, 789]
+ *
+ * copyright 2020 by Robert Dodier
+ * I release this work under terms of the GNU GPL.
+ */
+
+/* seems to cause interference between lassociative simplification and rules
+ *
+nary ("//", 205, 205);
+declare ("//", lassociative);
+ *
+ */
+/* try simple binary op instead */
+infix ("//", 205, 205);
+
+matchdeclare ([ll, mm], listp);
+
+matchdeclare (tt, tagp);
+tagp (e) := stringp (e);
+
+matchdeclare (bb, blobp);
+blobp (e) := not atom(e) and op(e) = 'blob;
+
+matchdeclare (ss, slashslashp);
+slashslashp (e) := not atom(e) and op(e) = "//";
+
+/* hmm, doesn't seem to work as expected
+ *
+matchdeclare (vv, subvarp);
+:lisp (defun $array_op (e) (if ($subvarp e) (caar e) (merror "array_op: argument must a subscripted variable; found: ~M" e)))
+:lisp (defun $array_args (e) (if ($subvarp e) (cons '(mlist) (cdr e)) (merror "array_args: argument must a subscripted variable; found: ~M" e)))
+ *
+ */
+
+simp: false $
+
+tellsimp (bb // tt, assoc (tt, bb));
+/* tellsimp (bb // vv, arrayapply (bb // array_op (vv), array_args (vv))); */ /* see remark above */
+
+/* tellsimp (bb // ss, cons (bb, ss)); */ /* not sure if this version works; try next line */
+tellsimp (bb // ss, lreduce ("//", cons (bb, args (ss))));
+
+tellsimp (bb // ll, apply ('blob, map (lambda ([y], y = bb // y), ll)));
+tellsimp (ll // tt, map (lambda ([x], x // tt), ll));
+tellsimp (ll // mm, map (lambda ([x], x // mm), ll));
+
+matchdeclare (aa, all);
+tellsimp (false // aa, false);
+
+simp: true $

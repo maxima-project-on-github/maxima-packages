@@ -1,0 +1,71 @@
+/* read_json.mac -- read JSON data and return blob expression
+ *
+ * e.g.: { "aa": 123, "bb": { "cc": [11, 22, 33] } }
+ * yields blob("aa" = 123, "bb" = blob("cc" = [11, 22, 33]))
+ *
+ * i.e. { ... } is replaced by blob(...),
+ * ":" is replaced by "=",
+ * and tags and [ ... ] are preserved.
+ *
+ * copyright 2020 by Robert Dodier
+ * I release this work under terms of the GNU GPL.
+ */
+
+get_all_attributes (fpattern) :=
+  (read_json_all (fpattern),
+   merge_data (%%),
+   map (lambda ([b], assoc ("attributes", b)), %%));
+
+get_attributes_by_name (all_attributes) :=
+  block ([use_fast_arrays: true, attributes_by_name],
+         map (lambda ([b], assoc ("name", b)), all_attributes),
+         unique (%%),
+         for n in %%
+           do (sublist (all_attributes , lambda ([b], assoc ("name", b) = n)),
+               attributes_by_name[n]: map (lambda ([b], assoc ("data", b)), %%)),
+         attributes_by_name);
+
+count_attributes_by_name (attributes_by_name) :=
+  block ([names: rest (arrayinfo (attributes_by_name), 2)],
+         sort (makelist ([length (attributes_by_name[n]), n], n, names)));
+
+read_json_all (fpattern) :=
+  block ([l: directory (fpattern)],
+         map (read_json, l));
+
+merge_data (l) := apply (append, map (lambda ([b], assoc ("data", b)), l));
+
+read_json (f) := subst (["{" = blob, ":" = "="], read_json_set (f));
+
+read_json_set (f) :=
+  block ([combined_input_stream,
+          primary_input_stream: if ?streamp(f) then f else openr (f, "UTF-8"),
+          terminator_stream: make_string_input_stream ("$")],
+         combined_input_stream: ?make\-concatenated\-stream (primary_input_stream, terminator_stream),
+         second (?mread (combined_input_stream)));
+
+/* work-around for bug in SBCL;
+ * see: https://bugs.launchpad.net/sbcl/+bug/690408
+ */
+load ("/Users/dodier/sandbox/tyi-raw.lisp");
+
+read_json_list (f) := subst (["{" = "[", ":" = "="], read_json_set (f));
+
+read_json_array (f) := json_list_to_array (read_json_list (f));
+
+/*
+/* THIS DOESN'T WORK. */
+json_list_to_array (json_list) :=
+  block ([json_array, use_fast_arrays: true],
+         for x in json_list
+           do block ([key: lhs(x), value: rhs(x)],
+                     json_array[key]: if atom(value) then value else json_list_to_array (value)),
+         json_array);
+
+fast_array_p (e) := ?hash\-table\-p (e) # false;
+
+matchdeclare (aa, fast_array_p);
+matchdeclare (bb, all);
+
+tellsimp (aa . bb, if atom(bb) or op(bb) # "." then aa[bb] else aa[first (bb)] . second (bb));
+ */

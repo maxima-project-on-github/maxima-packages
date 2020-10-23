@@ -1,0 +1,40 @@
+(if ?mget ('read_json, '?mexpr) = false
+   then load ("json_tools.mac"),
+0);
+0;
+
+(S: "{ \"aa\": 123, \"bb\": { \"cc\": [11, 22, 33] } }",
+ read_json (make_string_input_stream (S)));
+blob("aa" = 123, "bb" = blob("cc" = [11, 22, 33]));
+
+(foo: blob("aa" = 123, "bb" = blob("cc" = [11, 22, 33])),
+ foo // "aa");
+123;
+
+foo // "bb";
+blob("cc" = [11, 22, 33]);
+
+foo // "bb" // "cc";
+[11, 22, 33];
+
+kill(foo);
+done;
+
+flatten_json (blob ("foo" = 123, "bar" = 456), []);
+[foo = 123, bar = 456];
+
+flatten_json (blob ("foo" = blob ("bar" = 123)), []);
+[[foo.bar = 123]];
+
+flatten_json (blob ("foo" = 123), [bar]);
+[bar . foo = 123];
+
+flatten_json (blob ("foo" = 123), [bar, baz]);
+[bar . baz . foo = 123];
+
+flatten_json (blob ("mumble" = 456, "blurf" = 789), [baz, quux]);
+[baz . quux . mumble = 456, baz . quux . blurf = 789];
+
+flatten_json (blob ("foo" = blob ("bar" = 123), "mumble" = 456, "blurf" = 789), [baz, quux]);
+[[baz . quux . foo . bar = 123], baz . quux . mumble = 456, baz . quux . blurf = 789];
+
