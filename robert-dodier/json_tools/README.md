@@ -29,7 +29,7 @@ The `//` operator selects the value of a key,
 e.g.: 
 ```{maxima}
 x: blob("foo" = 123);
-x // "foo"
+x // "foo";
 ```
 yields `123`.
 
@@ -37,7 +37,7 @@ yields `123`.
 e.g.:
 ```{maxima}
 x: blob("foo" = blob("bar" = blob("baz" = 456)));
-x // "foo" // "bar" // "baz"
+x // "foo" // "bar" // "baz";
 ```
 yields `456`.
 
@@ -46,7 +46,7 @@ then `//` is mapped over the elements of the list,
 e.g.: 
 ```{maxima}
 x: [blob("aa" = 11), blob("aa" = 22), blob("aa" = 33)];
-x // "aa"
+x // "aa";
 ```
 yields `[11, 22, 33]`.
 
@@ -65,9 +65,16 @@ yields `blob("bb" = 22, "dd" = 44)`.
 `flatten_json` turns blobs into `foo.bar.baz = something`.
 That might or might not be useful; anyway there it is.
 
-E.g.: `flatten_json([foo, bar], blob("aa" = blob("bb" = 123)));`
+E.g.: 
+```{maxima}
+x: blob("aa" = blob("bb" = 123));
+flatten_json([foo, bar], x);
+```
 yields `foo . bar . aa . bb = 123`
 Here the keys have been turned into symbols.
+
+The first argument `[foo, bar]` are some additional symbols
+to put in front of any derived from the blobs.
 
 #### Writing blobs as JSON
 
