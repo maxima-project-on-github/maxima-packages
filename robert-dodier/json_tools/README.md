@@ -6,7 +6,8 @@ This package is experimental and subject to change.
 
 In order to load the package, either
 (1) one needs to launch Maxima from the `json_tools` folder,
-or (2) `push("path/to/json_tools", file_search_maxima);`
+or (2) `push("path/to/json_tools/###.mac", file_search_maxima);`
+and also `push("path/to/json_tools/###.lisp", file_search_lisp);`.
 
 Then `load(json_tools);` loads it.
 

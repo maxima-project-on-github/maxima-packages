@@ -47,7 +47,7 @@ read_json_set (f) :=
 /* work-around for bug in SBCL;
  * see: https://bugs.launchpad.net/sbcl/+bug/690408
  */
-load ("/Users/dodier/sandbox/tyi-raw.lisp");
+load ("tyi-raw.lisp");
 
 read_json_list (f) := subst (["{" = "[", ":" = "="], read_json_set (f));
 
