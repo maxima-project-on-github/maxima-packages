@@ -26,11 +26,39 @@ e.g.: `S: openr("mydata.json"); read_json(S);`
 #### Blob query operations
 
 The `//` operator selects the value of a key,
-e.g.: `blob("foo" = 123) // "foo"` yields `123`.
+e.g.: 
+```{maxima}
+x: blob("foo" = 123);
+x // "foo"
+```
+yields `123`.
+
+`//` can be applied successively,
+e.g.:
+```{maxima}
+x: blob("foo" = blob("bar" = blob("baz" = 456)));
+x // "foo" // "bar" // "baz"
+```
+yields `456`.
 
 When the left-hand side of `//` is a list,
 then `//` is mapped over the elements of the list,
-e.g.: `[blob("aa" = 11), blob("aa" = 22), blob("aa" = 33)] // "aa"` yields `[11, 22, 33]`.
+e.g.: 
+```{maxima}
+x: [blob("aa" = 11), blob("aa" = 22), blob("aa" = 33)];
+x // "aa"
+```
+yields `[11, 22, 33]`.
+
+When there is only one key, the result is just the value.
+Multiple keys in a list on the right-hand side
+yield a result which is again a blob, having just the selected keys,
+e.g.:
+```{maxima}
+x: blob("aa" = 11, "bb" = 22, "cc" = 33, "dd" = 44);
+x // ["bb", "dd"];
+```
+yields `blob("bb" = 22, "dd" = 44)`.
 
 #### Flattening blobs
 
