@@ -91,64 +91,6 @@ block( [private:100], [f(),private:200,f()]);
  f());
 6;
 
-/* maxima-discuss 2019-11-19: "concepts vs implementation, was: general proposal to implement lexical"
-
-matchdeclare(p1, true);
-defrule(r1,m(p1,p1), double(p1));
-apply1(m(3,3),r1)  ;
-
-defrule(r2,k(p1),p1(k));
-sin:cos;
-apply1(k(sin),r2);
-
-[...]
-
-/*Easy. */
-integrate(sin(x),x);
-sum(f(i),i,n,n+1);
-sum(n,i,n,n+1);  /* 2*n */
-product(n,i,n,n+1);
-block([j:0], for j:1 thru 10 do nothing, j);
-block([j:10], while j>0 do j:j-1,j);
-block([sin:cos], [sin(x),apply(sin,[x])]);
-
-
-/* more challenging */
-block([h:43,ans:[]],kill(f),
-  push([1,f(1)],ans),
-  f(e):=g(e),
-  push([2,f(2)],ans),
-  f(r):=block([m:h+r],m),
-  push([3,f(3)],ans),
-  f(r):=block([h],h+r),
-  push([4,f(4)],ans),
-  f(r):=block([],h+r),
-  push([5,f(5)],ans),
-  f(r):=(f(s):=g(r),1776),
-  push([6,f(6)],ans),
-  push([7,f(7)],ans),
-
-  reverse(ans));
-
-
-test3(e):=block([x],integrate(x^e,x))$
-x^2/2-test3(1);
-
-w(z):=block([numer:true],sin(z));
-
-inv(f,x,y):= solve(f(x)=y,x);
-kill(f);
-inv(atan,x,y);
-
-
-
-gg(f,g):=gradef(f(x),g(x));
-
-gg(foo,bar)   /* fails, define gradient for f, not foo */
- */
- 
-/* #summationindexscope */ /* I guess this refers to summations above */
-
 /* mailing list 2020-01-21: "What do ya do with a leaking symbol?" (tnx Stavros Macrakis) */
 
 (kill (g, foo),
