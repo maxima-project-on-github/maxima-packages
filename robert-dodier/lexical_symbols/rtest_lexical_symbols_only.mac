@@ -9,23 +9,58 @@
 
 /* Contrived examples. */
 
+/* Local symbol 'a' is distinct from top-level 'a',
+ * unless 'a' is declared global.
+ *
+ * HOWEVER, note that 'a' is not declared global at the time block([a], ...) is parsed
+ * in (declare(a, integer), block([a], featurep(a, integer))).
+ * Therefore the result is 'false'. In order for block([a], featurep(a, integer))
+ * to know about declare(a, integer), the declaration must be evaluated before
+ * the block is parsed.
+ */
 (declare (a, integer),
  block ([a], featurep (a, integer)));
 false;
 
+/* block([a], ...) is parsed BEFORE declare(a, ...) is evaluated. */
 (declare (a, global),
  block ([a], featurep (a, integer)));
+false;
+
+/* block([a], ...) is parsed AFTER declare(a, ...) is evaluated. */
+block([a], featurep (a, integer));
 true;
+
+/* A local symbol can have a declared property. */
+
+/* Separate block([a], ...) from declare(a, ...) to ensure declaration is in effect
+ * when the block is parsed. See HOWEVER above.
+ */
+(kill (a, b),
+ declare (a, integer));
+done;
+
+block ([a, b],
+       declare (b, integer),
+       [featurep (a, integer), featurep (b, integer)]);
+[false, true];
+
+featurep (b, integer);
+false;
 
 /* examples from blex.lisp
 ;; blex ([f], f(x) := 2*x);
 ;; blex ([a], h(x) := a[x] : 1, i() := arrayinfo(a));
  */
 
-kill(f);
+kill(f, foo);
 done;
 
-block ([f], f(x) := 2*x, f1(x) := f(x), 0);
+/* f is a local symbol, f1 is top-level.
+ * foo is top-level, but its value is the local symbol f.
+ */
+
+(foo: block ([f], f(x) := 2*x, f1(x) := f(x), f), 0);
 0;
 
 f(99);
@@ -34,43 +69,19 @@ f(99);
 f1(99);
 198;
 
-block ([a], h(x) := a[x]: 1, i() := arrayinfo(a), l() := listarray(a), 0);
-0;
-
-[h(17), h(29), h(1729)];
-[1, 1, 1];
-
-(a[11]: 2,
- a[13]: 2,
- a[17]: 2);
-2;
-
-arrayinfo(a);
-[hashed, 1, [11], [13], [17]];
-
-listarray(a);
-[2, 2, 2];
-
-i();
-[hashed, 1, [17], [29], [1729]];
-
-l();
-[1, 1, 1];
-
-block ([f], f(x) := 2*x, f1(x) := f(x), 0);
-0;
-
-f(99);
-298;
-
-f1(99);
+foo(99);
 198;
 
+/* a is a local symbol which is the name of an undeclared (hash) array,
+ * h, i, and l are top-level functions.
+ */
 block ([a], h(x) := a[x]: 1, i() := arrayinfo(a), l() := listarray(a), 0);
 0;
 
 [h(17), h(29), h(1729)];
 [1, 1, 1];
+
+/* These are references to top-level 'a', not local 'a'. */
 
 (a[11]: 2,
  a[13]: 2,
@@ -145,6 +156,9 @@ matrix([sin(z[2,1]+z[1,1])],[cos(z[1,1]*z[2,1])]);
 block([?mplus:foo],?mplus(a,a))  -->  2*a
 block([ gg:foo],    gg(a,a))     -->  foo(a,a)
  */
+
+kill(foo);
+done;
 
 block ([?mplus: foo], ?mplus(a, a));
 foo(a, a);
@@ -533,68 +547,6 @@ length(h[1]);
 /* 7. Call function mmetric with argument h */
 h[ij]: mmetric(h);
 matrix([1, 0, 0], [0, r^2, 0], [0, 0, 1]);
-
-/* maxima-discuss 2017-03-17: "Functions as parameters to lambda"
-
-  square(f) := lambda([x],(f(x))^2);
-  g:square(sin);
-  g(0.1);
-
-but the result is f^2(0.1) and not (sin(0.1))^2.
- */
-
-/* verify f is captured in lexical environment */
-
-(kill(f, g),
- square(f) := lambda([x],(f(x))^2),
- g:square(sin),
- string(%%));
-"lambda([x],f(x)^2)";
-
-g(1);
-sin(1)^2;
-
-/* maxima-discuss 2017-03-17: "Functions as parameters to lambda"
-
-(%i3)   square(f) := buildq([f], lambda([x],(f(x))^2));
-  g:square(sin);
-  g(0.1);
-
-(%o1) square(f):=buildq([f],lambda([x],f(x)^2))
-(g)lambda([x],sin(x)^2)
-(%o3) 0.009966711079379185
- */
-
-/* already works, ensure it continues to work */
-
-(kill(f, g),
- square(f) := buildq([f],lambda([x],f(x)^2)),
- g:square(sin),
- string(%%));
-"lambda([x],sin(x)^2)";
-
-g(1);
-sin(1)^2;
-
-/* maxima-discuss 2017-03-18: "Functions as parameters to lambda"
-
-h: lambda ([b], h2:lambda ([a], a*b), h2(2));
-h(3) ->  6
-
-g: lambda ([b], g2:lambda ([a], a*b), g2);
-(g(3))(2) -> 2 b
- */
-
-/* verify that b is captured in lexical environment of g2 */
-
-(kill (g, h, a, b),
- h: lambda ([b], h2:lambda ([a], a*b), h2(2)),
- h(3));
-6;
-
-(g: lambda ([b], g2:lambda ([a], a*b), g2),
- g(3)(2));
-6;
 
 /* maxima-discuss 2017-08-27: "Bound variables in lambdas only sometimes shadow globals?"
 
@@ -1004,10 +956,10 @@ A couple of possibly confusing cases:
  */
 
 /* verify that global x and local x are distinguished
- * whether that's surprising or unsurprising is not examined here !!
  */
 
-(f(x):='x,
+(kill(x),
+ f(x):='x,
  string (x - f(x)));
 "x-x";
 

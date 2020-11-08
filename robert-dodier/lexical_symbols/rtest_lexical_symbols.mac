@@ -46,6 +46,68 @@ string(g(4));
 g(4)(5);
 9;
 
+/* maxima-discuss 2017-03-17: "Functions as parameters to lambda"
+
+  square(f) := lambda([x],(f(x))^2);
+  g:square(sin);
+  g(0.1);
+
+but the result is f^2(0.1) and not (sin(0.1))^2.
+ */
+
+/* verify f is captured in lexical environment */
+
+(kill(f, g),
+ square(f) := lambda([x],(f(x))^2),
+ g:square(sin),
+ string(%%));
+"lambda([x],f(x)^2)";
+
+g(1);
+sin(1)^2;
+
+/* maxima-discuss 2017-03-17: "Functions as parameters to lambda"
+
+(%i3)   square(f) := buildq([f], lambda([x],(f(x))^2));
+  g:square(sin);
+  g(0.1);
+
+(%o1) square(f):=buildq([f],lambda([x],f(x)^2))
+(g)lambda([x],sin(x)^2)
+(%o3) 0.009966711079379185
+ */
+
+/* already works, ensure it continues to work */
+
+(kill(f, g),
+ square(f) := buildq([f],lambda([x],f(x)^2)),
+ g:square(sin),
+ string(%%));
+"lambda([x],sin(x)^2)";
+
+g(1);
+sin(1)^2;
+
+/* maxima-discuss 2017-03-18: "Functions as parameters to lambda"
+
+h: lambda ([b], h2:lambda ([a], a*b), h2(2));
+h(3) ->  6
+
+g: lambda ([b], g2:lambda ([a], a*b), g2);
+(g(3))(2) -> 2 b
+ */
+
+/* verify that b is captured in lexical environment of g2 */
+
+(kill (g, h, a, b),
+ h: lambda ([b], h2:lambda ([a], a*b), h2(2)),
+ h(3));
+6;
+
+(g: lambda ([b], g2:lambda ([a], a*b), g2),
+ g(3)(2));
+6;
+
 /* maxima-discuss 2018-09-07: "\"lambda\" should be renamed to something else"
 
 (%i1) lambda([f], lambda([x], [f, x]))(g)(y);
