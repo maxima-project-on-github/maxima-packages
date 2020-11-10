@@ -20,6 +20,15 @@
 ;; or, equivalently, (KINDP '$FOO '$GLOBAL) => T.
 ;; Any symbols declared global are excluded from gensym substitution.
 
+;; Some share functions have been redefined with lexical scope.
+;; Assign MEXPR property for symbols which have it at present.
+
+($auto_mexpr '$trigrat "trigrat.lisp")
+($auto_mexpr '$trigsimp "trgsmp.mac")
+($auto_mexpr '$facsum "facexp.mac")
+($auto_mexpr '$factorfacsum "facexp.mac")
+($auto_mexpr '$collectterms "facexp.mac")
+
 (mfuncall '$declare '$global '$feature)
 ;; Ensure that global feature isn't removed by reset()
 ;; by saving current list of features.

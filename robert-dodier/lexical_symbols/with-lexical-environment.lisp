@@ -170,7 +170,11 @@
                   ;; OH LOOK, THERE'S A CALL TO MEVAL !!
                   (mapcar #'(lambda (vv) (setf (gethash (first vv) new-env) (meval (second vv)))) vars+var-inits-pairs)
                   (setf (get new-env-id 'env) new-env)
-                  (with-lexical-environment (list new-env-id) (funcall prev-mfexpr* (cons '(mprog) (cons '(mprogn) body)))))
+                  (with-lexical-environment
+                    (list new-env-id)
+                    (progn
+                      #+debug (format t "HEY MFEXPR* MPROG, CALL PREV-MFEXPR* ON ~S~%" `((mprog) ((mprogn) ,@body)))
+                      (funcall prev-mfexpr* `((mprog) ((mprogn) ,@body))))))
                 (funcall prev-mfexpr* e))))))
 
 ;; example
