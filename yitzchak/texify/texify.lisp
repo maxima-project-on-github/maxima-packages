@@ -210,12 +210,19 @@
           (when value
             (return value)))))))
 
+(defun texify-replace-aliases (expr)
+  (cond
+    ((consp expr) (mapcar #'texify-replace-aliases expr))
+    ((symbolp expr) (or (get expr 'reversealias) expr))
+    (t expr)))
+
 (defun do-texify (expr dest modes styles)
   (let* ((*texify-styles* (mapcar (lambda (x) (gethash x texify-styles))
                                  (append styles (cdr $texify_styles))))
+         (expr-no-aliases (texify-replace-aliases expr))
          (result (texify (if (texify-mlabelp expr)
-                           expr
-                           `((mlabel simp) nil ,expr))
+                           expr-no-aliases
+                           `((mlabel simp) nil ,expr-no-aliases))
                          modes)))
     (cond
       ((null dest)
