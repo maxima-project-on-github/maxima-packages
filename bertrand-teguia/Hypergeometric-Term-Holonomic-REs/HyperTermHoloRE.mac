@@ -1,0 +1,1099 @@
+/*
+Copyright (c) September 2020 Bertrand Teguia T.
+https://www.bertrandteguia.com
+bteguia@mathematik.uni-kassel.de
+University of Kassel, Germany
+
+The algorithms of this code are part of my Ph.D. thesis supervised by
+Wolfram Koepf (http://www.mathematik.uni-kassel.de/~koepf/indexenglish.html)
+
+*/
+
+
+/*** code to check the input of HypervanHoeij taken as RE:lhs(eq)-rhs(eq)=0, where eq is the given holonomic recurrence equation ***/
+
+checkinput(RE,a):=block([opRE,opa,vara,recterm,holoeq],
+    errormsg:false,
+    opRE: errcatch(op(RE)),
+    opa: errcatch(op(a)),
+    vara: errcatch(first(a)),
+    errormsg:true,
+    if length(opRE)>0 and length(opa)>0 and length(vara)>0 then (
+        opRE:first(opRE),
+        opa:first(opa),
+        vara:first(vara),
+        if opRE="=" and atom(opa) and atom(vara) then
+            if freeof(opa,RE) or freeof(vara,RE) then false
+            else(
+                recterm:sublist(listofvars(RE), lambda([v], not atom(v))),
+                recterm:sort(sublist(recterm, lambda([v], is(equal(op(a),op(v)))))),
+                holoeq:subst(map(lambda([v],v=0),recterm),lhs(RE)),
+                if holoeq=0 then true
+                else(
+                    print("The given recurrence equation is not holonomic in the variable",nounify(opa)[nounify(vara)]),
+                    false
+                )
+            )
+    )
+)$
+
+/*** some recalls for users ***/
+
+Infos():=block([],
+    print("This package provides the functions 'HypervanHoeij', 'sumhyperRE', and 'dispersionSet'."),
+    print("The main function is 'HypervanHoeij' to compute hypergeometric term solutions"),
+    print("of holonomic recurrence equations. See HyperTermHoloRE.info for more details."),
+    print("")
+)$
+
+/*** Main code interface of this package ***/
+
+HypervanHoeij(Eq,a,[F]):= block([RE],
+    RE:lhs(Eq)-rhs(Eq)=0,
+    if(checkinput(RE,a)=false) then (
+        print("Wrong input(s)!"),
+        Instructions(),
+        false
+    )
+    else
+        if(emptyp(F)) then vanHoeij(Polcoeff(RE,a),first(a))
+        elseif(F[1]=C) then ComplexvanHoeij(Polcoeff(RE,a),first(a))
+        elseif(F[1]=Q) then vanHoeij(Polcoeff(RE,a),first(a))
+        else (
+            print(F[1], " is unknown. Please use Q or C"),
+            false
+        )
+)$
+
+load("basic")$  /* to use pop */
+
+load("functs")$ /* to use lcm */
+
+/* Variable to avoid some warning messages from Taylor expansion used */
+
+taylordepth:50$
+
+/*************** List of polynomials coefficients of a given holonomic RE *******************************************/
+
+REcoeff(RE,a):=block([n,recterm,e0,re,o,i],
+    n:first(a),
+    recterm:sublist(listofvars(RE), lambda([v], not atom(v))),
+    recterm:sort(sublist(recterm, lambda([v], is(equal(op(a),op(v)))))),
+    e0:rhs(linsolve(first(recterm[1]),n)[1]),
+    recterm:subst(n+e0,n,recterm),
+    re:lhs(subst(n+e0,n,RE)),
+    o:-rhs(linsolve(first(last(recterm)),n)[1]),
+    makelist(coeff(re,subst(n+i,n,a)),i,0,o)
+)$
+
+/************* rewrite the equation in a holonomic form in case of rational coefficients ***************/
+
+Polcoeff(RE,a):=block([C,denomC,n,freen,proddenom],
+    C:REcoeff(RE,a),
+    denomC:map(denom,C),
+    n:first(a),
+    freen:sublist(denomC,lambda([v],freeof(n,v))),
+    if length(freen)=length(denomC) then C
+    else(
+        proddenom:lprod(denomC),
+        map(lambda([v],proddenom*v),C)
+    )
+)$
+
+/**************** simplification of a holonomic RE (list of coefficients) *********************/
+
+simpRE(LRE,n):=block([lre,numlre,denomlre,comfactnum,comfactden],
+    lre:map(factor, LRE),
+    numlre:map(num, lre),
+    denomlre:map(denom, lre),
+    comfactnum:factor(lreduce('gcd,numlre)),
+    comfactden:factor(lreduce('lcm,denomlre)),
+    map(lambda([v], factor(xthru(v*comfactden/comfactnum))),lre)
+)$
+
+/************************************************************************************************************************ 
+
+
+                                            Hypergeometric term solutions over Q 
+
+
+*************************************************************************************************************************/
+
+
+/*** main algorithm ***/
+
+vanHoeij(recoeff,n):= catch(block([domain:real, Hyp:{}, inftype,d,dsol,P0,Pd,cvalue,inftypeset,inftypenub,c,candidates,ccandidates,bettercandidates,chs,term,Lre,sR],
+    if length(recoeff)<2 or sublist(recoeff,lambda([v], v#0))=[] then throw(Hyp),
+    inftype: localtype(expand(recoeff),n),
+    if(length(inftype)=0) then Hyp 
+    else(
+        d: length(recoeff),
+        dsol: length(inftype),
+        inftypeset: setify(inftype),
+        P0: subst(n-1,n,first(recoeff)),
+        Pd: subst(n-d+1,n,last(recoeff)),
+        candidates: map(lambda([v],v[1]/v[2]),cartesian_product(vanHoeijmonicfac(P0,n),vanHoeijmonicfac(Pd,n))),
+        cvalue: map(lambda([v], v[2]), inftypeset),
+        inftypenub: map(lambda([v],  [v[1],v[3]]),inftypeset),
+        ccandidates: subset(candidates, lambda([v], member(check_localtype(v,n),inftypenub))),
+        bettercandidates:{},
+        for c in cvalue do bettercandidates: union(bettercandidates, map(lambda([v], c*v),ccandidates)),
+        if(dsol<d) then (
+            for term in bettercandidates do (
+                if( member(remove_localtype(term,n),inftype)) then (
+                    Lre: makelist(recoeff[i+1]*product(subst(n+j,n,term),j,0,i-1),i,0,d-1),
+                    chs: check_solution(Lre,n),
+                    if(length(chs)>0) then (
+                        chs: lmax(chs),
+                        sR: Ratsolve(simpRE(Lre,n),n,chs),
+                        if(sR#false) then (
+                            Hyp: union(Hyp, map(lambda([v], v*pochfactorsimp(term,n)),sR)),
+                            delete(remove_localtype(term,n),inftype,1),
+                            if(cardinality(Hyp)=dsol) then throw(Hyp)
+                        )
+                    )
+                )
+            ),
+            Hyp
+        )
+        else (
+            for term in bettercandidates do (
+                Lre: makelist(recoeff[i+1]*product(subst(n+j,n,term),j,0,i-1),i,0,d-1),
+                chs: check_solution(Lre,n),
+                if(length(chs)>0) then (
+                    chs: lmax(chs),
+                    sR: Ratsolve(simpRE(Lre,n),n,chs),
+                    if(sR#false) then Hyp: union(Hyp, map(lambda([v], v*pochfactorsimp(term,n)),sR))
+                )
+            ),
+            Hyp
+        )
+    )
+))$
+
+
+/*** General procedure to find the representation of a hypergeometric term in terms of pochhammer symbols and factorials ***/
+
+pochfactorsimp(R,k):= block([p, q, teken, Zeros, Poles,zeros, mzeros, poles, mpoles, lpol, cpoles, intt, z_0, nfac,i,j],
+    assume(k>0),
+    p: expand(num(R)),
+    q: expand(denom(R)),
+    teken: coeff(p,k,hipow(p,k))/coeff(q,k,hipow(q,k)),
+
+    zeros: map(rhs, solve(p,k)),
+    mzeros: multiplicities,
+    poles: map(rhs, solve(q,k)),
+    mpoles: multiplicities,
+
+    Zeros: [],
+    Poles: [],
+    for i:1 thru length(zeros) do  for j:1 thru mzeros[i] do Zeros: endcons((-1)*zeros[i], Zeros),
+    for i:1 thru length(poles) do  for j:1 thru mpoles[i] do Poles: endcons((-1)*poles[i], Poles), 
+
+    nfac: teken^k,
+    while Zeros # [] and Poles # [] do (
+        z_0: pop(Zeros),
+        lpol: length(Poles),
+        cpoles: [],
+        intt: z_0 - Poles[1],
+        while integerp(intt)=false and length(cpoles)<lpol do (
+            intt: z_0-Poles[1],
+            cpoles: endcons(pop(Poles), cpoles)   
+        ),
+        if(length(cpoles)<lpol) then (
+            if(z_0=0 or Poles[1]=0) then nfac: nfac*transfone(z_0,k)/transfone(Poles[1],k)
+            else nfac: factor(nfac*minfactorial(makefact(makegamma(pochhammer(z_0,k)/pochhammer(Poles[1],k))))),
+            pop(Poles),
+            Poles: append(cpoles,Poles)
+        )
+        else(
+            nfac: nfac*transfone(z_0,k),
+            Poles: cpoles
+        )        
+    ),
+    if(Zeros=[] and Poles=[]) then factosimp(nfac)
+    elseif(Zeros = []) then factosimp(factor(minfactorial(nfac/apply("*", map(lambda([v], transfone(v,k)),Poles)))))
+    else factosimp(factor(minfactorial(nfac * apply("*", map(lambda([v], transfone(v,k)), Zeros)))))
+   
+)$
+
+/*** simplification of a single Pochhammer term ***/
+
+transfone(r,k):= block([q,cr,t],
+    if(r=0) then (k-1)!
+    elseif(ratnump(r)=false) then pochhammer(r,k)
+    elseif(integerp(r)=true) then (r+k-1)!/(r-1)!
+    elseif(r>0) then (
+        q: denom(r),
+        if(q#2) then pochhammer(r,k)
+        else(        /*special case when the denominator is 2*/
+            t: floor(r),
+            minfactorial(makefact((2*(t+k))!/((2*t)!*binomial(t+k,k)*k!*4^k)))
+        ) 
+     )
+      else(  
+           cr: ceiling(abs(r)),
+           transfone(r+cr,k)*pochhammer(r,cr)/pochhammer(r+k,cr)
+      )
+)$
+
+/*** particular simplification of factorials in a hypergeometric term (only helpful for some few cases) ***/
+
+factosimp(expr):=catch(block([nexpr,dexpr,nexprsimp,dexprsimp,exprsimp],
+    if(freeof("!",expr)) then throw(expr)
+    else(
+        nexpr: num(expr),
+        dexpr: denom(expr),
+        if(atom(nexpr) or atom(dexpr)) then throw(expr),
+        if(op(num(expr))="!" or op(denom(expr))="!") then (
+            dexprsimp:1,
+            nexprsimp:1,
+            if(op(dexpr)="!") then (
+                dexprsimp: factor(args(dexpr)[1]),
+                dexpr: factor(factorial(expand(dexprsimp-1)))
+            ),
+            if(op(nexpr)="!") then (
+                nexprsimp: factor(args(nexpr)[1]),
+                nexpr: factor(factorial(expand(nexprsimp-1)))
+            ),
+            exprsimp: xthru(nexprsimp*nexpr/(dexprsimp*dexpr)),
+            if(num(exprsimp)/nexpr/nexprsimp=1 or denom(exprsimp)/dexpr/dexprsimp=1) then expr
+            else exprsimp
+        )
+        else throw(expr)
+    )
+))$
+
+/*** computation of local type of hypergeometric term solutions: findC and localtype ***/
+
+findC(nulist,leadcoeffs, ijcouple):=block([LC,pos,cnulist,already,nu,samenu,ucouple,ki,eqC,i,x,Csol,Csolind,Csolmult],
+    LC: [],
+    cnulist: copylist(nulist),
+    pos: 1,
+    already: [],
+    while cnulist # [] do (
+        nu: pop(cnulist),
+        if(integerp(nu) and not member(pos,already)) then (
+            samenu: sublist_indices(nulist, lambda([v],v=nu)),
+            samenu: sublist(samenu, lambda([v], not disjointp(ijcouple[v],ijcouple[pos]))),
+            ucouple: {},
+            for ki in samenu do ucouple: union(ucouple,ijcouple[ki]),
+            eqC:0,
+            for i in ucouple do eqC: eqC + leadcoeffs[i]*x^(i-1),
+            if(eqC#0) then (
+                Csol: map(rhs, solve(eqC,x)),
+                Csolind: sublist_indices(Csol, lambda([v],ratnump(v) and v#0)),
+                Csol: map(lambda([v], ratsimp(Csol[v])),Csolind),
+                Csolmult: map(lambda([v], multiplicities[v]),Csolind),
+                for i thru length(Csol) do LC: endcons([nu,Csol[i],Csolmult[i]],LC)
+            ),
+            already: append(already,samenu)
+        ),
+        pos: pos+1
+    ),
+    LC
+)$
+
+localtype(L,n):=block([d,ijcouple,i,nulist,leadcoeffs,nuc,LC,lc,vlc,kj,bpoleq,t,eqargs,eq,b,soleq,soleqind,soleqmult,j,j1],
+    d: length(L),
+    ijcouple: listify(powerset(setify(makelist(i,i,1,d)),2)),
+    nulist: map(lambda([v],(hipow(L[first(v)],n)-hipow(L[last(v)],n))/(last(v)-first(v))),ijcouple),
+    leadcoeffs: map(lambda([v],coeff(v,n,hipow(v,n))),L),
+    nuc:findC(nulist,leadcoeffs,ijcouple),
+    LC:[],
+    for lc in nuc do(
+        vlc: lc[2]*n^(lc[1])*(1+b/n),
+        bpoleq: sum(L[kj+1]*product(subst(n+i,n,vlc),i,0,kj-1),kj,0,d-1),
+        t:1,
+        eq:0,
+        while(eq=0) do (
+            eq: first(taylor(bpoleq,n,inf,t)),
+            t: t+1
+        ),
+        soleq: map(rhs, solve(eq,b)),
+        soleqind: sublist_indices(soleq, ratnump),
+        if(length(soleqind)>0) then (
+            soleqmult: create_list(multiplicities[i],i,soleqind),
+            soleq: create_list(soleq[i],i,soleqind),
+            soleq: map(lambda([v], ratsimp(v-floor(v)-1)),soleq),
+            for j thru lc[3] do
+                for i thru length(soleq) do
+                    for j1 thru soleqmult[i] do
+                        LC: endcons([lc[1],lc[2],soleq[i]],LC)
+        )
+        
+    ),
+    LC
+)$
+
+/*** collecting monic factors (trailing and leading) modulo the integers: modZ, vanHoeijmonicfac ***/
+
+modZ(roots,mult):=block([S,pos,already,modroots,cmodroots,mroot,sameroot,lpow,kj,pow],
+    S: {},
+    already: [],
+    pos: 1,
+    modroots: map(lambda([v], v-floor(v)-1),roots),
+    cmodroots: copylist(modroots),
+    while cmodroots#[] do (
+        mroot: pop(cmodroots),
+        if(not member(pos,already)) then (
+            sameroot: sublist_indices(modroots, lambda([v],v=mroot)),
+            lpow: create_list(mult[kj],kj,sameroot),
+            pow: [lmin(lpow), lsum(pr,pr,lpow)],
+            S: adjoin([mroot,pow],S),
+            already: append(already,sameroot)
+        ),
+        pos: pos+1
+    ),
+    S
+)$
+
+lprod(L):= block([j],
+    product(L[j],j,1,length(L))
+)$
+
+vanHoeijmonicfac(P,n):=block([roots,indratroot,mult,modZroots,L1,j,L2,E],
+    roots: map(rhs, solve(P,n)),
+    indratroot: sublist_indices(roots, ratnump),
+    roots: map(lambda([v], roots[v]),indratroot),
+    mult: map(lambda([v], multiplicities[v]),indratroot),
+    modZroots: modZ(roots,mult),
+    L1: map(lambda([r], adjoin(1,setify(makelist((n-r[1])^j,j,r[2][1],r[2][2])))),modZroots),
+    L2:{1},
+    for E in L1 do
+        L2: map(lambda([l], lprod(l)), cartesian_product(L2,E)),
+    L2
+)$
+
+
+/**** compute the local type for a particular monic rational fraction build from the trailing and leading polynomial coefficients ***/
+
+check_localtype(term,n):=block([Rn,nuRn,tv,tayRn,cRn,bRn],
+    Rn: ratsimp(term),
+    nuRn: hipow(num(Rn),n) - hipow(denom(Rn),n),
+    Rn: ratsimp(subst(1/tv,n,ratsimp(Rn/n^nuRn))),
+    tayRn: ratdisrep(taylor(Rn,tv,0,2)),
+    cRn: coeff(tayRn,tv,0),
+    bRn: coeff(tayRn,tv,1)/cRn,
+    [nuRn,bRn-floor(bRn)-1]
+)$
+
+remove_localtype(term,n):=block([Rn,nuRn,tv,tayRn,cRn,bRn],
+    Rn: ratsimp(term),
+    nuRn: hipow(num(Rn),n) - hipow(denom(Rn),n),
+    Rn: ratsimp(subst(1/tv,n,ratsimp(Rn/n^nuRn))),
+    tayRn: ratdisrep(taylor(Rn,tv,0,2)),
+    cRn: coeff(tayRn,tv,0),
+    bRn: coeff(tayRn,tv,1)/cRn,
+    [nuRn,cRn,bRn-floor(bRn)-1]
+)$
+
+
+/*** Collect coefficients of a generic polynomial ***/
+
+allcoeffsBound(P,x,m,lm):= block([l,i],
+     l: [], 
+     for i:-lm thru m do (l : cons(coeff(P,x,i),l)), 
+     l
+)$
+
+
+/*** Computation of the universal denominator of a hypergeometric term solution rational: irfactor, colTerm2, hvw (dispersion set), Udenom ***/
+
+irfactor(expr,n):=block([ir,logform,mlog],
+    logexpand: true,
+    logform: log(expr),
+    logexpand: false,
+    mlog: args(logform),
+    if(length(mlog)=2) then (
+        ir: expand(exp(mlog[2])),
+        expand(ir/coeff(ir,n,hipow(ir,n)))   
+    )
+    else expand(expr/coeff(expand(expr),n,hipow(expand(expr),n)))
+)$
+
+colTerm2(func,law):=block([f1,L,T],
+    f1: func,
+    if(atom(f1)) then [f1]
+    else (
+        if(op(f1)="-") then f1:(-1)*f1,
+        if(atom(f1)) then [f1]
+        else(
+            L:args(f1),
+            T:apply(law,L),
+            if(xthru(T/f1)=1) then L
+            else [f1]
+        )
+    )
+)$
+
+/*******************   dispersion set code for two given polynomials  ************************/
+
+dispersionSet(P1,P2,n,[F]):=block([],
+    if polynomialp(P1,[n]) and polynomialp(P2,[n]) then 
+        if(emptyp(F)) then hvw(factor(P2),factor(P1),n)
+        elseif F[1]=C then hvw(Complexirfactor(P2,n),Complexirfactor(P1,n),n)
+        elseif F[1]=Q then hvw(factor(P2),factor(P1),n)
+        else (
+            print(F[1], " is unknown. Please use Q or C"),
+            false
+        )
+)$
+/*********************************************************************************************/
+
+
+hvw(V,W,n):= block([irv,irw,H,w,v,hip,an1,bn1,h],
+    irv: sublist(colTerm2(V,"*"),lambda([v], not(freeof(n,v)))),
+    irw: sublist(colTerm2(W,"*"),lambda([v], not(freeof(n,v)))),
+    irv: map(lambda([v],irfactor(v,n)),irv),
+    irw: map(lambda([v],irfactor(v,n)),irw),
+    H:{},
+    for w in irw do
+         for v in irv do(
+            hip: hipow(w,n),
+            if(hip=hipow(v,n) and coeff(w,n,hip)=coeff(v,n,hip)) then (
+                an1: coeff(w,n,hip-1),
+                bn1: coeff(v,n,hip-1),
+                h: (bn1-an1)/hip,
+                if(integerp(h) and h>=0) then 
+                    if(hip=1 or (hip>1 and expand(subst(n+h,n,w))=v)) then (
+                        H: adjoin(h,H)
+                    )
+            )
+        ),
+      H
+)$
+
+Udenom(A,B,d,n):= block([U,V,W,h,D,P,i],
+    U: 1,
+    V: subst(n-d,n,B),
+    W: A,
+    D: hvw(V,W,n),
+    if(cardinality(D)=0) then U
+    else(
+        D: sort(listify(D),'ordergreatp),
+        for h in D do (
+            P: gcd(V,subst(n+h,n,W),n),
+            V: V/P,
+            W: W/subst(n-h,n,P),
+            U: U*product(subst(n-i,n,P),i,0,h)
+        ),
+        U
+    )
+)$
+
+/*** main code to compute a hypergeometric term solution rational part ***/
+
+Ratsolve(LRE,n,x):= block([d,U,m,lpolre,pol,N,S,Rec,i,CoefRec,Sol,P],
+        d: length(LRE),
+        U: Udenom(first(LRE),last(LRE),d-1,n),
+        N: x+hipow(expand(U),n),
+        if(N>=0) then (
+            lpolre: simpRE(makelist(LRE[i+1]/subst(n+i,n,U),i,0,d-1),n),
+            m: lmax(map(lambda([v], hipow(v,n)),expand(lpolre))),
+            S: sum(concat(c,i)*n^i,i,0,N),
+            Rec: expand(sum(subst(n+i-1,n,S)*lpolre[i],i,1,d)),
+            CoefRec: allcoeffsBound(Rec,n,m*N,0),
+            linsolvewarn: false,
+            Sol: linsolve(CoefRec,makelist(concat(c,i),i,0,N)),
+            linsolvewarn: true,
+            P: expand(subst(Sol,S)),
+            if(P#0) then (
+                P: makelist(coeff(P,v),v,%rnum_list),
+                setify(map(factor, P/U))
+            )
+            else false
+            
+        )
+        else false
+)$
+
+/*** verification of a property of a possible hypergeometric term solution by checking the existence of its rational part ***/
+
+check_solution(Cr,n):=block([d,xx,r,t,i,j,expr,numexpr,hipn,xeqs],
+    d: length(Cr),
+    r: 1+xx/n,
+    t: 0,
+    expr: 0,
+    while(expr=0) do (
+        expr: ratsimp(taylor(sum(Cr[i+1]*product(subst(n+j,n,r),j,0,i-1),i,0,d-1),n,inf,t)),
+        t: t+1
+    ),
+    numexpr: expand(num(expr)),
+    hipn: hipow(numexpr,n),
+    xeqs: solve(factor(coeff(numexpr,n,hipn)),xx),
+    if listp(xeqs) then(
+        xeqs: ratsimp(map(rhs,xeqs)),
+        sublist(xeqs,integerp)
+    )
+    else []
+)$
+
+/*****************************************************************************************************************************************
+
+                                Hypergeometric term solutions  over extension field of Q 
+                            
+                                 (the implementation is similar to the previous case)
+
+*******************************************************************************************************************************************/
+
+/* Code to extract algebraic numbers */
+
+algIndets(expr):= block([domain:complex],
+    algindets(expr, {})
+)$
+
+algindets(expr, algSet) := block ([domain:complex,x, Args, newSet, arg],
+    if atom(expr) then 
+        if expr=%i then
+            adjoin(expr,algSet)
+        else
+            algSet
+    else(
+        x:op(expr),
+        Args: args(expr),
+        newSet: if (x="^" and integerp(Args[2])=false) or x=sqrt then
+                      adjoin(expr, algSet)
+                else algSet,
+        for arg in Args do
+            newSet: algindets(arg, newSet),
+        newSet
+    ) 
+)$
+
+
+ComplexfindC(nulist,leadcoeffs,ijcouple):=block([domain:complex,LC:[], pos,cnulist,already,nu,samenu,ucouple,eqC,i,%x,Csol,Csolind,Csolmult],
+    cnulist: copylist(nulist),
+    pos: 1,
+    already: [],
+    while cnulist # [] do (
+        nu: pop(cnulist),
+        if(integerp(nu) and not member(pos,already)) then (
+            samenu: sublist_indices(nulist, lambda([v],v=nu)),
+            samenu: sublist(samenu, lambda([v], not disjointp(ijcouple[v],ijcouple[pos]))),
+            ucouple: {},
+            for k in samenu do ucouple: union(ucouple,ijcouple[k]),
+            eqC:0,
+            for i in ucouple do eqC: eqC + leadcoeffs[i]*%x^(i-1),
+            if(eqC#0) then (
+                Csol: map(rhs, solve(eqC,%x)),
+                Csolind: sublist_indices(Csol, lambda([v],freeof(%x,v) and v#0)),
+                Csol: map(lambda([v],Csol[v]),Csolind),
+                Csolmult: map(lambda([v],multiplicities[v]),Csolind),
+                for i thru length(Csol) do LC: endcons([nu,ratsimp(Csol[i]),Csolmult[i]],LC)
+            ),
+            already: append(already,samenu)
+        ),
+        pos: pos+1
+    ),
+    LC
+)$
+
+
+onesideComplexfloor(c):=block([domain:complex,r],
+    r: realpart(c),
+    if(integerp(floor(r))) then (
+        r: r-floor(r)-1,
+        r+%i*imagpart(c)
+    )
+    else constantpart(c)
+)$
+
+constantpart(c):=block([listc,v],
+    if(atom(c)) then c
+    else (
+        if(op(c)="+") then (
+            listc: args(c),
+            listc: sublist(listc,lambda([v], not integerp(v))),
+            lsum(v,v,listc)
+        )
+        else c
+    )
+
+)$
+
+remimpextF(F,L) := block([domain:complex,SF, extFS, Csol, c, cFS, dimc],
+    SF: map(lambda([v], [v,algIndets(v[2])]),L),
+    extFS: sublist(SF, lambda([v], cardinality(v[2])>0 and disjointp(v[2],F))),
+    Csol: map(first,sublist(SF, lambda([v], not member(v,extFS)))),
+    for c in extFS do(
+        extFS: delete(c,extFS),
+        cFS: sublist(extFS,lambda([v], setequalp(c[2],v[2]))),
+        extFS: sublist(extFS,lambda([v], not member(v,cFS))),
+        if cardinality(c[2])<=length(cFS)+1 and length(cFS)>0 then(
+            cFS: map(first,cFS),
+            Csol: endcons(first(c),append(Csol,cFS))
+        ),
+        if extFS=[] then break
+    ),
+    Csol
+)$
+
+Complexlocaltype(L,n):=block([domain:complex,d,ijcouple,i,nulist,leadcoeffs, extFeq,nuc,LC,lc,vlc,kc,bpoleq,t,eq,%b,soleq,soleqind,soleqmult,j,j1],
+    d: length(L),
+    ijcouple: listify(powerset(setify(makelist(i,i,1,d)),2)),
+    nulist: map(lambda([v],(hipow(L[first(v)],n)-hipow(L[last(v)],n))/(last(v)-first(v))),ijcouple),
+    leadcoeffs: map(lambda([v],coeff(v,n,hipow(v,n))),L),
+    extFeq: algIndets(L),
+    nuc: ComplexfindC(nulist,leadcoeffs,ijcouple),
+    nuc: remimpextF(extFeq,nuc),
+    LC:[],
+    for lc in nuc do(
+        vlc: lc[2]*n^(lc[1])*(1+%b/n),
+        bpoleq: sum(L[kc+1]*product(subst(n+i,n,vlc),i,0,kc-1),kc,0,d-1),
+        t:1,
+        eq:0,
+        while eq=0 and t<max(lc[1]-1,1-lc[1])+1 do (
+            eq: factor(first(taylor(bpoleq,n,inf,t))),
+            t: t+1
+        ),
+        if eq=0 then
+            for j thru lc[3] do LC:endcons([lc[1],lc[2],-1],LC)
+        else(
+            soleq: map(rhs, solve(eq,%b)),
+            soleqind: sublist_indices(soleq, lambda([v],freeof(%b,v))),
+            if(length(soleqind)>0) then (
+                soleqmult: create_list(multiplicities[i],i,soleqind),
+                soleq: create_list(soleq[i],i,soleqind),
+                soleq: map(lambda([v], ratsimp(onesideComplexfloor(v))),soleq),
+                for j thru lc[3] do
+                    for i thru length(soleq) do
+                        for j1 thru soleqmult[i] do
+                            LC: endcons([lc[1],lc[2],soleq[i]],LC)
+            )
+        )
+    ),
+    LC
+)$
+
+ComplexmodZ(roots,mult):=block([domain:complex,S,pos,already,modroots,cmodroots,mroot,sameroot,pow,pr,lpow,k],
+    S: {},
+    already: [],
+    pos: 1,
+    modroots: map(lambda([v], onesideComplexfloor(v)),roots),
+    cmodroots: copylist(modroots),
+    while cmodroots#[] do (
+        mroot: pop(cmodroots),
+        if(not member(pos,already)) then (
+            sameroot: sublist_indices(modroots, lambda([v],v=mroot)),
+            lpow: create_list(mult[k],k,sameroot),
+            pow: [lmin(lpow),lsum(pr,pr,lpow)],
+            S: adjoin([mroot,pow],S),
+            already: append(already,sameroot)
+        ),
+        pos: pos+1
+    ),
+    S
+)$
+
+Copyright():=block([],
+    print("Hypergeometric terms and holonomic recurrence equations"),
+    print("Version 1.0"),
+    print("Execute 'Infos()' for details"),
+    print("Copyright (c) September 2020, Bertrand Teguia T."),
+    print("https://www.bertrandteguia.com"),
+    print("University of Kassel, Germany")
+)$
+
+ComplexvanHoeijmonicfac(P,n,extF):=catch(block([domain:complex,roots,indroot,mult,modZroots,L1,j,L2,E],
+    roots: map(rhs, solve(P,n)),
+    indroot: sublist_indices(roots, lambda([v], freeof(n,v) and cardinality(algIndets(v))<=extF)),
+    roots: map(lambda([v], roots[v]),indroot),
+    mult: map(lambda([v], multiplicities[v]),indroot),
+    modZroots: ComplexmodZ(roots,mult),
+    L1: map(lambda([r], adjoin(1,setify(makelist((n-r[1])^j,j,r[2][1],r[2][2])))),modZroots),
+    L2:{1},
+    for E in L1 do
+        L2: map(lambda([l], lprod(l)), cartesian_product(L2,E)),
+    L2
+))$
+
+Complexcheck_localtype(term,n):=block([domain:complex,Rn,nuRn,tv,tayRn,cRn,bRn],
+    Rn: ratsimp(term),
+    nuRn: hipow(num(Rn),n) - hipow(denom(Rn),n),
+    Rn: ratsimp(subst(1/tv,n,ratsimp(Rn/n^nuRn))),
+    tayRn: ratdisrep(taylor(Rn,tv,0,2)),
+    cRn: ratsimp(coeff(tayRn,tv,0)),
+    bRn: ratsimp(coeff(tayRn,tv,1)/cRn),
+    [nuRn,cRn,onesideComplexfloor(bRn)]
+)$
+Complexirfactor(P,n):=block([domain:complex,S],
+    S: map(rhs,solve(P,n)),
+    S: map(lambda([v], if constantp(v) then n-v else v),S),
+    lprod(S)
+)$
+
+ComplexUdenom(A,B,d,n):= block([domain:complex,U,V,W,h,D,i,P],
+    U: 1,
+    V: Complexirfactor(subst(n-d,n,B),n),
+    W: Complexirfactor(A,n),
+    D: hvw(V,W,n),
+    if(cardinality(D)=0) then U
+    else(
+        D: sort(listify(D),'ordergreatp),
+        for h in D do (
+            P: gcd(V,subst(n+h,n,W),n),
+            V: V/P,
+            W: W/subst(n-h,n,P),
+            U: U*product(subst(n-i,n,P),i,0,h)
+        ),
+        U
+    )
+)$
+
+Copyright();
+
+ComplexRatsolve(LRE,n,x):= block([domain:complex,d,U,p,tayU,m,lpolre,i,pol,N,S,Rec,CoefRec,Sol,P],
+        d: length(LRE),
+        U: ComplexUdenom(first(LRE),last(LRE),d-1,n),
+        N: x+hipow(expand(U),n),
+        if(N>=0) then (
+            lpolre: simpRE(makelist(LRE[i+1]/subst(n+i,n,U),i,0,d-1),n),
+            m: lmax(map(lambda([v], hipow(v,n)),expand(lpolre))),
+            S: sum(concat(c,i)*n^i,i,0,N),
+            Rec: expand(factor(sum(subst(n+i-1,n,S)*lpolre[i],i,1,d))),
+            CoefRec: allcoeffsBound(Rec,n,m*N,0),
+            linsolvewarn: false,
+            Sol: linsolve(CoefRec,makelist(concat(c,i),i,0,N)),
+            linsolvewarn: true,
+            P: subst(Sol,S),
+            if(P#0) then (
+                P: makelist(coeff(expand(P),v),v,%rnum_list),
+                setify(map(factor, P/U))
+            )
+            else false
+            
+        )
+        else false
+)$
+
+ComplexvanHoeij(recoeff,n):= catch(block([domain:complex, Hyp,d,dsol,P0,Pd,inftype,inftypeset,extF,cvalue,c,candidates,bettercandidates,bbettercandidates,Cchltype,chs,term,Lre,i,j,sR],
+    Hyp: {},
+    if length(recoeff)<2 or sublist(recoeff,lambda([v], v#0))=[] then throw(Hyp),
+    inftype: Complexlocaltype(expand(recoeff),n),
+    if(length(inftype)=0) then Hyp 
+    else(
+        d: length(recoeff),
+        dsol: length(inftype),
+        inftypeset: setify(inftype),
+        extF: cardinality(algIndets(inftypeset)),
+        P0: subst(n-1,n,first(recoeff)),
+        Pd: subst(n-d+1,n,last(recoeff)),
+        candidates: cartesian_product(ComplexvanHoeijmonicfac(P0,n,extF),ComplexvanHoeijmonicfac(Pd,n,extF)),
+        if(length(candidates)>0 and member(0,first(candidates))) then throw(Hyp),
+        candidates: map(lambda([v],factor(v[1]/v[2])),candidates),
+        cvalue: map(lambda([v], v[2]), inftypeset),
+        bettercandidates:{},
+        for c in cvalue do bettercandidates: union(bettercandidates, map(lambda([v], c*v),candidates)),
+        bbettercandidates: subset(bettercandidates, lambda([v], member(Complexcheck_localtype(v,n),inftypeset))),
+        if(dsol<d) then 
+            for term in bbettercandidates do (
+                Cchltype: Complexcheck_localtype(term,n),
+                if( member(Cchltype,inftype)) then (
+                    Lre: makelist(recoeff[i+1]*product(subst(n+j,n,term),j,0,i-1),i,0,d-1),
+                    domain:real,
+                    chs: check_solution(Lre,n),
+                    domain:complex,
+                    if(length(chs)>0) then (
+                        chs: lmax(chs),
+                        sR: ComplexRatsolve(simpRE(Lre,n),n,chs),
+                        if(sR#false) then (
+                            Hyp: union(Hyp, map(lambda([v], v*pochfactorsimp(term,n)),sR)),
+                            delete(Cchltype,inftype,1),
+                            if(cardinality(Hyp)=dsol) then throw(Hyp)
+                        )
+                    )
+                )
+            )
+        else 
+            for term in bbettercandidates do (
+                    Lre: makelist(recoeff[i+1]*product(subst(n+j,n,term),j,0,i-1),i,0,d-1),
+                    chs: check_solution(Lre,n),
+                    if(length(chs)>0) then (
+                        chs: lmax(chs),
+                        sR: ComplexRatsolve(simpRE(Lre,n),n,chs),
+                        if(sR#false) then Hyp: union(Hyp, map(lambda([v], v*pochfactorsimp(term,n)),sR))
+                    )
+            ),
+        Hyp
+    )
+))$
+
+
+
+/***************************************************************************************************************************************** 
+
+                            Generate a holonomic RE for a given list of hypergeometric terms: sumhyperRE 
+
+******************************************************************************************************************************************/
+
+ratfunpRE(expr,z):=block([r],
+  r: ratsimp(expr),
+  polyanycoeffp(num(r),z) and polyanycoeffp(denom(r),z)
+)$
+
+polyanycoeffp(expr,z):=catch(block([P,opP,LP,M,pow,flag:true],
+    P:expand(expr),
+    errormsg:false,
+    opP:errcatch(op(P)),
+    errormsg:true,
+    if length(opP)>0 and opP[1]="+" then (
+        LP:args(P),
+        for M in LP do (
+            pow: hipow(M,z),
+            flag: flag and integerp(pow) and freeof(z,coeff(M,z,pow)),
+            if not flag then throw(flag)
+        ),
+        flag
+    )
+    else(
+        pow: hipow(expr,z),
+        integerp(pow) and freeof(z,coeff(expr,z,pow)) 
+    )
+))$
+
+ratio(term,n):=block([r],
+r: factor(subst(n+1,n,term)/term),
+factor(ratsimp(minfactorial(makefact(makegamma(r)))))
+)$
+
+/* simple case of the next code*/
+sum2hyperRE(term1,term2,a):=block([n,r1,r2,r11,r21,aterm,R,RE],
+    n: first(a),
+    r1: ratio(term1,n),
+    r2: ratio(term2,n),
+    r11: subst(n+1,n,r1),
+    r21: subst(n+1,n,r2),
+    R: [factor((r21*r2-r11*r1)/(r1*r2*(r11-r21))), factor((r1-r2)/(r1*r2*(r11-r21)))],
+    aterm: [a,subst(n+1,n,a),subst(n+2,n,a)],
+    RE: num(factor(R[2]*aterm[3]+R[1]*aterm[2]+aterm[1])),
+    for i: 1 thru 3 do RE: map(factor, collectterms(RE,aterm[i])),
+    RE=0
+)$
+
+sumhyperRE(H,a):=catch(block([n,term,R,d,k,i,j,M,b,Vcomp,V,aterm,RE],
+    kill(takegcd),
+    if( (not listp(H)) or atom(a)) then (
+        print("wrong input(s)"),
+        throw(false)
+    ),
+    n: first(a),
+    R: map(lambda([term], ratio(term,n)),H),
+    d: length(H),
+    R: sublist(R, lambda([term], ratfunpRE(term,n))),
+    if(length(R)<d) then (
+        print("There are some non hypergeometric terms over Q"),
+        throw(false)    
+    ),
+    M: apply('matrix, makelist(makelist(prod(subst(n+k,n,R[i]),k,1,j-1),j,1,d),i,1,d)),
+    b: apply('matrix, makelist([-1/R[i]],i,1,d)),
+    Vcomp: makelist(concat('%v,i),i,1,d),
+    V: transpose(matrix(Vcomp)),
+    linsolvewarn:false,
+    V: factor(linsolve(xreduce('append,args(M.V-b)),Vcomp)),
+    linsolvewarn:true,
+    /** Due to some issues (wrong solutions) with the linsolve command the following is
+        sometimes the best approach...
+    linsolvewarn:false,
+    V:factor(xreduce('append,args(linsolve_by_lu(M,b)[1]))),
+    linsolvewarn:true,
+    ***/
+    if(length(%rnum_list)>0) then V:subst(map(lambda([v],v=0),%rnum_list),V),
+    V: map(rhs, V),
+    aterm: makelist(subst(n+i,n,a),i,0,d),
+    RE: num(factor(aterm[1] + sum(V[i]*aterm[i+1],i,1,d))),
+    for i: 1 thru d+1 do RE: map(factor, collectterms(RE, aterm[i])),
+    RE=0
+))$
+
+
+/***************************************************************************************************************************************
+
+                    An implementation of Petkovsek's algorithm the first published algorithm of this kind: HyperPetkov.
+                    
+    However the output of this code is a set of ratios of hypergeometric term solutions that does not necessarely represent a basis. 
+ Nevertheless, it can be used to find a 'normal' representation of ratios of hypergeometric term solutions of holonomic recurrence equations.
+    
+                    As point out on the solve_rec help, this approach has an exponential complexity 
+                       on the degrees of the leading and trainling polynomial coefficients.
+
+****************************************************************************************************************************************/
+
+PolyPetkov(RE,a):=block([L],
+  L: REcoeff(RE,a),
+  Poly(L,first(a))
+)$
+
+Poly(L,n):= block([%rnum_list:[],d,Li,m,lm,C,s,b,j,i,lb,bs,DN,D,N,S,Rec,CoefRec,Sol],
+    d:length(L),
+    Li:expand(L),
+    m:lmax(map(lambda([v], hipow(v,n)),Li)),
+    lm:max(d-1-m,0),
+    C:map(lambda([v], allcoeffsBound(v,n,m,lm)),Li),
+    s:0,
+    b:ratsimp(sum(C[i][1],i,1,d)),
+    j:1,
+    while b=0 do(
+        s:s+1,
+        b: ratsimp(sum(C[i][s+1],i,1,d)),
+        j:1,
+        while b=0 and j<=s do(
+            b: ratsimp(sum((i-1)^j*C[i][s-j+1],i,1,d)),
+            j:j+1
+        )
+    ),
+    lb:[b],
+    j0:j,
+    if(j<=s) then
+        while j<=s do(
+            lb:endcons(sum((i-1)^j*C[i][s-j+1],i,1,d),lb),
+            j:j+1
+        ),
+    DN: sum(binomial(N,i)*lb[i-j0+2],i,j0-1,s),
+    D: map(rhs, solve(DN,N)),
+    N: lmax(sublist(D,integerp)),
+    if(N>=0) then (
+        S: sum(concat(c,i)*n^i,i,0,N),
+        Rec: expand(sum(subst(n+i-1,n,S)*Li[i],i,1,d)),
+        CoefRec: allcoeffsBound(Rec,n,hipow(Rec,n),0),
+        linsolvewarn: false,
+        Sol: linsolve(CoefRec,makelist(concat(c,i),i,0,N)),
+        linsolvewarn: true,
+        S: expand(subst(Sol,S)),
+        S: makelist(num(factor(coeff(S,%rnum_list[j]))),j,1,length(%rnum_list)),
+        sum(S[j]*%rnum_list[j],j,1,length(%rnum_list))
+    )
+    else false
+)$
+
+
+filter(e,F,n):=block([flag,j],
+    flag:true,
+    j:1,
+    while flag and j<=length(F) do (
+        flag: is(0#resultant(F[j],e,n)),
+        j:j+1
+    ),
+    flag
+)$
+
+filtersetprod(S,n):=catch(block([sp,F],
+    sp:1,
+    F:[],
+    for e in S do 
+        if(filter(e,F,n)) then (
+            sp: sp*e,
+            F:endcons(e,F)
+        )
+        else throw(1),
+    sp
+))$
+
+colTerm(func,law):=block([L,T],
+    if(atom(func)) then [func]
+    else (
+        L:args(func),
+        T:apply(law,L),
+        if(T=func) then L
+        else [func]
+    )
+)$
+
+
+Cmonicfac(P,n):=block([numfacP,l,ss,L,powL,p2,p,i,j],
+    numfacP:num(factor(P)),
+    if(atom(numfacP)) then l: [numfacP]
+    elseif(op(numfacP)="*") then l:colTerm(numfacP,"*")
+    else l: colTerm(-numfacP,"*"),
+    L:{},
+    for p in l do(
+        ss: map(rhs,solve(p,n)),
+        for i:1 thru length(ss) do (
+            if(constantp(ss[i])) then L:union(L,setify(makelist((n-ss[i])^j,j,1,multiplicities[i])))
+            else (
+                p2: expand(ss[i]/coeff(ss[i],n,hipow(ss[i],n))),
+                L: union(L,setify(makelist(p2^j,j,1,hipow(p,ss[i]))))
+            )
+        )
+    ),
+    powL:setdifference(powerset(L),{{}}),
+    union({1},map(lambda([v],filtersetprod(v,n)),powL))
+)$
+
+Qirfactor(expr,n):= catch(block([ir,logform,mlog],
+    if(constantp(expr)) then throw([1,1]),
+    logexpand: true,
+    logform: log(expr),
+    logexpand: false,
+    mlog: args(logform),
+    if(length(mlog)=2) then (
+        ir: expand(exp(mlog[2])),
+        [mlog[1],expand(ir/coeff(ir,n,hipow(ir,n)))]   
+    )
+    else [1,expand(expr/coeff(expand(expr),n,hipow(expand(expr),n)))]
+))$
+
+Qmonicfac(P,n):=block([numfacP,l,j,L,powL,pp,e,p],
+    numfacP:num(factor(P)),
+    if(atom(numfacP)) then l: [numfacP]
+    elseif(op(numfacP)="*") then l:colTerm(numfacP,"*")
+    else l: colTerm(-numfacP,"*"),
+    L:{},
+    for p in l do(
+        [e,pp]: Qirfactor(factor(p),n),
+        L: union(L,setify(makelist(pp^j,j,1,e)))
+    ),
+    powL:setdifference(powerset(L),{{}}),
+    union({1},map(lambda([v],filtersetprod(v,n)),powL))
+)$
+
+HyperPetkov(RE,a,[F]):=catch(block([domain:real,%rnum_list:[],K,L,n,Hyp,d,P0,Pd,mfacP0,mfacPd,A,B,dAB,DAB:{},LP,m,Alphacoef,Zsol,zsol,Pol,nsol,i,j],
+    if(emptyp(F)) then K: numberp
+    elseif F[1]=C then K: constantp
+    elseif F[1]=Q then K: numberp
+    else (
+        print(F[1], " is unknown. Please use Q or C"),
+        throw(false)
+    ),
+    nsol:0,
+    L: REcoeff(RE,a),
+    n: first(a),
+    Hyp:{},
+    d:length(L),
+    P0:factor(subst(n-1,n,first(L))),
+    Pd:factor(subst(n-d+1,n,last(L))),
+    if(K(sqrt(2))) then (
+        mfacP0: Cmonicfac(P0,n),
+        mfacPd: Cmonicfac(Pd,n)
+    )
+    else (
+        mfacP0: Qmonicfac(P0,n),
+        mfacPd: Qmonicfac(Pd,n)
+    ),
+    for A in mfacP0 do
+        for B in mfacPd do (
+            dAB: hipow(expand(A),n)-hipow(expand(B),n),
+            if(not member(dAB,DAB)) then (
+                LP:[],
+                for j:1 thru d do 
+                    LP: endcons(expand(L[j]*prod(subst(n+l,n,A),l,1,j-1)*prod(subst(n+k,n,B),k,j,d-1)),LP),
+                m:lmax(map(lambda([v], hipow(v,n)),LP)),
+                Alphacoef: map(lambda([v],coeff(v,n,m)),LP),
+                Zsol:map(rhs,solve(sum(Alphacoef[i]*Z^(i-1),i,1,d),Z)),
+                Zsol:sublist(Zsol, lambda([v], v#0 and K(v))),
+                if(length(Zsol)=0) then DAB: adjoin(dAB,DAB),
+                for zsol in Zsol do (
+                    Pol: Poly(makelist(zsol^(i-1)*LP[i],i,1,d),n),
+                    if(Pol#false and Pol#0) then (
+                        Pol: setify(create_list(coeff(Pol,rnumi),rnumi,%rnum_list)),
+                        %rnum_list:[],
+                        Pol: map(lambda([v],factor(zsol*(subst(n+1,n,A)/subst(n+1,n,B))*(subst(n+1,n,v)/v))),Pol),
+                        Hyp: union(Hyp,Pol),
+                        nsol: cardinality(Hyp),
+                        if(nsol=d-1) then throw(Hyp)
+                    )
+                )
+            )
+        ),
+    Hyp
+))$
