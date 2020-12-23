@@ -1173,4 +1173,33 @@ b[k]*c[k];
 g3a(b,a);
 a[k]*b[k];
 
+/* https://sourceforge.net/p/maxima/bugs/3684/
+ * originally: https://stackoverflow.com/questions/65064961/maxima-calling-assume-in-a-function
+ */
 
+(kill (foo),
+ myctxt: newcontext (),
+ foo(a, b) := apply('assume, [a < b]),
+ 0)$
+0;
+
+facts();
+[];
+
+foo(0, a);
+[a > 0];
+
+foo(b, a);
+[a > b];
+
+foo(d, c);
+[c > d];
+
+assume(0 < a);
+[redundant];
+
+facts ();
+[a > 0, a > b, c > d];
+
+killcontext (myctxt);
+done;
