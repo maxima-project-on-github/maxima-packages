@@ -652,7 +652,7 @@ remimpextF(F,L) := block([domain:complex,SF, extFS, Csol, c, cFS, dimc],
     extFS: sort(extFS,lambda([x,y],cardinality(x[4])<cardinality(y[4]))),
     for c in extFS do(
         extFS: delete(c,extFS),
-        cFS: sublist(extFS,lambda([v], subsetp(c[4],v[4]) or subset(v[4],c[4]) and c[1]=v[1])),
+        cFS: sublist(extFS,lambda([v], subsetp(c[4],v[4]) or subsetp(v[4],c[4]) and c[1]=v[1])),
         extFS: sublist(extFS,lambda([v], not member(v,cFS))),
         if length(cFS)>0 then(
             cFS: setify(apply(append,cons(c[2],map(second, cFS)))),
