@@ -9,8 +9,6 @@ Wolfram Koepf (http://www.mathematik.uni-kassel.de/~koepf/indexenglish.html)
 
 */
 
-/* I release this work under terms of the GNU General Public License */
-
 
 /*** code to check the input of HypervanHoeij taken as RE:lhs(eq)-rhs(eq)=0, where eq is the given holonomic recurrence equation ***/
 
@@ -149,6 +147,7 @@ vanHoeij(recoeff,n):= catch(block([domain:real, Hyp:{}, inftype,d,dsol,P0,Pd,cva
                         chs: lmax(chs),
                         sR: Ratsolve(simpRE(Lre,n),n,chs),
                         if(sR#false) then (
+                            sR: removeConst(sR,n),
                             Hyp: union(Hyp, map(lambda([v], v*pochfactorsimp(term,n)),sR)),
                             delete(remove_localtype(term,n),inftype,1),
                             if(cardinality(Hyp)=dsol) then throw(Hyp)
@@ -165,7 +164,10 @@ vanHoeij(recoeff,n):= catch(block([domain:real, Hyp:{}, inftype,d,dsol,P0,Pd,cva
                 if(length(chs)>0) then (
                     chs: lmax(chs),
                     sR: Ratsolve(simpRE(Lre,n),n,chs),
-                    if(sR#false) then Hyp: union(Hyp, map(lambda([v], v*pochfactorsimp(term,n)),sR))
+                    if(sR#false) then (
+                        sR: removeConst(sR,n),
+                        Hyp: union(Hyp, map(lambda([v], v*pochfactorsimp(term,n)),sR))
+                    )
                 )
             ),
             Hyp
@@ -510,6 +512,33 @@ Ratsolve(LRE,n,x):= block([d,U,m,lpolre,pol,N,S,Rec,i,CoefRec,Sol,P],
         else false
 )$
 
+/** Removing constant factors from rational solutions **/
+
+removeConst(Sexpr,n):=block([expr, o, nexpr, dexpr, A, S:{}],
+    for expr in Sexpr do (
+        nexpr:num(expr),
+        dexpr:denom(expr),
+        errormsg:false,
+        o:errcatch(op(nexpr)),
+        errormsg:true,
+        if (length(o)>0 and o[1]="*") then(
+            A:args(nexpr),
+            A:sublist(A,lambda([v],not freeof(n,v))),
+            nexpr:lprod(A)
+        ),
+        errormsg:false,
+        o:errcatch(op(dexpr)),
+        errormsg:true,
+        if (length(o)>0 and o[1]="*") then(
+            A:args(dexpr),
+            A:sublist(A,lambda([v],not freeof(n,v))),
+            dexpr:lprod(A)
+        ),
+        S:adjoin(nexpr/dexpr,S)
+    ),
+    S
+)$
+
 /*** verification of a property of a possible hypergeometric term solution by checking the existence of its rational part ***/
 
 check_solution(Cr,n):=block([d,xx,r,t,i,j,expr,numexpr,hipn,xeqs],
@@ -615,16 +644,17 @@ constantpart(c):=block([listc,v],
 )$
 
 remimpextF(F,L) := block([domain:complex,SF, extFS, Csol, c, cFS, dimc],
-    SF: map(lambda([v], [v,algIndets(v[2])]),L),
-    extFS: sublist(SF, lambda([v], cardinality(v[2])>0 and disjointp(v[2],F))),
-    Csol: map(first,sublist(SF, lambda([v], not member(v,extFS)))),
+    SF: map(lambda([v], [v[1],[v[2]],v[3],algIndets(v[2])]),L),
+    extFS: sublist(SF, lambda([v], cardinality(v[4])>0 and disjointp(v[4],F))),
+    Csol: map(lambda([v],firstn(v,3)),sublist(SF, lambda([v], not member(v,extFS)))),
+    extFS: sort(extFS,lambda([x,y],cardinality(x[4])<cardinality(y[4]))),
     for c in extFS do(
         extFS: delete(c,extFS),
-        cFS: sublist(extFS,lambda([v], setequalp(c[2],v[2]))),
+        cFS: sublist(extFS,lambda([v], subsetp(c[4],v[4]) or subset(v[4],c[4]) and c[1]=v[1])),
         extFS: sublist(extFS,lambda([v], not member(v,cFS))),
-        if cardinality(c[2])<=length(cFS)+1 and length(cFS)>0 then(
-            cFS: map(first,cFS),
-            Csol: endcons(first(c),append(Csol,cFS))
+        if length(cFS)>0 then(
+            cFS: setify(apply(append,cons(c[2],map(second, cFS)))),
+            Csol: endcons([c[1],listify(cFS),c[3]],Csol)
         ),
         if extFS=[] then break
     ),
@@ -641,7 +671,7 @@ Complexlocaltype(L,n):=block([domain:complex,d,ijcouple,i,nulist,leadcoeffs, ext
     nuc: remimpextF(extFeq,nuc),
     LC:[],
     for lc in nuc do(
-        vlc: lc[2]*n^(lc[1])*(1+%b/n),
+        vlc: lc[2][1]*n^(lc[1])*(1+%b/n),
         bpoleq: sum(L[kc+1]*product(subst(n+i,n,vlc),i,0,kc-1),kc,0,d-1),
         t:1,
         eq:0,
@@ -717,7 +747,7 @@ Complexcheck_localtype(term,n):=block([domain:complex,Rn,nuRn,tv,tayRn,cRn,bRn],
     tayRn: ratdisrep(taylor(Rn,tv,0,2)),
     cRn: ratsimp(coeff(tayRn,tv,0)),
     bRn: ratsimp(coeff(tayRn,tv,1)/cRn),
-    [nuRn,cRn,onesideComplexfloor(bRn)]
+    [nuRn,onesideComplexfloor(bRn)]
 )$
 Complexirfactor(P,n):=block([domain:complex,S],
     S: map(rhs,solve(P,n)),
@@ -725,11 +755,14 @@ Complexirfactor(P,n):=block([domain:complex,S],
     lprod(S)
 )$
 
-ComplexUdenom(A,B,d,n):= block([domain:complex,U,V,W,h,D,i,P],
+Copyright();
+
+ComplexUdenom(A,B,d,n):= block([algebraic:true,domain:complex,U,V,W,h,D,i,P],
     U: 1,
     V: Complexirfactor(subst(n-d,n,B),n),
     W: Complexirfactor(A,n),
     D: hvw(V,W,n),
+    tt:0,
     if(cardinality(D)=0) then U
     else(
         D: sort(listify(D),'ordergreatp),
@@ -743,17 +776,15 @@ ComplexUdenom(A,B,d,n):= block([domain:complex,U,V,W,h,D,i,P],
     )
 )$
 
-Copyright();
-
-ComplexRatsolve(LRE,n,x):= block([domain:complex,d,U,p,tayU,m,lpolre,i,pol,N,S,Rec,CoefRec,Sol,P],
+ComplexRatsolve(LRE,n,x):= block([algebraic:true,domain:complex,d,U,p,tayU,m,lpolre,i,pol,N,S,Rec,CoefRec,Sol,P],
         d: length(LRE),
         U: ComplexUdenom(first(LRE),last(LRE),d-1,n),
         N: x+hipow(expand(U),n),
         if(N>=0) then (
             lpolre: simpRE(makelist(LRE[i+1]/subst(n+i,n,U),i,0,d-1),n),
-            m: lmax(map(lambda([v], hipow(v,n)),expand(lpolre))),
+            m: lmax(map(lambda([v], hipow(v,n)),ratexpand(lpolre))),
             S: sum(concat(c,i)*n^i,i,0,N),
-            Rec: expand(factor(sum(subst(n+i-1,n,S)*lpolre[i],i,1,d))),
+            Rec: ratexpand(factor(sum(subst(n+i-1,n,S)*lpolre[i],i,1,d))),
             CoefRec: allcoeffsBound(Rec,n,m*N,0),
             linsolvewarn: false,
             Sol: linsolve(CoefRec,makelist(concat(c,i),i,0,N)),
@@ -769,7 +800,7 @@ ComplexRatsolve(LRE,n,x):= block([domain:complex,d,U,p,tayU,m,lpolre,i,pol,N,S,R
         else false
 )$
 
-ComplexvanHoeij(recoeff,n):= catch(block([domain:complex, Hyp,d,dsol,P0,Pd,inftype,inftypeset,extF,cvalue,c,candidates,bettercandidates,bbettercandidates,Cchltype,chs,term,Lre,i,j,sR],
+ComplexvanHoeij(recoeff,n):= catch(block([domain:complex, Hyp,d,dsol,P0,Pd,inftype,inftypeset,extF,cvalue,inftypenub,c,candidates,bettercandidates,bbettercandidates,termtype,Cchltype,chs,term,Lre,i,j,sR,e],
     Hyp: {},
     if length(recoeff)<2 or sublist(recoeff,lambda([v], v#0))=[] then throw(Hyp),
     inftype: Complexlocaltype(expand(recoeff),n),
@@ -785,12 +816,17 @@ ComplexvanHoeij(recoeff,n):= catch(block([domain:complex, Hyp,d,dsol,P0,Pd,infty
         if(length(candidates)>0 and member(0,first(candidates))) then throw(Hyp),
         candidates: map(lambda([v],factor(v[1]/v[2])),candidates),
         cvalue: map(lambda([v], v[2]), inftypeset),
+        inftypenub: map(lambda([v], [v[1],v[3]]),inftypeset),
         bettercandidates:{},
-        for c in cvalue do bettercandidates: union(bettercandidates, map(lambda([v], c*v),candidates)),
-        bbettercandidates: subset(bettercandidates, lambda([v], member(Complexcheck_localtype(v,n),inftypeset))),
+        for c in cvalue do bettercandidates: union(bettercandidates, map(lambda([v], [c[1]*v,c]),candidates)),
+        bettercandidates: map(lambda([v],[v[1],Complexcheck_localtype(v[1],n),v[2]]),bettercandidates),
+        bbettercandidates: subset(bettercandidates, lambda([v], member(v[2],inftypenub))),
+        bbettercandidates: map(lambda([v], [v[1],[v[2][1],v[3],v[2][2]]]),bbettercandidates),
         if(dsol<d) then 
-            for term in bbettercandidates do (
-                Cchltype: Complexcheck_localtype(term,n),
+            for termtype in bbettercandidates do (
+                term: termtype[1],
+                Cchltype: termtype[2],
+                /*Cchltype: Complexcheck_localtype(term,n),*/
                 if( member(Cchltype,inftype)) then (
                     Lre: makelist(recoeff[i+1]*product(subst(n+j,n,term),j,0,i-1),i,0,d-1),
                     domain:real,
@@ -800,7 +836,11 @@ ComplexvanHoeij(recoeff,n):= catch(block([domain:complex, Hyp,d,dsol,P0,Pd,infty
                         chs: lmax(chs),
                         sR: ComplexRatsolve(simpRE(Lre,n),n,chs),
                         if(sR#false) then (
-                            Hyp: union(Hyp, map(lambda([v], v*pochfactorsimp(term,n)),sR)),
+                            sR: removeConst(sR,n),
+                            term: term/Cchltype[2][1],
+                            for e in Cchltype[2] do
+                                Hyp: union(Hyp, map(lambda([v],e^n*v*pochfactorsimp(term,n)),sR)),
+                            /*Hyp: union(Hyp, map(lambda([v], v*pochfactorsimp(term,n)),sR)),*/
                             delete(Cchltype,inftype,1),
                             if(cardinality(Hyp)=dsol) then throw(Hyp)
                         )
@@ -808,13 +848,21 @@ ComplexvanHoeij(recoeff,n):= catch(block([domain:complex, Hyp,d,dsol,P0,Pd,infty
                 )
             )
         else 
-            for term in bbettercandidates do (
+            for termtype in bbettercandidates do (
+                    term: termtype[1],
+                    Cchltype: termtype[2],
                     Lre: makelist(recoeff[i+1]*product(subst(n+j,n,term),j,0,i-1),i,0,d-1),
                     chs: check_solution(Lre,n),
                     if(length(chs)>0) then (
                         chs: lmax(chs),
                         sR: ComplexRatsolve(simpRE(Lre,n),n,chs),
-                        if(sR#false) then Hyp: union(Hyp, map(lambda([v], v*pochfactorsimp(term,n)),sR))
+                        if(sR#false) then (
+                            sR: removeConst(sR,n),
+                            term: term/Cchltype[2][1],
+                            for e in Cchltype[2] do
+                                Hyp: union(Hyp, map(lambda([v],e^n*v*pochfactorsimp(term,n)),sR)),
+                            Hyp: union(Hyp, map(lambda([v], v*pochfactorsimp(term,n)),sR))
+                        )
                     )
             ),
         Hyp
@@ -916,7 +964,7 @@ sumhyperRE(H,a):=catch(block([n,term,R,d,k,i,j,M,b,Vcomp,V,aterm,RE],
     However the output of this code is a set of ratios of hypergeometric term solutions that does not necessarely represent a basis. 
  Nevertheless, it can be used to find a 'normal' representation of ratios of hypergeometric term solutions of holonomic recurrence equations.
     
-                    As point out on the solve_rec help, this approach has an exponential complexity 
+                    As pointed out on the solve_rec help, this approach has an exponential complexity 
                        on the degrees of the leading and trainling polynomial coefficients.
 
 ****************************************************************************************************************************************/
