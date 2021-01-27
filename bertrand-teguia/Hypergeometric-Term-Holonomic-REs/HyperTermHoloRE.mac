@@ -814,7 +814,6 @@ ComplexvanHoeij(recoeff,n):= catch(block([domain:complex, Hyp,d,dsol,P0,Pd,infty
         P0: subst(n-1,n,first(recoeff)),
         Pd: subst(n-d+1,n,last(recoeff)),
         candidates: cartesian_product(ComplexvanHoeijmonicfac(P0,n,extF),ComplexvanHoeijmonicfac(Pd,n,extF)),
-        if(length(candidates)>0 and member(0,first(candidates))) then throw(Hyp),
         candidates: map(lambda([v],factor(v[1]/v[2])),candidates),
         cvalue: map(lambda([v], v[2]), inftypeset),
         inftypenub: map(lambda([v], [v[1],v[3]]),inftypeset),
