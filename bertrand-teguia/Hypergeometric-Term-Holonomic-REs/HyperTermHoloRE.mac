@@ -9,6 +9,7 @@ Wolfram Koepf (http://www.mathematik.uni-kassel.de/~koepf/indexenglish.html)
 
 */
 
+/* I release this work under terms of the GNU General Public License */
 
 /*** code to check the input of HypervanHoeij taken as RE:lhs(eq)-rhs(eq)=0, where eq is the given holonomic recurrence equation ***/
 
