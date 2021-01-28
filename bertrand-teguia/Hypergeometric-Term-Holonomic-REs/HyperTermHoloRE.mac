@@ -519,21 +519,29 @@ removeConst(Sexpr,n):=block([expr, o, nexpr, dexpr, A, S:{}],
     for expr in Sexpr do (
         nexpr:num(expr),
         dexpr:denom(expr),
-        errormsg:false,
-        o:errcatch(op(nexpr)),
-        errormsg:true,
-        if (length(o)>0 and o[1]="*") then(
-            A:args(nexpr),
-            A:sublist(A,lambda([v],not freeof(n,v))),
-            nexpr:lprod(A)
+        if freeof(n,nexpr) then
+            nexpr:1
+        else (
+            errormsg:false,
+            o:errcatch(op(nexpr)),
+            errormsg:true,
+            if (length(o)>0 and o[1]="*") then(
+                A:args(nexpr),
+                A:sublist(A,lambda([v],not freeof(n,v))),
+                nexpr:lprod(A)
+            )
         ),
-        errormsg:false,
-        o:errcatch(op(dexpr)),
-        errormsg:true,
-        if (length(o)>0 and o[1]="*") then(
-            A:args(dexpr),
-            A:sublist(A,lambda([v],not freeof(n,v))),
-            dexpr:lprod(A)
+        if freeof(n,dexpr) then
+            dexpr:1
+        else (        
+            errormsg:false,
+            o:errcatch(op(dexpr)),
+            errormsg:true,
+            if (length(o)>0 and o[1]="*") then(
+                A:args(dexpr),
+                A:sublist(A,lambda([v],not freeof(n,v))),
+                dexpr:lprod(A)
+            )
         ),
         S:adjoin(nexpr/dexpr,S)
     ),
