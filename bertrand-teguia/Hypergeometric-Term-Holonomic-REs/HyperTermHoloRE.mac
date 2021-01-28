@@ -620,7 +620,7 @@ ComplexfindC(nulist,leadcoeffs,ijcouple):=block([domain:complex,LC:[], pos,cnuli
                 Csolind: sublist_indices(Csol, lambda([v],freeof(%x,v) and v#0)),
                 Csol: map(lambda([v],Csol[v]),Csolind),
                 Csolmult: map(lambda([v],multiplicities[v]),Csolind),
-                for i thru length(Csol) do LC: endcons([nu,ratsimp(Csol[i]),Csolmult[i]],LC)
+                for i thru length(Csol) do LC: endcons([nu,ratsimp(Csol[i]),Csolmult[i],eqC],LC)
             ),
             already: append(already,samenu)
         ),
@@ -653,13 +653,13 @@ constantpart(c):=block([listc,v],
 )$
 
 remimpextF(F,L) := block([domain:complex,SF, extFS, Csol, c, cFS, dimc],
-    SF: map(lambda([v], [v[1],[v[2]],v[3],algIndets(v[2])]),L),
+    SF: map(lambda([v], [v[1],[v[2]],v[3],algIndets(v[2]),v[4]]),L),
     extFS: sublist(SF, lambda([v], cardinality(v[4])>0 and disjointp(v[4],F))),
     Csol: map(lambda([v],firstn(v,3)),sublist(SF, lambda([v], not member(v,extFS)))),
     extFS: sort(extFS,lambda([x,y],cardinality(x[4])<cardinality(y[4]))),
     for c in extFS do(
         extFS: delete(c,extFS),
-        cFS: sublist(extFS,lambda([v], subsetp(c[4],v[4]) or subsetp(v[4],c[4]) and c[1]=v[1])),
+        cFS: sublist(extFS,lambda([v], (subsetp(c[4],v[4]) or subsetp(v[4],c[4])) and c[5]=v[5])),
         extFS: sublist(extFS,lambda([v], not member(v,cFS))),
         if length(cFS)>0 then(
             cFS: setify(apply(append,cons(c[2],map(second, cFS)))),
