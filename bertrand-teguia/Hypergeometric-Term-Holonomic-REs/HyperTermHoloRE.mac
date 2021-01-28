@@ -730,7 +730,7 @@ Copyright():=block([],
 
 ComplexvanHoeijmonicfac(P,n,extF):=catch(block([domain:complex,roots,indroot,mult,modZroots,L1,j,L2,E],
     roots: map(rhs, solve(P,n)),
-    indroot: sublist_indices(roots, lambda([v], freeof(n,v) and cardinality(algIndets(v))<=extF)),
+    indroot: sublist_indices(roots, lambda([v], freeof(n,v) and subsetp(algIndets(v),extF))),
     roots: map(lambda([v], roots[v]),indroot),
     mult: map(lambda([v], multiplicities[v]),indroot),
     modZroots: ComplexmodZ(roots,mult),
@@ -741,15 +741,15 @@ ComplexvanHoeijmonicfac(P,n,extF):=catch(block([domain:complex,roots,indroot,mul
     L2
 ))$
 
-Complexcheck_localtype(term,n):=block([domain:complex,Rn,nuRn,tv,tayRn,cRn,bRn],
+Complexcheck_localtype(term,n):=block([domain:complex,Rn,nuRn,tv,tayRn,bRn],
     Rn: ratsimp(term),
     nuRn: hipow(num(Rn),n) - hipow(denom(Rn),n),
     Rn: ratsimp(subst(1/tv,n,ratsimp(Rn/n^nuRn))),
     tayRn: ratdisrep(taylor(Rn,tv,0,2)),
-    cRn: ratsimp(coeff(tayRn,tv,0)),
-    bRn: ratsimp(coeff(tayRn,tv,1)/cRn),
+    bRn: ratsimp(coeff(tayRn,tv,1)),
     [nuRn,onesideComplexfloor(bRn)]
 )$
+
 Complexirfactor(P,n):=block([domain:complex,S],
     S: map(rhs,solve(P,n)),
     S: map(lambda([v], if constantp(v) then n-v else v),S),
@@ -810,7 +810,7 @@ ComplexvanHoeij(recoeff,n):= catch(block([domain:complex, Hyp,d,dsol,P0,Pd,infty
         d: length(recoeff),
         dsol: length(inftype),
         inftypeset: setify(inftype),
-        extF: cardinality(algIndets(inftypeset)),
+        extF: algIndets(inftypeset),
         P0: subst(n-1,n,first(recoeff)),
         Pd: subst(n-d+1,n,last(recoeff)),
         candidates: cartesian_product(ComplexvanHoeijmonicfac(P0,n,extF),ComplexvanHoeijmonicfac(Pd,n,extF)),
@@ -818,10 +818,10 @@ ComplexvanHoeij(recoeff,n):= catch(block([domain:complex, Hyp,d,dsol,P0,Pd,infty
         cvalue: map(lambda([v], v[2]), inftypeset),
         inftypenub: map(lambda([v], [v[1],v[3]]),inftypeset),
         bettercandidates:{},
-        for c in cvalue do bettercandidates: union(bettercandidates, map(lambda([v], [c[1]*v,c]),candidates)),
+        for c in cvalue do bettercandidates: union(bettercandidates, map(lambda([v], [v,c]),candidates)),
         bettercandidates: map(lambda([v],[v[1],Complexcheck_localtype(v[1],n),v[2]]),bettercandidates),
         bbettercandidates: subset(bettercandidates, lambda([v], member(v[2],inftypenub))),
-        bbettercandidates: map(lambda([v], [v[1],[v[2][1],v[3],v[2][2]]]),bbettercandidates),
+        bbettercandidates: map(lambda([v], [v[3][1]*v[1],[v[2][1],v[3],v[2][2]]]),bbettercandidates),
         if(dsol<d) then 
             for termtype in bbettercandidates do (
                 term: termtype[1],
@@ -840,7 +840,6 @@ ComplexvanHoeij(recoeff,n):= catch(block([domain:complex, Hyp,d,dsol,P0,Pd,infty
                             term: term/Cchltype[2][1],
                             for e in Cchltype[2] do
                                 Hyp: union(Hyp, map(lambda([v],e^n*v*pochfactorsimp(term,n)),sR)),
-                            /*Hyp: union(Hyp, map(lambda([v], v*pochfactorsimp(term,n)),sR)),*/
                             delete(Cchltype,inftype,1),
                             if(cardinality(Hyp)=dsol) then throw(Hyp)
                         )
@@ -860,8 +859,7 @@ ComplexvanHoeij(recoeff,n):= catch(block([domain:complex, Hyp,d,dsol,P0,Pd,infty
                             sR: removeConst(sR,n),
                             term: term/Cchltype[2][1],
                             for e in Cchltype[2] do
-                                Hyp: union(Hyp, map(lambda([v],e^n*v*pochfactorsimp(term,n)),sR)),
-                            Hyp: union(Hyp, map(lambda([v], v*pochfactorsimp(term,n)),sR))
+                                Hyp: union(Hyp, map(lambda([v],e^n*v*pochfactorsimp(term,n)),sR))
                         )
                     )
             ),
