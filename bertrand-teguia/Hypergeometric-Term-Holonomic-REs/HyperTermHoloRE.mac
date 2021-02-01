@@ -758,7 +758,7 @@ Complexcheck_localtype(term,n):=block([domain:complex,Rn,nuRn,tv,tayRn,bRn],
     [nuRn,onesideComplexfloor(bRn)]
 )$
 
-Complexirfactor(P,n):=block([domain:complex,S],
+Complexirfactor(P,n):=block([domain:complex,algebraic:true,S],
     S: map(rhs,solve(P,n)),
     S: map(lambda([v], if constantp(v) then n-v else v),S),
     lprod(S)
@@ -766,12 +766,11 @@ Complexirfactor(P,n):=block([domain:complex,S],
 
 Copyright();
 
-ComplexUdenom(A,B,d,n):= block([algebraic:true,domain:complex,U,V,W,h,D,i,P],
+ComplexUdenom(A,B,d,n):= block([algebraic:true,domain:complex,gcd:subres,U,V,W,h,D,i,P],
     U: 1,
     V: Complexirfactor(subst(n-d,n,B),n),
     W: Complexirfactor(A,n),
     D: hvw(V,W,n),
-    tt:0,
     if(cardinality(D)=0) then U
     else(
         D: sort(listify(D),'ordergreatp),
