@@ -738,7 +738,10 @@ Copyright():=block([],
 
 ComplexvanHoeijmonicfac(P,n,extF):=catch(block([domain:complex,roots,indroot,mult,modZroots,L1,j,L2,E],
     roots: map(rhs, solve(P,n)),
-    indroot: sublist_indices(roots, lambda([v], freeof(n,v) and subsetp(algIndets(v),extF))),
+    if emptyp(extF) then
+        indroot: sublist_indices(roots, lambda([v], complexnbrp(v)))
+    else
+        indroot: sublist_indices(roots, lambda([v], freeof(n,v) and subsetp(algIndets(v),extF))),
     roots: map(lambda([v], roots[v]),indroot),
     mult: map(lambda([v], multiplicities[v]),indroot),
     modZroots: ComplexmodZ(roots,mult),
