@@ -12,6 +12,7 @@ polyfit (X, Y, N) :=
         beta: invert(XX) . transpose(X1) . Y,
         Yhat: X1 . beta,
         residuals: Y - Yhat,
+        mse: (transpose (residuals) . residuals)/length (residuals),
         Xvars: makelist (if j = 0 then 1 else 'Xtilde^j, j, 0, N),
         f: buildq ([Xvars, Xmean, Xsd, beta],
                    lambda ([X], block ([Xtilde: (X - Xmean)/Xsd, X1],
