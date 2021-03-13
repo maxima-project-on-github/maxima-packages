@@ -2,10 +2,6 @@ if ?mget (mean, '?mexpr) = false then load (descriptive);
 
 polyfit (X, Y, N) :=
     block ([Xtilde, Xmean, Xsd, X1, XX, Xvars, beta, Yhat, residuals, mse, f],
-        /*
-        X: ensure_matrix (X),
-        Y: ensure_matrix (Y),
-         */
         Xmean: mean (X),
         Xsd: std (X),
         Xtilde: map (lambda([r], (r - Xmean)/Xsd), X),
@@ -27,12 +23,3 @@ polyfit (X, Y, N) :=
          'Xmean = Xmean,
          'Xsd = Xsd,
          'f = f]);
-
-/*
-ensure_matrix (a) :=
-    if not atom(a) and op(a) = 'matrix
-        then a
-    elseif listp(a)
-        then transpose(matrix(a))
-        else matrix([a]);
- */
