@@ -56,3 +56,8 @@ matchdeclare (aa, all);
 tellsimp (false // aa, false);
 
 simp: true $
+
+tags(b) :=
+  if listp(b)
+    then unique (map (tags, b))
+    else maplist (lhs, b);
