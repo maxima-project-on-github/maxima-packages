@@ -40,9 +40,12 @@ read_json (f) := subst (["{" = blob, ":" = "="], read_json_set (f));
 read_json_set (f) :=
   block ([combined_input_stream,
           primary_input_stream: if ?streamp(f) then f else openr (f, "UTF-8"),
-          terminator_stream: make_string_input_stream ("$")],
+          terminator_stream: make_string_input_stream ("$"),
+          return_value],
          combined_input_stream: ?make\-concatenated\-stream (primary_input_stream, terminator_stream),
-         second (?mread (combined_input_stream)));
+         return_value: second (?mread (combined_input_stream)),
+         if not ?streamp(f) then close (primary_input_stream),
+         return_value);
 
 /* work-around for bug in SBCL;
  * see: https://bugs.launchpad.net/sbcl/+bug/690408
