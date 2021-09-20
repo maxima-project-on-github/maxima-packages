@@ -1334,3 +1334,15 @@ ratdisrep (test1(taylor(cos(x), x, 0, 4)));
 (x^4-12*x^2+24)/24;
 
 /* SF bug #3462: "simplify_sum() variable name clash" */
+
+(load("simplify_sum"), kill(a), 0);
+0;
+
+simplify_sum(sum((2*i+1)^-2, i, 0, inf));
+%pi^2/8;
+
+(a[i] := i, simplify_sum(sum((2*i+1)^-2, i, 0, inf)));
+%pi^2/8;
+
+(kill(a), simplify_sum(sum((2*i+1)^-2, i, 0, inf)));
+%pi^2/8;
