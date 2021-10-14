@@ -13,7 +13,8 @@
  * unless 'a' is declared global.
  *
  * HOWEVER, note that 'a' is not declared global at the time block([a], ...) is parsed
- * in (declare(a, integer), block([a], featurep(a, integer))).
+ * in (declare(a, integer), block([a], featurep(a, integer)))
+ * (i.e., both expressions within MPROGN).
  * Therefore the result is 'false'. In order for block([a], featurep(a, integer))
  * to know about declare(a, integer), the declaration must be evaluated before
  * the block is parsed.
@@ -1203,3 +1204,270 @@ facts ();
 
 killcontext (myctxt);
 done;
+
+/* SF bug #3664: "variable name collision in mat_trace" */
+
+(n:3,
+kill(cm,m,mg),  
+m[1]:ident(2)/*,declare(mg,symmetric)*/,
+mg:ident(3),
+for i thru 3 do cm[i]:zeromatrix(3,3),
+m[1][2,2]:-1,
+for i:2 thru 3 do 
+m[i]:zeromatrix(2,2),
+m[2][1,2]:1,
+m[3][2,1]:1,
+for i thru 3 do for j:i+1 thru 3 do( t:m[i].m[j]-m[j].m[i],disp([i,j,t])),
+cm[1][2,2]:2,
+cm[2][1,2]:-2,
+cm[1][3,3]:-2,
+cm[3][1,3]:2,
+cm[2][3,1]:1,
+cm[3][2,1]:-1,
+for i thru 3 do(mg[i,i]:mat_trace(cm[i].cm[i]),
+for j:i+1 thru 3 do mg[i,j]:mat_trace(cm[i].cm[j]) ));
+done;
+
+mg;
+matrix([8,0,0],[0,0,4],[0,0,0]);
+
+arrayinfo(cm);
+[hashed,1,[1],[2],[3]];
+
+listarray(cm);
+[matrix([0,0,0],[0,2,0],[0,0,-2]),
+ matrix([0,-2,0],[0,0,0],[1,0,0]),
+ matrix([0,0,2],[-1,0,0],[0,0,0])];
+
+arrayinfo(m);
+[hashed,1,[1],[2],[3]];
+
+listarray(m);
+[matrix([1,0],[0,-1]),
+ matrix([0,1],[0,0]),
+ matrix([0,0], [1,0])];
+
+mat_trace(ident(3));
+3;
+
+/* SF bug #3654: "uniteigenvectors fails if uv[1] is used in the user main program." */
+
+(if ?mget ('uniteigenvectors, '?mexpr) = false then load(eigen), 0);
+0;
+
+(kill(m, mm, r, uv, foo, θ),
+ assume (m > 0, r > 0),
+ mm:matrix(
+          [-(r-2*m)/r,    sqrt(2*m/r),    0,  0],
+          [sqrt(2*m/r),   1,  0,  0],
+          [0, 0,  r^2,    0],
+          [0, 0,  0,  r^2*sin(θ)^2]
+      ),
+ foo: uniteigenvectors(mm),
+ 0);
+0;
+
+/* go through some gyrations here to verify result of uniteigenvectors */
+
+(kill(S),
+ [e1, e2, e3, e4]: [foo[2][1][1], foo[2][2][1], foo[2][3][1], foo[2][4][1]],
+ S: transpose (matrix (e1, e2, e3, e4)),
+ ratsimp (S . transpose (S)));
+matrix ([1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]);
+
+(kill(Lambda),
+ Lambda: ident(4),
+ for i thru 4 do Lambda[i, i]: foo[1][1][i],
+ ratsimp (S . Lambda . transpose (S) - mm));
+matrix ([0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]);
+
+/* now test in presence of uv array */
+
+(kill(uv), uv[1]:0);
+0;
+
+member ('uv, arrays);
+true;
+
+(bar: uniteigenvectors(mm),
+ is (bar = foo));
+true;
+
+kill(uv);
+done;
+
+/* SF bug #3605: "Variable confusion in function handling Taylor series" */
+
+/* function definition copied verbatim from bug report --
+ * expect same result as without lexical symbols
+ */
+(test(f) := block([i:taylorinfo(f)[1]], sum(coeff(f, i[1], x) * i[1]^x, x, 0, i[3])), 0);
+0;
+
+ratdisrep (test(taylor(cos(y), y, 0, 4)));
+(y^4-12*y^2+24)/24;
+
+ratdisrep (test(taylor(cos(x), x, 0, 4)));
+29/3;
+
+/* declare summation index in block to distinguish from global
+ *
+ * x is a local variable in the block; this is necessary
+ * because sum evaluates the summand before
+ * subsituting a gensym for the summation index,
+ * so x being the summation index isn't enough to help sum
+ * distinguish x as the summation index from x as the Taylor variable.
+ * That might or might not indicate a weakness in sum, but anyway,
+ * this arrangement enables test to get the expected result.
+ *
+ * The only benefit of lexical symbols for this problem is that
+ * the summation index can have the same name as the global variable;
+ * it need not have a % wart or other workaround.
+ */
+(test1(f) := block([i:taylorinfo(f)[1], x], sum(coeff(f, i[1], x) * i[1]^x, x, 0, i[3])), 0);
+0;
+
+ratdisrep (test1(taylor(cos(y), y, 0, 4)));
+(y^4-12*y^2+24)/24;
+
+ratdisrep (test1(taylor(cos(x), x, 0, 4)));
+(x^4-12*x^2+24)/24;
+
+/* SF bug #3462: "simplify_sum() variable name clash" */
+
+(load("simplify_sum"), kill(a), 0);
+0;
+
+simplify_sum(sum((2*i+1)^-2, i, 0, inf));
+%pi^2/8;
+
+(a[i] := i, simplify_sum(sum((2*i+1)^-2, i, 0, inf)));
+%pi^2/8;
+
+(kill(a), simplify_sum(sum((2*i+1)^-2, i, 0, inf)));
+%pi^2/8;
+
+/* SF bug #3684: "Calling assume within function leads to mixed-up facts" */
+
+(kill(all), foo(a, b) := apply('assume, [a < b]), 0);
+0;
+
+facts();
+[];
+
+foo(0, a);
+[a > 0];
+
+foo(b, a);
+[a > b];
+
+foo(d, c);
+[c > d];
+
+assume(0 < a);
+[redundant];
+
+/* SF bug #1991: "Another function local variable affected. Scope broken?" */
+
+/*
+g(x,y):=block([z],[x,z[2]] );
+g(1,2); /* => [1, z ] */
+
+f(x,y):=block([z]
+,z[1]:x
+,z[2]:y
+,[x,z[2]] );
+
+f(1,2); /* => [1, 2 ] */
+
+g(1,2); /* =>[1, 2 ] not [1, z_2 ] I except former result */
+ */
+
+kill (f, g, z);
+done;
+
+(g(x, y) := block([z], [x, z[2]]), foo: g(1, 2), string(foo));
+"[1,z[2]]";
+
+is (foo = [1, z[2]]);
+false;
+
+(f(x, y) := block([z], z[1]:x, z[2]:y, [x, z[2]]), f(1, 2));
+[1, 2];
+
+(bar: g(1, 2), string(bar));
+"[1,z[2]]";
+
+is (bar = [1, z[2]]);
+false;
+
+/* SF bug #224: "3 solver bugs", third bug */
+
+/*
+don't use i or k as one of your variables:
+
+[...]
+(C8) trace(solve)$ 
+
+(C9) solver([u-t*(u^(k+1)+1)=0,1-(k+1)*t*u^k=0],[u,t]); 
+
+1 Enter SOLVE [(-k-1)*t*u^k+1,t] 
+1 Exit  SOLVE [t = 1/((k+1)*u^k)] 
+Warning: GET(OP(EXPR),'Valuation) was declared mode FIXNUM, has 
+value: FALSE 
+1 Enter SOLVE [(2*u^3-1)/(3*u^2),u] 
+
+* obviously, this is wrong here ** who set k=2 ??? This might
+have to do with dynamic scope - in valuationsolver k is used, and if I
+leave away the parameter k, i get the following message:
+
+Warning: GET(OP(EXPR),'Valuation) was declared mode FIXNUM, has 
+value: 
+FALSE 
+*********************************************** 
+
+
+1 Exit  SOLVE [u = (SQRT(3)*%I-1)/(2*2^(1/3)),u = 
+-(SQRT(3)*%I+1)/(2*2^(1/3)),u = 1/2^(1/3)] 
+(D9) [[u = (SQRT(3)*%I-1)/(2*2^(1/3)), 
+t = 2^(4*k/3)/((SQRT(3)*%I-1)^k*k+(SQRT(3)*%I-1)^k)], 
+[u = -(SQRT(3)*%I+1)/(2*2^(1/3)), 
+t = 2^(4*k/3)/((-SQRT(3)*%I-1)^k*k+(-SQRT(3)*%I-1)^k)], 
+[u = 1/2^(1/3),t = 2^(k/3)/(k+1)]] 
+
+similar trouble for i
+
+(C10) solver([u-t*(u^(i+1)+1)=0,1-(i+1)*t*u^i=0],[u,t],[i]); 
+
+1 Enter SOLVE [(-i-1)*t*u^i+1,t] 
+1 Exit  SOLVE [t = 1/((i+1)*u^i)] 
+1 Enter SOLVE [(i*u^(i+1)-1)/((i+1)*u^i),u] 
+Is  i  an integer? 
+
+y; 
+1 Exit  SOLVE [u = 1/i^(1/(i+1))] 
+(D10) [[u = 1,t = 1/2]] 
+
+(with l in place of i or k the result is correct:
+
+solver([u-t*(u^(l+1)+1)=0,1-(l+1)*t*u^l=0],[u,t],[l]); 
+
+(D15) [[u = 1/l^(1/(l+1)),t = l^(l/(l+1))/(l+1)]] 
+ */
+
+(load (Solver),
+ kill (i, k, l, blurf, u, t),
+ declare ([i, k, l, blurf], integer),
+ eqs: [u-t*(u^(k+1)+1)=0,1-(k+1)*t*u^k=0],
+ foo: Solver (subst (k = blurf, eqs), [u, t], [blurf]));
+[[u = 1/blurf^(1/(blurf+1)),t = blurf^(blurf/(blurf+1))/(blurf+1)]];
+
+Solver (eqs, [u, t], [k]);
+''(subst (blurf = k, foo));
+
+Solver (subst (k = i, eqs), [u, t], [i]);
+''(subst (blurf = i, foo));
+
+Solver (subst (k = l, eqs), [u, t], [l]);
+''(subst (blurf = l, foo));
+
