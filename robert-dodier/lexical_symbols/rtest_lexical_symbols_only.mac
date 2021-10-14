@@ -9,7 +9,7 @@
 
 /* Contrived examples. */
 
-/* Local symbol 'a' is distinct from top-level 'a',
+/* Lexical symbol 'a' is distinct from global 'a',
  * unless 'a' is declared global.
  *
  * HOWEVER, note that 'a' is not declared global at the time block([a], ...) is parsed
@@ -32,7 +32,7 @@ false;
 block([a], featurep (a, integer));
 true;
 
-/* A local symbol can have a declared property. */
+/* A lexical symbol can have a declared property. */
 
 /* Separate block([a], ...) from declare(a, ...) to ensure declaration is in effect
  * when the block is parsed. See HOWEVER above.
@@ -57,8 +57,8 @@ false;
 kill(f, foo);
 done;
 
-/* f is a local symbol, f1 is top-level.
- * foo is top-level, but its value is the local symbol f.
+/* f is a lexical symbol, f1 is global.
+ * foo is global, but its value is the lexical symbol f.
  */
 
 (foo: block ([f], f(x) := 2*x, f1(x) := f(x), f), 0);
@@ -73,8 +73,8 @@ f1(99);
 foo(99);
 198;
 
-/* a is a local symbol which is the name of an undeclared (hash) array,
- * h, i, and l are top-level functions.
+/* a is a lexical symbol which is the name of an undeclared (hash) array,
+ * h, i, and l are global functions.
  */
 block ([a], h(x) := a[x]: 1, i() := arrayinfo(a), l() := listarray(a), 0);
 0;
@@ -82,7 +82,7 @@ block ([a], h(x) := a[x]: 1, i() := arrayinfo(a), l() := listarray(a), 0);
 [h(17), h(29), h(1729)];
 [1, 1, 1];
 
-/* These are references to top-level 'a', not local 'a'. */
+/* These are references to global 'a', not lexical 'a'. */
 
 (a[11]: 2,
  a[13]: 2,
@@ -403,9 +403,9 @@ f(Z);
  */
 
 (Z: [k, k],
- /* sum was supposed to make its index a local symbol,
+ /* sum was supposed to make its index a lexical symbol,
   * but that got lost somewhere along the way in 2005 ...
-  * anyway by explicitly making k a local symbol, 
+  * anyway by explicitly making k a lexical symbol, 
   * we can get the expected result.
   *   #summationindexscope
   */
@@ -567,7 +567,7 @@ Too few arguments supplied to a(x); found: []
 (%o4)                                 bar
  */
 
-/* verify that global a and local a are distinguished */
+/* verify that global a and lexical a are distinguished */
 
 (kill(a, b),
  a(x) := x,
@@ -592,7 +592,7 @@ With dynamic binding, f(7) prints 7.
 And with dynamic binding, ( f(7), g() )  prints 7 then 23, not 7 then 7,
  */
 
-/* verify that global a and local a are distinguished */
+/* verify that global a and lexical a are distinguished */
 
 (kill(a, f, g, l),
  a:23,
@@ -631,7 +631,7 @@ global scope, not in the calling function's (f) scope. In lexical scope,
 both f(23) and g() would return 0.
  */
 
-/* verify global x and local x are distinguished */
+/* verify global x and lexical x are distinguished */
 
 (kill(f, g, x),
  x: 0,
@@ -721,7 +721,7 @@ ff():=block([func], func:lambda([],print(88)), (+func)()) ;
 ff() => 88
  */
 
-/* verify that global func and local func are distinguished */
+/* verify that global func and lexical func are distinguished */
 
 (kill(func, ff),
  func() := print(3),
@@ -746,7 +746,7 @@ will look like an error.
  */
 
 /* Hmm. f returns 15*i only if the summation index i is distinguished from the global i.
- * sum doesn't treat its index as a local variable, maybe it should.
+ * sum doesn't treat its index as a lexical variable, maybe it should.
  *   #summationindexscope
  */
 
@@ -854,7 +854,7 @@ expected for fourier(f(t+(t1+T/2)),t,T). I've pushed commit 4650d2d to
 implement that.
  */
 
-/* verify that global f and local f are distinguished
+/* verify that global f and lexical f are distinguished
  * assume that 4650d2d is reverted
  */
 
@@ -896,7 +896,7 @@ expr1: u=m*r^2*f+m*s^2*g+m*t^2*h;    =>    u=h*m*t^2+g*m*s^2+f*m*r^2
 Apply2Part(factor, expr1, 2, [1,2]);    =>    u=m*(h*t^2+g*s^2)+factor*m*r^2
  */
 
-/* verify that global f and local f are distinguished */
+/* verify that global f and lexical f are distinguished */
 
 (kill(u, m, r, d, s, g, t, h, f),
  Apply2Part(f, [subexpr]):=block(
@@ -973,7 +973,7 @@ A couple of possibly confusing cases:
 
  */
 
-/* verify that global x and local x are distinguished
+/* verify that global x and lexical x are distinguished
  */
 
 (kill(x),
@@ -1023,7 +1023,7 @@ y[1] + a[2]
 Worse, calling foo(y,x) will make Maxima hang.
  */
 
-/* verify that global x and y are distinguished from local x and y */
+/* verify that global x and y are distinguished from lexical x and y */
 
 (kill(x, y, a, b),
  foo(x,y) := x[1] + y[2],
@@ -1168,7 +1168,7 @@ matrix([3, 9], [-4, 12]);
 genmatrix(lambda([i,j],v[i]|ω[j]),2,2);
 matrix([3, 9], [-4, 12]);
 
-/* simpler version -- global array / local variable name collision */
+/* simpler version -- global array / lexical variable name collision */
 
 (kill (fooarray, foofun, z),
  fooarray[1]: [11, 22, 33],
@@ -1337,7 +1337,7 @@ ratdisrep (test(taylor(cos(x), x, 0, 4)));
 
 /* declare summation index in block to distinguish from global
  *
- * x is a local variable in the block; this is necessary
+ * x is a lexical variable in the block; this is necessary
  * because sum evaluates the summand before
  * subsituting a gensym for the summation index,
  * so x being the summation index isn't enough to help sum

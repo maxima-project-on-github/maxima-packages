@@ -135,7 +135,7 @@ And of course it doesn't matter if there are other variables named
  */
 
 /* verify that private captured in the lexical environment of lambda
- * verify that global private and local private are distinguished
+ * verify that global private and lexical private are distinguished
  */
 
 (kill(private, f),
