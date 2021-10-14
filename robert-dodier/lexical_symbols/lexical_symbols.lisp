@@ -18,10 +18,13 @@
 ;; which makes symbols dynamic instead of lexical.
 ;; One can say declare(foo, global) and then featurep(foo, global) => true,
 ;; or, equivalently, (KINDP '$FOO '$GLOBAL) => T.
-;; Any symbols declared global are excluded from gensym substitution.
+;; Any symbols which have been declared global by the time
+;; the construct is parsed are excluded from gensym substitution.
 
 ;; Some share functions have been redefined with lexical scope.
-;; Assign MEXPR property for symbols which have it at present.
+;; Assign MEXPR property for symbols which have MEXPR at present.
+;; This part can go away when the lexical symbol implementation
+;; is in the Maxima image.
 
 ($auto_mexpr '$trigrat "trigrat.lisp")
 ($auto_mexpr '$trigsimp "trgsmp.mac")
@@ -45,6 +48,8 @@
   (declare1 defmvars-list t '$global 'kind)
   (mset '$context save-$context)
   (setq $props save-$props))
+ 
+;; Variables defined by define_variable are also declared global.
 
 (let ((prev-mfexpr* (get '$define_variable 'mfexpr*)))
   (setf (get '$define_variable 'mfexpr*)
