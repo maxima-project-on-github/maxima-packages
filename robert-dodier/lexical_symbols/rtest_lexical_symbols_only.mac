@@ -101,6 +101,14 @@ i();
 l();
 [1, 1, 1];
 
+/* function argument same name as function itself */
+
+(f(f, x) := f(x), 0);
+0;
+
+f(sin, 1);
+sin(1);
+
 /* Examples collected "in the wild". */
 
 /* maxima-discuss 2014-04-19: "How to make buildq evaluate its first argument - please help"
@@ -385,14 +393,6 @@ function it works as expected.
  L(expr));
 x^2 + x^4 + x^6;
 
-/* I DUNNO, I DON'T THINK THIS ONE ILLUSTRATES ANYTHING ABOUT LEXICAL VS DYNAMIC BINDING !!
-mailing list 2015-11-18: "Sublist"
-
-f(k) := mod(k,mm)>0 $
-mm:5 $
-sublist(ll,f) $
- */
-
 /* maxima-discuss 2015-11-25: "preventing names of algebraic symbols from conflicting with local variables?"
 
 Z : [k,k];
@@ -665,6 +665,8 @@ Point 2:
 
 */
 
+/* Point 1: */
+
 /* verify that global innerf and local innerf are distinguished */
 
 (kill(f, innerf),
@@ -685,7 +687,19 @@ innerf();
 innerf();
 innerf();
 
-/* MORE NEEDED HERE ABOUT F AND INNERF ABOVE; INCOMPLETE EXAMPLE !! */
+/* Point 2: */
+
+/* var in nested blocks are two distinct symbols */
+
+(g() := block( [innerf, var: 23],
+                innerf():=var,
+                block([var: 56], innerf())),
+ 0);
+0;
+
+g();
+23;
+
 
 /* maxima-discuss 2019-03-24: "Questions about compiling"
 
@@ -748,7 +762,10 @@ f(i);
  f(i));
 15*i;
 
-/* NOT CLEAR WHAT THIS ONE SHOWS ABOUT LEXICAL SCOPE !! */
+/* dunno what this next example shows about lexical symbols,
+ * but anyway let's keep it since it's already done.
+ */
+
 /* maxima-discuss 2019-05-25: "Question about defmatch"
 
 find_sin(z):=block([kk:[]], apply1(z,push_on_kk), kk);
@@ -1029,6 +1046,11 @@ y(1) + b(2);
 bar(y, x);
 y(1) + x(2);
 
+/* warning message about arguments of hypergeometric
+ * no longer occurs because psubstitute is not called.
+ * let it stand, seems like a useful example in any case.
+ */
+ 
 /* maxima-discuss 2019-11-20: "Re: [Maxima-discuss] general proposal to implement lexical"
 
 (%i4) bob(a,b,c,x) := block([p : [a,b], q : [c]],hypergeometric(p,q,x));
@@ -1071,18 +1093,21 @@ string (f():=block([x,y],0+x+y));
    in: https://en.wikipedia.org/wiki/Scheme_(programming_language)#Lambda_calculus
  */
 
-/* SEEMS LIKE THIS EXAMPLE COULD BE MORE CLEAR !! */
 (kill (plus, times, name),
  plus: lambda ([a, b], a + b),
  times: lambda ([a, b], a * b),
  block ([name: 'plus], block ([plus: 'times], ?meval (funmake (name, [2, 3])))));
 5;
 
-/* LOOKS LIKE THIS IS MISSING AN EXAMPLE !! */
 /* substitution into lambda should fail
  * e.g. block([a], lambda([v], subst('v=v, lambda([v],a*v))));
  * doesn't change inner lambda
  */
+
+(block([a], lambda([v], subst('v=v, lambda([v],a*v)))),
+ %%(123),
+ string (%%));
+"lambda([v],a*v)";
 
 /* mailing list 2020-05-18: "Anonymous functions and parameter names" */
 
@@ -1323,6 +1348,7 @@ ratdisrep (test(taylor(cos(x), x, 0, 4)));
  * The only benefit of lexical symbols for this problem is that
  * the summation index can have the same name as the global variable;
  * it need not have a % wart or other workaround.
+ * #summationindexscope
  */
 (test1(f) := block([i:taylorinfo(f)[1], x], sum(coeff(f, i[1], x) * i[1]^x, x, 0, i[3])), 0);
 0;
