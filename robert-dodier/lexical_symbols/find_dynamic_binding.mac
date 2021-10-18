@@ -1,4 +1,4 @@
-load ("lexical_symbols.mac");
+load ("lexical_symbols.lisp");
 
 slurp_exprs (f) :=
   block ([s: openr(f), l: [], l1],
@@ -6,21 +6,47 @@ slurp_exprs (f) :=
          close (s),
          reverse (l));
 
-listofvars_explode_mapatoms (expr) :=
-  unique (flatten (listofvars_explode_mapatoms1 (expr)));
+declare (explode_mapatoms, global);
+explode_mapatoms: false; /* more nearly consistent with built-in listofvars */
 
-listofvars_explode_mapatoms1 (e) :=
-  if e = [] then []
-    elseif atom(e) then e
-    else [listofvars_explode_mapatoms1 (listofvars (op(e))), map (listofvars_explode_mapatoms1, listofvars (args(e)))];
+setofvars (e) :=
+  if mapatom(e)
+    then if explode_mapatoms and not atom(e)
+           then union (setofvars (op(e)), setofvars (args(e)))
+           else (if symbolp(e) or subvarp(e) then (if e # true and e # false and not false_symbol(e) then {e} else {}) else {})
+    else block ([op_e: op(e), args_e: args(e), args_vars],
+                args_vars: apply (union, map (setofvars, args_e)),
+                if member (verbify(op_e), '[sum, lsum, integrate, makelist])
+                  then setdifference (args_vars, { second(e) })
+                elseif verbify(op_e) = 'at
+                  then setdifference (args_vars, if listp (second (e)) then setify (map (first, second (e))) else { second(e) })
+                elseif member (verbify(op_e), '[?mdo, ?mdoin]) and first(e) # false
+                  then setdifference (args_vars, { first(e) })
+                elseif verbify(op_e) = verbify("block")
+                  then (if length(e) > 0 and listp (first (e))
+                          then block ([local_vars: map (lambda ([e1], if atom(e1) then e1 else lhs(e1)), first(e))],
+                                      setdifference (args_vars, setify (local_vars)))
+                          else args_vars)
+                elseif verbify(op_e) = '?mdefine
+                  then setdifference (args_vars, setify (args (first (e))))
+                elseif verbify(op_e) = 'lambda
+                  then setdifference (args_vars, setify (first (e)))
+                  else args_vars); /* IGNORE ANY VARIABLES IN OP, E.G. X in F[X](Y) -- LISTOFVARS DOES TOO */
 
-listofvars_global ([e]) := sublist (listofvars_explode_mapatoms (e), lambda ([x], ?symbol\-package(x) # false));
-listofvars_lexical ([e]) := sublist (listofvars_explode_mapatoms (e), lambda ([x], ?symbol\-package(x) = false));
+/* a gyration necessitated by the parser -- $FALSE is tacked onto if-then sans else. Oh well. */
+false_symbol (e) := symbolp(e) and ?symbol\-name(e) = "$FALSE";
+
+/* SETOFVARS_GLOBAL AND SETOFVARS_LEXICAL RELY ON LEXICAL SYMBOLS BEING UNINTERNED --
+ * THIS IS AN IMPLEMENTATION DETAIL, THEREFORE SUBJECT TO CHANGE
+ */
+/* MAYBE CALL PARTITION_SET HERE */
+setofvars_global ([e]) := subset (block ([explode_mapatoms: true], setofvars (e)), lambda ([x], is (?symbol\-package(x) # false)));
+setofvars_lexical ([e]) := subset (block ([explode_mapatoms: true], setofvars (e)), lambda ([x], is (?symbol\-package(x) = false)));
 get_global_name (x) := if ?symbol\-package(x) = false then ?get (x, ?reversealias);
 
 defstruct (finfo (op, lexicals, globals));
 
-make_finfo (e) := finfo (op(lhs(e)), map (get_global_name, listofvars_lexical(lhs(e), rhs(e))), listofvars_global(rhs(e)));
+make_finfo (e) := finfo (op(lhs(e)), map (get_global_name, listify (setofvars_lexical(lhs(e), rhs(e)))), listify (setofvars_global(rhs(e))));
 
 defstruct (callinfo (callee, globalvar, callers));
 
@@ -63,6 +89,7 @@ block
  ([e, b, foolist, barlist, r0, r1],
   matchdeclare (e, lambda ([x], not mapatom(x) and member (op(x), foolist))),
   /* JUST BLOCK BY ITSELF CONFUSES PARSER, ALTHOUGH IT SHOULD BE OK; VERBIFY("BLOCK") IS A WORKAROUND !! */
+  /* SEE NOTE ON THIS TOPIC ABOVE DEF-NUD MPROG IN LEXICAL_SYMBOLS.LISP !! */
   matchdeclare (b, lambda ([x], not mapatom(x) and op(x) = verbify("block"))),
   defrule (r0, b, (if listp (first (b))
                      then (foolist: map (lambda ([x], if atom(x) then x else first(x)), first(b)),
