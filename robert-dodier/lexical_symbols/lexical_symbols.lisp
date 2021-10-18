@@ -101,6 +101,14 @@
 
 (defvar right-paren-symbol '|$)|)
 
+;; MPROG (i.e., block) is given a NUD property here,
+;; which assumes that block is followed by a parenthesis.
+;; Use of the symbol 'block in Maxima code,
+;; which hitherto has worked, since 'block was treated
+;; like any other quoted symbol, won't work anymore;
+;; now it triggers a syntax error ("Missing )").
+;; I WONDER IF THIS POINT NEEDS DISCUSSION !!
+
 (def-nud (mprog) (op)
   (pop-c) ;; eat the opening parenthesis
   (let
