@@ -12,7 +12,7 @@ Outline:
 
  * ensure it doesn't break stuff
 
- * fix up stuff around the edges (debugger, infolists, probably other stuff)
+ * fix up stuff around the edges
 
  * upon releasing 6.0, switch general development to 6.nnn instead of 5.nnn
 
