@@ -18,10 +18,13 @@
 ;; which makes symbols dynamic instead of lexical.
 ;; One can say declare(foo, global) and then featurep(foo, global) => true,
 ;; or, equivalently, (KINDP '$FOO '$GLOBAL) => T.
-;; Any symbols declared global are excluded from gensym substitution.
+;; Any symbols which have been declared global by the time
+;; the construct is parsed are excluded from gensym substitution.
 
 ;; Some share functions have been redefined with lexical scope.
-;; Assign MEXPR property for symbols which have it at present.
+;; Assign MEXPR property for symbols which have MEXPR at present.
+;; This part can go away when the lexical symbol implementation
+;; is in the Maxima image.
 
 ($auto_mexpr '$trigrat "trigrat.lisp")
 ($auto_mexpr '$trigsimp "trgsmp.mac")
@@ -40,11 +43,13 @@
 ;; Make these declarations in the global context to protect them from kill.
 
 (let (defmvars-list (save-$props (copy-list $props)) (save-$context $context))
-  (maphash #'(lambda (k v) (push k defmvars-list)) *variable-initial-values* )
+  (maphash #'(lambda (k v) (declare (ignore v)) (push k defmvars-list)) *variable-initial-values* )
   (mset '$context '$global)
   (declare1 defmvars-list t '$global 'kind)
   (mset '$context save-$context)
   (setq $props save-$props))
+ 
+;; Variables defined by define_variable are also declared global.
 
 (let ((prev-mfexpr* (get '$define_variable 'mfexpr*)))
   (setf (get '$define_variable 'mfexpr*)
@@ -95,6 +100,14 @@
    gensym-mprog))
 
 (defvar right-paren-symbol '|$)|)
+
+;; MPROG (i.e., block) is given a NUD property here,
+;; which assumes that block is followed by a parenthesis.
+;; Use of the symbol 'block in Maxima code,
+;; which hitherto has worked, since 'block was treated
+;; like any other quoted symbol, won't work anymore;
+;; now it triggers a syntax error ("Missing )").
+;; I WONDER IF THIS POINT NEEDS DISCUSSION !!
 
 (def-nud (mprog) (op)
   (pop-c) ;; eat the opening parenthesis

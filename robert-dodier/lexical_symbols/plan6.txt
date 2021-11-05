@@ -1,0 +1,51 @@
+Plan for implementing lexical symbols in Maxima
+Robert Dodier
+Oct. 13, 2021
+subject to revision
+
+
+Outline:
+
+ * branch source code, leading to Maxima 6
+
+ * implement lexical symbols first (Maxima 6.0)
+
+ * ensure it doesn't break stuff
+
+ * fix up stuff around the edges
+
+ * upon releasing 6.0, switch general development to 6.nnn instead of 5.nnn
+
+ * work on closures post-6.0
+
+
+Disclaimer:
+
+I refuse to consider having both lexical and dynamic symbols for the constructs which are getting lexical symbols in this implementation.
+
+
+Details:
+
+ * I have been working in:
+   https://github.com/maxima-project-on-github/maxima-packages
+   See the folder: robert-dodier/lexical_symbols
+
+ * The lexical symbols only implementation is in: lexical_symbols.lisp
+
+ * lexical_symbols.lisp is a working implementation (via gensym + alias) for lexical symbols. It is pretty simplistic. If someone has an alternative, I'm all ears. 
+
+ * Lexical symbols are defined for these constructs: functions (named and unnamed, f(x), f[x], and f[x](y)), block, and for loops ('for i thru ...' and 'for i in ...').
+ 
+ * These constructs work as expected, according to test cases (rtest_lexical_symbols_only.mac). 
+
+ * I have experimented with closures but it doesn't really work yet. I'd like to get that working eventually too. We can work on closures post-Maxima 6.0.
+
+ * I am proposing to make a branch in the Maxima Git repo for branch-maxima-6, to copy lexical_symbols.lisp there, and to work in the Maxima Git repo to continue development towards Maxima 6.
+
+ * Unresolved issues. In the interest of brevity, I have omitted discussion of these items from this document. (a) Interaction with global constructs, (b) additional constructs for consideration, (c) interaction with debugger.
+ 
+ * (a) Interaction with global constructs: assume database, declarations, infolists ('functions', 'arrays', etc.).
+
+ * (b) Additional constructs for consideration: 'at', 'integrate', 'sum', 'lsum', 'makelist', 'create_list', possibly others.
+
+ * (c) Interaction with debugger: how to refer to lexical symbols in debugging session, how to disambiguate multiple lexical symbols by same name.

@@ -9,7 +9,115 @@
 
 /* Contrived examples. */
 
-/* Local symbol 'a' is distinct from top-level 'a',
+/* verify that named functions (f(x), f[x], f[x](y)) and unnamed functions,
+ * block, and for loops ('for i thru ...' and 'for x in ...')
+ * all work as expected: their local variables are lexical symbols.
+ */
+
+/* named functions -- f(x) */
+
+(kill(b),
+ b(c, a) := a - c,
+ h(b, c, z) := b(c, z),
+ h(lambda([c, a], a + c), 222, 555));
+777;
+
+(kill(d, e),
+ d[m] := 2^m,
+ e[7]: 888,
+ g(d, k) := d[k],
+ g(e, 7));
+888;
+
+(kill(u, v),
+ u[m](n) := m^n,
+ h(u, v) := u[3](v),
+ h([lambda([w], 1 + w), lambda([w], 2 + w), lambda([w], 3 + w)], 9));
+12;
+
+(kill(f, a, b, x, y),
+ f(x, y) := [x, y] :: [y, x],
+ f(a, b));
+[b, a];
+
+/* named functions -- f[x] */
+
+(kill(a, b),
+ a[b] := b[3],
+ b[3]: 1729,
+ z: [11, 22, 33],
+ a[z]);
+33;
+
+arrayinfo (a);
+[hashed, 1, [[11, 22, 33]]];
+ 
+listarray (a);
+[33];
+
+(c[3]: 123,
+ a[c]);
+123;
+
+arrayinfo (a);
+[hashed, 1, [[11, 22, 33]], [c]];
+ 
+listarray (a);
+[33, 123];
+
+/* named functions -- f[x](y) */
+
+/* f[x](y) is first evaluated for x, yielding an expression in y,
+ * and then a lambda expression with that as the body is stored as f[x].
+ * Ensure that both x and y are lexical symbols.
+ */
+
+(kill(u, v, w, x, y, z),
+ x[u](v, w) := v(u(1)) + w(u(1)),
+ u(z) := 10*z,
+ v(u) := 100*u,
+ w(v) := 1000*v,
+ x[lambda([y], 3 - y)](y, z));
+y(2) + z(2);
+
+/* unnamed functions */
+
+(a[3]: 456,
+ lambda ([a], a[3]) ([11, 22, 33, 44]));
+33;
+
+/* block */
+
+(kill (f),
+ f(x) := x + 1,
+ block ([f], f: lambda([x], x - 2), f(10)));
+8;
+
+/* for i thru ... */
+
+/* loop index is just a number, so array or function properties aren't relevant ...
+ * here's a contrived example.
+ */
+
+(kill(i),
+ declare(i, complex),
+ for i thru 1 do if featurep(i, complex) then return(1) else return(0));
+0;
+
+(foo: featurep(i, complex),
+ kill(i),
+ foo);
+true;
+
+/* for x in ... */
+
+(x(z) := 123,
+ y: [],
+ for x in [sin, cos, tan] do push (x(1), y),
+ y);
+[tan(1), cos(1), sin(1)];
+
+/* Lexical symbol 'a' is distinct from global 'a',
  * unless 'a' is declared global.
  *
  * HOWEVER, note that 'a' is not declared global at the time block([a], ...) is parsed
@@ -32,7 +140,7 @@ false;
 block([a], featurep (a, integer));
 true;
 
-/* A local symbol can have a declared property. */
+/* A lexical symbol can have a declared property. */
 
 /* Separate block([a], ...) from declare(a, ...) to ensure declaration is in effect
  * when the block is parsed. See HOWEVER above.
@@ -57,8 +165,8 @@ false;
 kill(f, foo);
 done;
 
-/* f is a local symbol, f1 is top-level.
- * foo is top-level, but its value is the local symbol f.
+/* f is a lexical symbol, f1 is global.
+ * foo is global, but its value is the lexical symbol f.
  */
 
 (foo: block ([f], f(x) := 2*x, f1(x) := f(x), f), 0);
@@ -73,8 +181,8 @@ f1(99);
 foo(99);
 198;
 
-/* a is a local symbol which is the name of an undeclared (hash) array,
- * h, i, and l are top-level functions.
+/* a is a lexical symbol which is the name of an undeclared (hash) array,
+ * h, i, and l are global functions.
  */
 block ([a], h(x) := a[x]: 1, i() := arrayinfo(a), l() := listarray(a), 0);
 0;
@@ -82,7 +190,7 @@ block ([a], h(x) := a[x]: 1, i() := arrayinfo(a), l() := listarray(a), 0);
 [h(17), h(29), h(1729)];
 [1, 1, 1];
 
-/* These are references to top-level 'a', not local 'a'. */
+/* These are references to global 'a', not lexical 'a'. */
 
 (a[11]: 2,
  a[13]: 2,
@@ -100,6 +208,14 @@ i();
 
 l();
 [1, 1, 1];
+
+/* function argument same name as function itself */
+
+(f(f, x) := f(x), 0);
+0;
+
+f(sin, 1);
+sin(1);
 
 /* Examples collected "in the wild". */
 
@@ -385,14 +501,6 @@ function it works as expected.
  L(expr));
 x^2 + x^4 + x^6;
 
-/* I DUNNO, I DON'T THINK THIS ONE ILLUSTRATES ANYTHING ABOUT LEXICAL VS DYNAMIC BINDING !!
-mailing list 2015-11-18: "Sublist"
-
-f(k) := mod(k,mm)>0 $
-mm:5 $
-sublist(ll,f) $
- */
-
 /* maxima-discuss 2015-11-25: "preventing names of algebraic symbols from conflicting with local variables?"
 
 Z : [k,k];
@@ -403,9 +511,9 @@ f(Z);
  */
 
 (Z: [k, k],
- /* sum was supposed to make its index a local symbol,
+ /* sum was supposed to make its index a lexical symbol,
   * but that got lost somewhere along the way in 2005 ...
-  * anyway by explicitly making k a local symbol, 
+  * anyway by explicitly making k a lexical symbol, 
   * we can get the expected result.
   *   #summationindexscope
   */
@@ -567,7 +675,7 @@ Too few arguments supplied to a(x); found: []
 (%o4)                                 bar
  */
 
-/* verify that global a and local a are distinguished */
+/* verify that global a and lexical a are distinguished */
 
 (kill(a, b),
  a(x) := x,
@@ -592,7 +700,7 @@ With dynamic binding, f(7) prints 7.
 And with dynamic binding, ( f(7), g() )  prints 7 then 23, not 7 then 7,
  */
 
-/* verify that global a and local a are distinguished */
+/* verify that global a and lexical a are distinguished */
 
 (kill(a, f, g, l),
  a:23,
@@ -631,7 +739,7 @@ global scope, not in the calling function's (f) scope. In lexical scope,
 both f(23) and g() would return 0.
  */
 
-/* verify global x and local x are distinguished */
+/* verify global x and lexical x are distinguished */
 
 (kill(f, g, x),
  x: 0,
@@ -665,6 +773,8 @@ Point 2:
 
 */
 
+/* Point 1: */
+
 /* verify that global innerf and local innerf are distinguished */
 
 (kill(f, innerf),
@@ -685,7 +795,19 @@ innerf();
 innerf();
 innerf();
 
-/* MORE NEEDED HERE ABOUT F AND INNERF ABOVE; INCOMPLETE EXAMPLE !! */
+/* Point 2: */
+
+/* var in nested blocks are two distinct symbols */
+
+(g() := block( [innerf, var: 23],
+                innerf():=var,
+                block([var: 56], innerf())),
+ 0);
+0;
+
+g();
+23;
+
 
 /* maxima-discuss 2019-03-24: "Questions about compiling"
 
@@ -707,7 +829,7 @@ ff():=block([func], func:lambda([],print(88)), (+func)()) ;
 ff() => 88
  */
 
-/* verify that global func and local func are distinguished */
+/* verify that global func and lexical func are distinguished */
 
 (kill(func, ff),
  func() := print(3),
@@ -732,7 +854,7 @@ will look like an error.
  */
 
 /* Hmm. f returns 15*i only if the summation index i is distinguished from the global i.
- * sum doesn't treat its index as a local variable, maybe it should.
+ * sum doesn't treat its index as a lexical variable, maybe it should.
  *   #summationindexscope
  */
 
@@ -748,7 +870,10 @@ f(i);
  f(i));
 15*i;
 
-/* NOT CLEAR WHAT THIS ONE SHOWS ABOUT LEXICAL SCOPE !! */
+/* dunno what this next example shows about lexical symbols,
+ * but anyway let's keep it since it's already done.
+ */
+
 /* maxima-discuss 2019-05-25: "Question about defmatch"
 
 find_sin(z):=block([kk:[]], apply1(z,push_on_kk), kk);
@@ -837,7 +962,7 @@ expected for fourier(f(t+(t1+T/2)),t,T). I've pushed commit 4650d2d to
 implement that.
  */
 
-/* verify that global f and local f are distinguished
+/* verify that global f and lexical f are distinguished
  * assume that 4650d2d is reverted
  */
 
@@ -879,7 +1004,7 @@ expr1: u=m*r^2*f+m*s^2*g+m*t^2*h;    =>    u=h*m*t^2+g*m*s^2+f*m*r^2
 Apply2Part(factor, expr1, 2, [1,2]);    =>    u=m*(h*t^2+g*s^2)+factor*m*r^2
  */
 
-/* verify that global f and local f are distinguished */
+/* verify that global f and lexical f are distinguished */
 
 (kill(u, m, r, d, s, g, t, h, f),
  Apply2Part(f, [subexpr]):=block(
@@ -956,7 +1081,7 @@ A couple of possibly confusing cases:
 
  */
 
-/* verify that global x and local x are distinguished
+/* verify that global x and lexical x are distinguished
  */
 
 (kill(x),
@@ -1006,7 +1131,7 @@ y[1] + a[2]
 Worse, calling foo(y,x) will make Maxima hang.
  */
 
-/* verify that global x and y are distinguished from local x and y */
+/* verify that global x and y are distinguished from lexical x and y */
 
 (kill(x, y, a, b),
  foo(x,y) := x[1] + y[2],
@@ -1029,6 +1154,11 @@ y(1) + b(2);
 bar(y, x);
 y(1) + x(2);
 
+/* warning message about arguments of hypergeometric
+ * no longer occurs because psubstitute is not called.
+ * let it stand, seems like a useful example in any case.
+ */
+ 
 /* maxima-discuss 2019-11-20: "Re: [Maxima-discuss] general proposal to implement lexical"
 
 (%i4) bob(a,b,c,x) := block([p : [a,b], q : [c]],hypergeometric(p,q,x));
@@ -1071,18 +1201,21 @@ string (f():=block([x,y],0+x+y));
    in: https://en.wikipedia.org/wiki/Scheme_(programming_language)#Lambda_calculus
  */
 
-/* SEEMS LIKE THIS EXAMPLE COULD BE MORE CLEAR !! */
 (kill (plus, times, name),
  plus: lambda ([a, b], a + b),
  times: lambda ([a, b], a * b),
  block ([name: 'plus], block ([plus: 'times], ?meval (funmake (name, [2, 3])))));
 5;
 
-/* LOOKS LIKE THIS IS MISSING AN EXAMPLE !! */
 /* substitution into lambda should fail
  * e.g. block([a], lambda([v], subst('v=v, lambda([v],a*v))));
  * doesn't change inner lambda
  */
+
+(block([a], lambda([v], subst('v=v, lambda([v],a*v)))),
+ %%(123),
+ string (%%));
+"lambda([v],a*v)";
 
 /* mailing list 2020-05-18: "Anonymous functions and parameter names" */
 
@@ -1143,7 +1276,7 @@ matrix([3, 9], [-4, 12]);
 genmatrix(lambda([i,j],v[i]|ω[j]),2,2);
 matrix([3, 9], [-4, 12]);
 
-/* simpler version -- global array / local variable name collision */
+/* simpler version -- global array / lexical variable name collision */
 
 (kill (fooarray, foofun, z),
  fooarray[1]: [11, 22, 33],
@@ -1310,9 +1443,20 @@ ratdisrep (test(taylor(cos(y), y, 0, 4)));
 ratdisrep (test(taylor(cos(x), x, 0, 4)));
 29/3;
 
+/* now try it again, making x a lexical symbol in function test */
+
+(test(f) := block([x, i:taylorinfo(f)[1]], sum(coeff(f, i[1], x) * i[1]^x, x, 0, i[3])), 0);
+0;
+
+ratdisrep (test(taylor(cos(y), y, 0, 4)));
+(y^4-12*y^2+24)/24;
+
+ratdisrep (test(taylor(cos(x), x, 0, 4)));
+(x^4-12*x^2+24)/24;
+
 /* declare summation index in block to distinguish from global
  *
- * x is a local variable in the block; this is necessary
+ * x is a lexical variable in the block; this is necessary
  * because sum evaluates the summand before
  * subsituting a gensym for the summation index,
  * so x being the summation index isn't enough to help sum
@@ -1323,6 +1467,7 @@ ratdisrep (test(taylor(cos(x), x, 0, 4)));
  * The only benefit of lexical symbols for this problem is that
  * the summation index can have the same name as the global variable;
  * it need not have a % wart or other workaround.
+ * #summationindexscope
  */
 (test1(f) := block([i:taylorinfo(f)[1], x], sum(coeff(f, i[1], x) * i[1]^x, x, 0, i[3])), 0);
 0;
