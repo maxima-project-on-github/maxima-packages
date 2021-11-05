@@ -9,13 +9,13 @@ slurp_exprs (f) :=
 declare (explode_mapatoms, global);
 explode_mapatoms: false; /* more nearly consistent with built-in listofvars */
 
-setofvars (e) :=
+global_variables (e) :=
   if mapatom(e)
     then if explode_mapatoms and not atom(e)
-           then union (setofvars (op(e)), setofvars (args(e)))
+           then union (global_variables (op(e)), global_variables (args(e)))
            else (if symbolp(e) or subvarp(e) then (if e # true and e # false and not false_symbol(e) then {e} else {}) else {})
     else block ([op_e: op(e), args_e: args(e), args_vars],
-                args_vars: apply (union, map (setofvars, args_e)),
+                args_vars: apply (union, map (global_variables, args_e)),
                 if member (verbify(op_e), '[sum, lsum, integrate, makelist])
                   then setdifference (args_vars, { second(e) })
                 elseif verbify(op_e) = 'at
@@ -31,22 +31,50 @@ setofvars (e) :=
                   then setdifference (args_vars, setify (args (first (e))))
                 elseif verbify(op_e) = 'lambda
                   then setdifference (args_vars, setify (first (e)))
-                  else args_vars); /* IGNORE ANY VARIABLES IN OP, E.G. X in F[X](Y) -- LISTOFVARS DOES TOO */
+                  else args_vars);
 
 /* a gyration necessitated by the parser -- $FALSE is tacked onto if-then sans else. Oh well. */
 false_symbol (e) := symbolp(e) and ?symbol\-name(e) = "$FALSE";
 
-/* SETOFVARS_GLOBAL AND SETOFVARS_LEXICAL RELY ON LEXICAL SYMBOLS BEING UNINTERNED --
- * THIS IS AN IMPLEMENTATION DETAIL, THEREFORE SUBJECT TO CHANGE
+/* "local" variables and not "lexical", because this function
+ * also picks up local variables for sum/lsum, integrate, makelist, and at,
+ * which are not lexical variables.
  */
-/* MAYBE CALL PARTITION_SET HERE */
-setofvars_global ([e]) := subset (block ([explode_mapatoms: true], setofvars (e)), lambda ([x], is (?symbol\-package(x) # false)));
-setofvars_lexical ([e]) := subset (block ([explode_mapatoms: true], setofvars (e)), lambda ([x], is (?symbol\-package(x) = false)));
+
+local_variables (e) :=
+  if mapatom(e)
+    then if explode_mapatoms and not atom(e)
+           then union (local_variables (op(e)), local_variables (args(e)))
+           else (if symbolp(e) or subvarp(e) then (if e # true and e # false and not false_symbol(e) then {e} else {}) else {})
+    else block ([op_e: op(e)],
+                /* NOT SURE IF WE WANT THESE; CAN'T CALL ANOTHER FUNCTION (I THINK)
+                 * WHEN LOCAL VARIABLE IS BOUND IN THESE CONSTRUCTS.
+                 * WELL, EXCEPT FOR MAKELIST.
+                if member (verbify(op_e), '[sum, lsum, integrate, makelist])
+                  then apply (union, cons ({second(e)}, map (local_variables, list_except_index (args(e), 2))))
+                elseif verbify(op_e) = 'at
+                  then 
+                  */
+                elseif member (verbify(op_e), '[?mdo, ?mdoin]) and first(e) # false
+                  then apply (union, cons ({first(e)}, map (local_variables, list_except_index (args(e), 1))))
+                elseif verbify(op_e) = verbify("block")
+                  then (if length(e) > 0 and listp (first (e))
+                          then block ([local_vars: setify (map (lambda ([e1], if atom(e1) then e1 else lhs(e1)), first(e)))],
+                                      union (local_vars, local_variables (map (lambda ([e1], if not atom(e1) then rhs(e1)), first(e))), local_variables (rest (e))))
+                          else local_variables (args(e)))
+                elseif verbify(op_e) = '?mdefine
+                  then union (setify (flatten (args (first(e)))), local_variables (second(e)))
+                elseif verbify(op_e) = 'lambda
+                  then union (setify (flatten (first(e))), local_variables (rest(e)))
+                  else apply (union, maplist (local_variables, e)));
+
+list_except_index (l, i) := makelist (l[j], j, delete (i, makelist (k, k, 1, length(l))));
+
 get_global_name (x) := if ?symbol\-package(x) = false then ?get (x, ?reversealias);
 
 defstruct (finfo (op, lexicals, globals));
 
-make_finfo (e) := finfo (op(lhs(e)), map (get_global_name, listify (setofvars_lexical(lhs(e), rhs(e)))), listify (setofvars_global(rhs(e))));
+make_finfo (e) := finfo (op(lhs(e)), map (get_global_name, listify (local_variables(lhs(e), rhs(e)))), listify (global_variables(rhs(e))));
 
 defstruct (callinfo (callee, globalvar, callers));
 
