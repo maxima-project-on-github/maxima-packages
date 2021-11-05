@@ -9,6 +9,114 @@
 
 /* Contrived examples. */
 
+/* verify that named functions (f(x), f[x], f[x](y)) and unnamed functions,
+ * block, and for loops ('for i thru ...' and 'for x in ...')
+ * all work as expected: their local variables are lexical symbols.
+ */
+
+/* named functions -- f(x) */
+
+(kill(b),
+ b(c, a) := a - c,
+ h(b, c, z) := b(c, z),
+ h(lambda([c, a], a + c), 222, 555));
+777;
+
+(kill(d, e),
+ d[m] := 2^m,
+ e[7]: 888,
+ g(d, k) := d[k],
+ g(e, 7));
+888;
+
+(kill(u, v),
+ u[m](n) := m^n,
+ h(u, v) := u[3](v),
+ h([lambda([w], 1 + w), lambda([w], 2 + w), lambda([w], 3 + w)], 9));
+12;
+
+(kill(f, a, b, x, y),
+ f(x, y) := [x, y] :: [y, x],
+ f(a, b));
+[b, a];
+
+/* named functions -- f[x] */
+
+(kill(a, b),
+ a[b] := b[3],
+ b[3]: 1729,
+ z: [11, 22, 33],
+ a[z]);
+33;
+
+arrayinfo (a);
+[hashed, 1, [[11, 22, 33]]];
+ 
+listarray (a);
+[33];
+
+(c[3]: 123,
+ a[c]);
+123;
+
+arrayinfo (a);
+[hashed, 1, [[11, 22, 33]], [c]];
+ 
+listarray (a);
+[33, 123];
+
+/* named functions -- f[x](y) */
+
+/* f[x](y) is first evaluated for x, yielding an expression in y,
+ * and then a lambda expression with that as the body is stored as f[x].
+ * Ensure that both x and y are lexical symbols.
+ */
+
+(kill(u, v, w, x, y, z),
+ x[u](v, w) := v(u(1)) + w(u(1)),
+ u(z) := 10*z,
+ v(u) := 100*u,
+ w(v) := 1000*v,
+ x[lambda([y], 3 - y)](y, z));
+y(2) + z(2);
+
+/* unnamed functions */
+
+(a[3]: 456,
+ lambda ([a], a[3]) ([11, 22, 33, 44]));
+33;
+
+/* block */
+
+(kill (f),
+ f(x) := x + 1,
+ block ([f], f: lambda([x], x - 2), f(10)));
+8;
+
+/* for i thru ... */
+
+/* loop index is just a number, so array or function properties aren't relevant ...
+ * here's a contrived example.
+ */
+
+(kill(i),
+ declare(i, complex),
+ for i thru 1 do if featurep(i, complex) then return(1) else return(0));
+0;
+
+(foo: featurep(i, complex),
+ kill(i),
+ foo);
+true;
+
+/* for x in ... */
+
+(x(z) := 123,
+ y: [],
+ for x in [sin, cos, tan] do push (x(1), y),
+ y);
+[tan(1), cos(1), sin(1)];
+
 /* Lexical symbol 'a' is distinct from global 'a',
  * unless 'a' is declared global.
  *
@@ -1334,6 +1442,17 @@ ratdisrep (test(taylor(cos(y), y, 0, 4)));
 
 ratdisrep (test(taylor(cos(x), x, 0, 4)));
 29/3;
+
+/* now try it again, making x a lexical symbol in function test */
+
+(test(f) := block([x, i:taylorinfo(f)[1]], sum(coeff(f, i[1], x) * i[1]^x, x, 0, i[3])), 0);
+0;
+
+ratdisrep (test(taylor(cos(y), y, 0, 4)));
+(y^4-12*y^2+24)/24;
+
+ratdisrep (test(taylor(cos(x), x, 0, 4)));
+(x^4-12*x^2+24)/24;
 
 /* declare summation index in block to distinguish from global
  *
