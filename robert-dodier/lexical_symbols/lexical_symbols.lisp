@@ -43,7 +43,7 @@
 ;; Make these declarations in the global context to protect them from kill.
 
 (let (defmvars-list (save-$props (copy-list $props)) (save-$context $context))
-  (maphash #'(lambda (k v) (push k defmvars-list)) *variable-initial-values* )
+  (maphash #'(lambda (k v) (declare (ignore v)) (push k defmvars-list)) *variable-initial-values* )
   (mset '$context '$global)
   (declare1 defmvars-list t '$global 'kind)
   (mset '$context save-$context)
