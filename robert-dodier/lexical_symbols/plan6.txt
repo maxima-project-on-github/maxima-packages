@@ -1,6 +1,6 @@
 Plan for implementing lexical symbols in Maxima
 Robert Dodier
-Oct. 13, 2021
+Nov. 4, 2021
 subject to revision
 
 
