@@ -1,0 +1,45 @@
+/* add_compatible_units -- add compatible units for ezunits
+ *
+ * Copyright 2022 by Robert Dodier
+ * I release this work under terms of the GNU General Public License, v2.
+ *
+ * This program contains :lisp, so you have to use 'batch' to load it;
+ * 'load' doesn't handle :lisp.
+ */
+
+if not featurep (dimensional, feature) then load (ezunits);
+
+add_compatible_units (e) := apply2 (e, compatible_units_r1, compatible_units_r2, compatible_units_r3);
+
+matchdeclare (aa, all, uu, unitop_p);
+
+defrule (compatible_units_r1a, aa + uu, compatible_units_foo (uu, aa));
+
+"work-around for SF bug #3938 causing stack overflow";
+:lisp (defun $compatible_units_r1 (e) (when (and (consp e) (eq (caar e) 'mplus)) ($compatible_units_r1a e)))
+
+matchdeclare (pp, lambda ([e], not atom(e) and op(e) = "+"));
+
+defrule (compatible_units_r2, compatible_units_foo (pp, aa), convert_compatible_units (args (pp)) + aa);
+
+defrule (compatible_units_r3, compatible_units_foo (uu, aa), uu + aa);
+
+convert_compatible_units (l) :=
+    block ([units_l: map (units, l)],
+           if length (unique (map (dimensions, units_l))) = 1
+               then apply ("+", l `` simplest_units (units_l))
+               else (print ("convert_compatible_units: can't convert incompatible units: ", units_l),
+                     apply ("+", l)));
+
+simplest_units (units_l) :=
+    block ([n: lmin (map (leaf_count, units_l)), uu, un],
+           uu: unique (units_l),
+           un: sublist (uu, lambda ([u], leaf_count (u) = n)),
+           if length (un) = 1
+               then un[1]
+               else print ("simplest_units: found multiple equally-simple units among", unique (units_l), "; return ", un[1]));
+
+leaf_count (e) :=
+    if atom(e) then 1
+        else apply ("+", map (leaf_count, args(e)));
+

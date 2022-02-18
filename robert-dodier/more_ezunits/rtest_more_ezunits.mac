@@ -1,0 +1,25 @@
+(batch ("add_compatible_units.mac"), 0);
+0;
+
+add_compatible_units (1`V/A + 1`Ohm);
+2 ` Ohm;
+
+add_compatible_units (sqrt (1`V/A + 1`Ohm));
+sqrt(2) ` sqrt(Ohm);
+
+add_compatible_units (sqrt (1`V/A + 1`Ohm)*sqrt (1`Ohm));
+sqrt(2) ` Ohm;
+
+add_compatible_units ((x - y)/(a`inch + b`foot + c`mile)^2);
+/* assuming here that foot is chosen among the equally simple units */
+((x - y)/((a/12) + b + 5280*c)^2) ` 1/foot^2;
+
+add_compatible_units (sin ('foo (1000 ` kW/m^2 + 1000 ` Btu/hour/acre)));
+/* assuming here that Btu/hour/acre is chosen among the equally simple units */
+sin('foo(2913736835128/211 ` Btu/(acre*hour)));
+
+add_compatible_units (sin ('foo (1000 ` kW/ha + 1000 ` Btu/hour/acre)));
+sin('foo(2847506468875/2845445922 ` kW/ha));
+
+add_compatible_units (sin ('foo (500 ` kW/ha + 500/10^4 ` kJ/s/m^2 + 1000 ` Btu/hour/acre)));
+sin('foo(2847506468875/2845445922 ` kW/ha));
