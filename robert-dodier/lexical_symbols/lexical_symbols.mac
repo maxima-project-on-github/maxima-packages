@@ -1,5 +1,6 @@
 if featurep (global, feature) = false
   then (load ("lexical_symbols.lisp"),
         load ("with-lexical-environment.lisp"),
-        load ("mlambda.lisp"))
+        load ("mlambda.lisp"),
+        load ("meval.lisp"))
   else print ("lexical_symbols: appears to be loaded already, I won't do it again.");

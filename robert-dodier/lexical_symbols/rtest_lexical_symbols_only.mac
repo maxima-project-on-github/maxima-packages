@@ -1616,3 +1616,22 @@ Solver (subst (k = i, eqs), [u, t], [i]);
 Solver (subst (k = l, eqs), [u, t], [l]);
 ''(subst (blurf = l, foo));
 
+/* SF bug #2715: "Function argument name collision with global symbol yields surprising result" */
+
+(kill (a, b, foo, foobar),
+ foo(a,b):=a-b,
+ foobar(a,b):=a[1]-b[1],
+ 0);
+0;
+
+foo(b, a);
+b - a;
+
+foobar(x, [1]);
+x[1] - 1;
+
+foobar(b, [1]);
+b[1] - 1;
+
+foobar(b, a);
+b[1] - a[1];
