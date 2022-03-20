@@ -108,11 +108,11 @@ if x <= 7520.5
     then (if x > 1678 then 0.764*x+103.112 else 0.748*x+129.96)
     else 1.32*x-3910.66;
 
-flatten_conditionals (e1);
+e2: flatten_conditionals (e1);
 if x <= 7520.5 and x > 1678 then 0.764*x+103.112
     elseif x <= 7520.5 then 0.748*x+129.96
     else 1.32*x-3910.66;
 
-(makelist (ev (e1 - e), x, makelist (i*10.0, i, 1, 1000)),
+(makelist (ev (e2 - e), x, makelist (i*10.0, i, 1, 1000)),
  is (lmax (abs (%%)) < 5e-12));
 true;
