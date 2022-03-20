@@ -1,0 +1,118 @@
+(if not ?mget ('flatten_conditionals, '?mexpr)
+     then load ("./simplify_conditionals.mac"),
+ 0);
+0;
+
+(c1: if x > 0 then xp else xnp,
+ c2: if y < 0 then yn else ynn,
+ c3: if z < 0 then zn elseif equal(z, 0) then zz else zp,
+ c4: if equal(f(a), 1) then c1 else c2,
+ 0);
+0;
+
+flatten_conditionals (c4);
+if equal(f(a), 1) and (x > 0) then xp
+    elseif equal(f(a), 1) then xnp
+    elseif y < 0 then yn
+    else ynn;
+
+arithmetic_with_conditionals (c1 + c2);
+if (y < 0) and (x > 0) then yn + xp
+    elseif y < 0 then yn + xnp
+    elseif x > 0 then ynn + xp
+    else ynn + xnp;
+
+arithmetic_with_conditionals (a*c1 - b*c2 + 100);
+if (y < 0) and (x > 0) then 100 -b*yn + a*xp
+    elseif y < 0 then 100 -b*yn + a*xnp
+    elseif x > 0 then 100 -b*ynn + a*xp
+    else 100 -b*ynn + a*xnp;
+
+arithmetic_with_conditionals (c1 * c2);
+if (x > 0) and (y < 0) then xp*yn 
+    elseif x > 0 then xp*ynn
+    elseif y < 0 then xnp*yn
+    else xnp*ynn;
+
+e1: arithmetic_with_conditionals (e: c1*c2/2 + c3*c4/3 - %pi);
+if x > 0 and y < 0 and equal(f(a),1) and z < 0
+    then (if x > 0 then (xp*zn)/3+(xp*yn)/2-%pi else (xnp*zn)/3+(xp*yn)/2-%pi)
+    elseif x > 0 and y < 0 and equal(f(a),1) and equal(z,0)
+    then (if x > 0 then (xp*zz)/3+(xp*yn)/2-%pi else (xnp*zz)/3+(xp*yn)/2-%pi)
+    elseif x > 0 and y < 0 and equal(f(a),1)
+    then (if x > 0 then (xp*zp)/3+(xp*yn)/2-%pi else (xnp*zp)/3+(xp*yn)/2-%pi)
+    elseif x > 0 and y < 0 and z < 0
+    then (if y < 0 then (yn*zn)/3+(xp*yn)/2-%pi else (ynn*zn)/3+(xp*yn)/2-%pi)
+    elseif x > 0 and y < 0 and equal(z,0)
+    then (if y < 0 then (yn*zz)/3+(xp*yn)/2-%pi else (ynn*zz)/3+(xp*yn)/2-%pi)
+    elseif x > 0 and y < 0
+    then (if y < 0 then (yn*zp)/3+(xp*yn)/2-%pi else (ynn*zp)/3+(xp*yn)/2-%pi)
+    elseif x > 0 and equal(f(a),1) and z < 0
+    then (if x > 0 then (xp*zn)/3+(xp*ynn)/2-%pi
+              else (xnp*zn)/3+(xp*ynn)/2-%pi)
+    elseif x > 0 and equal(f(a),1) and equal(z,0)
+    then (if x > 0 then (xp*zz)/3+(xp*ynn)/2-%pi
+              else (xnp*zz)/3+(xp*ynn)/2-%pi) elseif x > 0 and equal(f(a),1)
+    then (if x > 0 then (xp*zp)/3+(xp*ynn)/2-%pi
+              else (xnp*zp)/3+(xp*ynn)/2-%pi) elseif x > 0 and z < 0
+    then (if y < 0 then (yn*zn)/3+(xp*ynn)/2-%pi
+              else (ynn*zn)/3+(xp*ynn)/2-%pi) elseif x > 0 and equal(z,0)
+    then (if y < 0 then (yn*zz)/3+(xp*ynn)/2-%pi
+              else (ynn*zz)/3+(xp*ynn)/2-%pi) elseif x > 0
+    then (if y < 0 then (yn*zp)/3+(xp*ynn)/2-%pi
+              else (ynn*zp)/3+(xp*ynn)/2-%pi)
+    elseif y < 0 and equal(f(a),1) and z < 0
+    then (if x > 0 then (xp*zn)/3+(xnp*yn)/2-%pi
+              else (xnp*zn)/3+(xnp*yn)/2-%pi)
+    elseif y < 0 and equal(f(a),1) and equal(z,0)
+    then (if x > 0 then (xp*zz)/3+(xnp*yn)/2-%pi
+              else (xnp*zz)/3+(xnp*yn)/2-%pi) elseif y < 0 and equal(f(a),1)
+    then (if x > 0 then (xp*zp)/3+(xnp*yn)/2-%pi
+              else (xnp*zp)/3+(xnp*yn)/2-%pi) elseif y < 0 and z < 0
+    then (if y < 0 then (yn*zn)/3+(xnp*yn)/2-%pi
+              else (ynn*zn)/3+(xnp*yn)/2-%pi) elseif y < 0 and equal(z,0)
+    then (if y < 0 then (yn*zz)/3+(xnp*yn)/2-%pi
+              else (ynn*zz)/3+(xnp*yn)/2-%pi) elseif y < 0
+    then (if y < 0 then (yn*zp)/3+(xnp*yn)/2-%pi
+              else (ynn*zp)/3+(xnp*yn)/2-%pi) elseif equal(f(a),1) and z < 0
+    then (if x > 0 then (xp*zn)/3+(xnp*ynn)/2-%pi
+              else (xnp*zn)/3+(xnp*ynn)/2-%pi)
+    elseif equal(f(a),1) and equal(z,0)
+    then (if x > 0 then (xp*zz)/3+(xnp*ynn)/2-%pi
+              else (xnp*zz)/3+(xnp*ynn)/2-%pi) elseif equal(f(a),1)
+    then (if x > 0 then (xp*zp)/3+(xnp*ynn)/2-%pi
+              else (xnp*zp)/3+(xnp*ynn)/2-%pi) elseif z < 0
+    then (if y < 0 then (yn*zn)/3+(xnp*ynn)/2-%pi
+              else (ynn*zn)/3+(xnp*ynn)/2-%pi) elseif equal(z,0)
+    then (if y < 0 then (yn*zz)/3+(xnp*ynn)/2-%pi
+              else (ynn*zz)/3+(xnp*ynn)/2-%pi)
+    else (if y < 0 then (yn*zp)/3+(xnp*ynn)/2-%pi
+              else (ynn*zp)/3+(xnp*ynn)/2-%pi)$
+
+(lx: [x = -2, x = 5],
+ ly: [y = -4/7, y = 12/11],
+ lz: [z = -8, z = 0, z = 5/3],
+ la: [f(a) = 1, f(a) = 0],
+ combos: cartesian_product_list (lx, ly, lz, la),
+ every (equal, map (lambda ([combo], subst (combo, e1)), combos), map (lambda ([combo], subst (combo, e)), combos)));
+true;
+
+/* from: https://stackoverflow.com/questions/71498284/transform-expression-so-that-all-if-then-else-are-on-top-level */
+
+(e: x-(if x<=7520.5 then 0.2*x-0.2*(if x>1678 then 515.56-0.18*x else 649.8-0.26*x) else 3910.66-0.32*x),
+ 0);
+0;
+
+e1: expand (arithmetic_with_conditionals (e));
+if x <= 7520.5
+    then (if x > 1678 then 0.764*x+103.112 else 0.748*x+129.96)
+    else 1.32*x-3910.66;
+
+flatten_conditionals (e1);
+if x <= 7520.5 and x > 1678 then 0.764*x+103.112
+    elseif x <= 7520.5 then 0.748*x+129.96
+    else 1.32*x-3910.66;
+
+(makelist (ev (e1 - e), x, makelist (i*10.0, i, 1, 1000)),
+ is (lmax (abs (%%)) < 5e-12));
+true;
