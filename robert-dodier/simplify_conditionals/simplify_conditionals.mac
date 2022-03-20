@@ -1,0 +1,81 @@
+/* simplify_conditionals.mac
+ * copyright 2022 by Robert Dodier
+ * I release this work under terms of the GNU General Public License, v2
+ */
+
+flatten_conditionals (e) := applyb1 (e, rule_flatten_conditional);
+
+matchdeclare (cc, lambda ([e], not atom(e) and op(e) = "if"));
+defrule (rule_flatten_conditional, cc, flatten_conditional (cc));
+
+flatten_conditional (c) :=
+   (by_twos (args (c)),
+    map (lambda ([e], if not atom(e[2]) and op(e[2]) = "if"
+                          then makelist ([e[1] and a[1], a[2]], a, by_twos (args (e[2])))
+                          else [e]),
+                      %%),
+    funmake ("if", apply (append, apply (append, %%))));
+
+by_twos (l) := by_tuples (l, 2);
+
+by_tuples (l, m) :=
+    block ([n],
+           if atom(l) then error ("by_tuples: first argument must be a nonatomic expression; found:", l),
+           n: length (l),
+           if mod (n, m) # 0 then error ("by_tuples: length of first argument not a multiple of", m),
+           if listp(l)
+               then by_tuples_list (l, m, n)
+               else map (lambda ([u], funmake (op(l), u)), by_tuples_list (args (l), m, n)));
+
+by_tuples_list (l, m, n) :=
+    makelist (makelist (l[i], i, 1 + (j - 1)*m, j*m), j, 1, n/m);
+
+arithmetic_with_conditionals (e) := apply1 (e, rule_multiply_conditional, rule_add_to_conditional);
+
+/* PART+ matches cc first, then aa, so when matching aa,
+ * refuse to match 0 if cc is not a "+" expression.
+ * The effect is that aa = 0 is matched if cc matches multiple "if" expressions,
+ * or cc matches just one "if" if aa # 0,
+ * but not both aa = 0 and cc matches just one "if".
+ */
+matchdeclare (aa, lambda ([e], op(cc) = "+" or e # 0));
+defrule (rule_add_to_conditional, aa + cc, add_to_conditional (aa, add_conditionals (cc)));
+
+add_to_conditional (x, c) := nonconditional_conditional_op (x, c, "+");
+
+nonconditional_conditional_op (x, c, myop) :=
+   (by_twos (args (c)),
+    map (lambda ([e], [e[1], myop (x, e[2])]), %%),
+    funmake ("if", apply (append, %%)));
+
+add_conditionals (cc) := conditionals_op (cc, "+");
+
+conditionals_op (cc, myop) :=
+    if op(cc) = "if" then cc else conditionals_op_list (args (cc), myop);
+
+conditionals_op_list (cc_list, myop) :=
+    block ([all_args, conditions_args, conditions_combos, conditions,
+            results_args, results_combos, results],
+           all_args: map (lambda ([c], by_twos (args (c))), cc_list),
+           conditions_args: map (lambda ([l], map (first, l)), all_args),
+           conditions_combos: apply (cartesian_product_list, conditions_args),
+           conditions: map (lambda ([l], apply ("and", l)), conditions_combos),
+           results_args: map (lambda ([l], map (second, l)), all_args),
+           results_combos: apply (cartesian_product_list, results_args),
+           results: map (lambda ([l], apply (myop, l)), results_combos),
+           join (conditions, results),
+           funmake ("if", %%));
+
+/* PART* matches cc first, then aa, so when matching aa,
+ * refuse to match 0 if cc is not a "*" expression.
+ * The effect is that aa = 0 is matched if cc matches multiple "if" expressions,
+ * or cc matches just one "if" if aa # 0,
+ * but not both aa = 0 and cc matches just one "if".
+ */
+matchdeclare (aa, lambda ([e], op(cc) = "*" or e # 0));
+defrule (rule_multiply_conditional, aa*cc, multiply_conditional (aa, multiply_conditionals (cc)));
+
+multiply_conditional (x, c) := nonconditional_conditional_op (x, c, "*");
+
+multiply_conditionals (cc) := conditionals_op (cc, "*");
+
