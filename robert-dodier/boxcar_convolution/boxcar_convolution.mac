@@ -1,0 +1,67 @@
+/* distribute 'integrate over "+" */
+declare (nounify(integrate), linear);
+
+/* detect empty boxcars */
+matchdeclare (cc1, constantp, cc2, lambda ([e], constantp(e) and e <= cc1));
+matchdeclare (uu, mapatom);
+tellsimpafter (B[cc1, cc2](uu), 0);
+
+/* TO-DO: convert B[0, 1](x - t) --> B[x - 1, x](t) */
+
+/* extract boxcars in integrand */
+matchdeclare (aa, all);
+matchdeclare ([cc1, cc2], constantp);
+matchdeclare (uu, mapatom);
+matchdeclare (bb, lambda ([e], not freeof (B, e)));
+simp:false;
+tellsimpafter ('integrate(aa*bb, uu, cc1, cc2), FOO (aa, bb, uu, cc1, cc2));
+simp:true;
+
+/* (1) collapse constant boxcars
+ * (2) modify limits of integration using result of (1)
+ * (3) extract variable boxcar and construct two integrals
+ */
+FOO (aa, bb, uu, cc1, cc2) :=
+ (collapse_Bconst (bb),
+  if %% # false
+    then [integrand, variable, lower_limit, upper_limit] : [aa*third(%%), uu, max (cc1, first (%%)), min (cc2, second (%%))]
+    else [integrand, variable, lower_limit, upper_limit] : [aa*bb, uu, cc1, cc2],
+  /* any remaining boxcars must be variable */
+  match_boxcar (integrand),
+  if %% # false
+    then extract_variable_boxcar (%%, variable, lower_limit, upper_limit)
+    else 'integrate (integrand, variable, lower_limit, upper_limit));
+
+Bconstp(e) := match_Bconst(e) # false;
+matchdeclare ([cc1, cc2], constantp);
+defmatch (match_Bconst, B[cc1, cc2](uu)); /* assume uu bound already */
+matchdeclare (aa, all);
+matchdeclare (bb, Bconstp);
+/* return a list of [left, right, rest of stuff] */
+defrule (collapse_Bconst, bb*aa,
+                          (if op(bb) = "*" then maplist (op, bb) else [op(bb)],
+                           [lmax (map (first, %%)), lmin (map (second, %%)), aa]));
+
+matchdeclare ([aa, bb, cc], all);
+defmatch (match_boxcar, aa*B[bb, cc](uu));
+
+extract_variable_boxcar (eqns, variable, lower_limit, upper_limit) := block ([aa, bb, cc, uu, xx],
+  [aa, bb, cc, uu] : map (lambda ([x], assoc (x, eqns)), '[aa, bb, cc, uu]),
+  /* ASSUME CC - BB = UPPER_LIMIT - LOWER_LIMIT; SHOULD INCLUDE ALL CASES HERE !! */
+  /* ASSUME LINEAR EQUATIONS !! */
+  xx : first (listofvars ([bb, cc])), /* ASSUME EXACTLY ONE VARIABLE !! */
+  [[rhs (first (solve (lower_limit = cc, xx))), rhs (first (solve (upper_limit = cc, xx)))],
+   [rhs (first (solve (lower_limit = bb, xx))), rhs (first (solve (upper_limit = bb, xx)))]],
+  B[%%[1][1], %%[1][2]](xx) * 'integrate (aa, uu, lower_limit, cc)
+   + B[%%[2][1], %%[2][2]](xx) * 'integrate (aa, variable, bb, upper_limit));
+
+/* carry out iterations -- e = stuff already computed */
+
+foo (e, n) :=
+ (for i thru n
+   do
+    (multthru (B[x - 1, x](t), subst (x=t, e)),
+     integrate (%%, t, minf, inf),
+     ev (%%, nouns),
+     e : expand (%%)),
+  e);

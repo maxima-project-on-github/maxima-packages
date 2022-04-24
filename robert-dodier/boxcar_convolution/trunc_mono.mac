@@ -1,0 +1,37 @@
+/* Copyright 2009 by Robert Dodier.
+ * I release this work under terms of the GNU General Public License.
+ */
+matchdeclare (aa,freeof(y), bb, freeof(y), nn, freeof(y), cc, freeof(y));
+defmatch (trunc_mono, cc*y^nn*U(y - aa)*U(bb - y), y);
+
+hack (expr) := block ([m : length (expr), ss : 0],
+    for k thru m do
+        block ([term : part (expr, k), l],
+            l : trunc_mono (term, x),
+            new_term : cc*(bb^(nn + 1) - aa^(nn + 1))*U(bb - aa)/(nn + 1),
+            /* print (k, l, new_term), */
+            ss : ss + new_term),
+    return(ss));
+
+f1(x) := U(x) - U(x-1);
+
+expr: expand (f1(x)*f1(y - x));
+
+f2(y) := ''(hack (expr));
+
+expr: expand (f2(x)*f2(y - x));
+
+f4(y) := ''(hack (expr));
+
+expr: expand (f4(x)*f4(y - x));
+
+f8(y) := ''(hack (expr));
+
+linel : 80;
+
+grind (ratsimp (f2 (x)));
+grind (ratsimp (f4 (x)));
+grind (ratsimp (f8 (x)));
+
+plot2d ([f2, f4, f8], [x, 0, 8], [plot_format, gnuplot]), U(x) := if x >= 0 then 1 else 0;
+
