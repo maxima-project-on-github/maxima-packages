@@ -1,0 +1,11 @@
+<outputs>
+<output>
+<mth><lbl>(%o1) </lbl><d><f diffstyle="yes"><r><e><r><s>d</s></r><r><n>3</n></r></e></r><r><s>d</s><h>*</h><e><r><v>x</v></r><r><n>3</n></r></e></r></f><h>*</h><fn><r><fnm>f</fnm></r><r><p><v>x</v></p></r></fn></d>
+</mth></output>
+<output>
+<mth><lbl>(%o2) </lbl><d><f diffstyle="yes"><r><e><r><s>d</s></r><r><n>3</n></r></e></r><r><s>d</s><h>*</h><e><r><v>x</v></r><r><n>3</n></r></e></r></f><h>*</h><fn><r><fnm>f</fnm></r><r><p><v>x</v><t>,</t><v>y</v></p></r></fn></d>
+</mth></output>
+<output>
+<mth><lbl>(%o3) </lbl><d><f diffstyle="yes"><r><e><r><s>d</s></r><r><v>n</v><v>+</v><n>3</n></r></e></r><r><s>d</s><h>*</h><e><r><v>x</v></r><r><n>3</n></r></e><h>*</h><s>d</s><h>*</h><e><r><v>y</v></r><r><v>n</v></r></e></r></f><h>*</h><fn><r><fnm>f</fnm></r><r><p><v>x</v><t>,</t><v>y</v></p></r></fn></d>
+</mth></output>
+</outputs>

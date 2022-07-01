@@ -1,0 +1,38 @@
+<outputs>
+<output>
+<mth><lbl>(%o1) </lbl><v>cc</v><v>+</v><v>bb</v><v>+</v><v>aa</v>
+</mth></output>
+<output>
+<mth><lbl>(%o2) </lbl><v>cc</v><v>-</v><v>bb</v><v>+</v><v>aa</v>
+</mth></output>
+<output>
+<mth><lbl>(%o3) </lbl><v>-</v><v>cc</v><v>-</v><v>bb</v><v>+</v><v>aa</v>
+</mth></output>
+<output>
+<mth><lbl>(%o4) </lbl><v>cc</v><v>+</v><v>bb</v><v>-</v><v>aa</v>
+</mth></output>
+<output>
+<mth><lbl>(%o5) </lbl><e><r><v>abc</v></r><r><n>123</n></r></e>
+</mth></output>
+<output>
+<mth><lbl>(%o5) </lbl><v>aa</v><h>*</h><v>bb</v><h>*</h><v>cc</v>
+</mth></output>
+<output>
+<mth><lbl>(%o6) </lbl><fn><r><fnm>foo</fnm></r><r><p><v>abc</v><t>,</t><n>123</n></p></r></fn>
+</mth></output>
+<output>
+<mth><lbl>(%o6) </lbl><v>cc</v><h>*</h><v>dd</v><h>*</h><v>ee</v><v>+</v><v>aa</v><h>*</h><v>bb</v>
+</mth></output>
+<output>
+<mth><lbl>(%o7) </lbl><v>xyz</v><v>+</v><fn><r><fnm>foo</fnm></r><r><p><v>abc</v><t>,</t><n>123</n></p></r></fn>
+</mth></output>
+<output>
+<mth><lbl>(%o7) </lbl><f><r><n>1234</n></r><r><v>abcd</v></r></f>
+</mth></output>
+<output>
+<mth><lbl>(%o7) </lbl><v>nn</v><t>!</t>
+</mth></output>
+<output>
+<mth><lbl>(%o8) </lbl><v>-</v><v>aa</v>
+</mth></output>
+</outputs>
