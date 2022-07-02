@@ -17,8 +17,9 @@ tellsimpafter (conv (B[aa, bb](uu)*ee1, B[cc, dd](uu)*ee2)(vv), rewrite_conv (aa
 rewrite_conv (a, b, c, d, e1, e2, u, v) :=
 
     block ([new_integrand, left_boxcar, right_boxcar],
-           left_boxcar: B[a, b](v - c)*B[a, v - c](u),
-           right_boxcar: B[a, b](v - d)*B[v - d, b](u),
+           /* apply 1-arg limit to clean up inf/minf */
+           left_boxcar: B[a, b](v - c)*B[a, limit (v - c)](u),
+           right_boxcar: B[a, b](v - d)*B[limit (v - d), b](u),
            new_integrand: (left_boxcar + right_boxcar) * e1 * subst (u = v - u, e2),
            'integrate (new_integrand, u, minf, inf));
 
@@ -26,7 +27,8 @@ simp: false; /* prevent ee1 from getting pulled out of 'integrate */
 tellsimpafter ('integrate (B[aa, bb](uu)*ee1, uu, minf, inf), 'integrate (ee1, uu, aa, bb));
 simp: true;
 
-declare (conv, additive);
+load ("multiadditive");
+declare (conv, multiadditive);
 
 matchdeclare (cc, constantp);
 matchdeclare (aa, all);
@@ -36,8 +38,13 @@ tellsimpafter ((aa + cc)(xx), cc + (if not atom(aa) and op(aa) = "+" then map (l
 matchdeclare ([aa, bb], all);
 matchdeclare (yy, lambda ([e], e # 0 and constantp(e)));
 matchdeclare (xx, mapatom);
-tellsimpafter (B[aa, bb](xx + yy), B[aa - yy, bb - yy](xx));
+/* apply 1-arg limit to clean up inf/minf */
+tellsimpafter (B[aa, bb](xx + yy), B[limit (aa - yy), limit (bb - yy)](xx));
+tellsimpafter (B[minf, inf](aa), 1);
+tellsimpafter (B[aa, aa](bb), 0);
 
+/*
+ *
 /* now try repeated convolution of B[0, 1](t) */
 
 conv1: B[0, 1](x);
@@ -56,3 +63,5 @@ expand (%);
 %, nouns;
 conv4: expand (%);
 plot2d ([conv1, conv2, conv3, conv4], [x, -1, 5]), B[a, b](z) := if z >= a and z < b then 1 else 0;
+ *
+ */
