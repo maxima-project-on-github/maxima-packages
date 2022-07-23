@@ -23,8 +23,14 @@ rewrite_conv (a, b, c, d, e1, e2, u, v) :=
            new_integrand: (left_boxcar + right_boxcar) * e1 * subst (u = v - u, e2),
            'integrate (new_integrand, u, minf, inf));
 
+/* not sure if this has the right effect -- might depend on the order
+ * in which variables are matched, specifically because uu might not
+ * be known when aa, bb, cc, and dd are matched
+ */
+matchdeclare ([aa, bb, cc, dd], freeof (uu));
+
 simp: false; /* prevent ee1 from getting pulled out of 'integrate */
-tellsimpafter ('integrate (B[aa, bb](uu)*ee1, uu, minf, inf), 'integrate (ee1, uu, aa, bb));
+tellsimpafter ('integrate (B[aa, bb](uu)*ee1, uu, cc, dd), if aa <= dd and bb >= cc then 'integrate (ee1, uu, max (aa, cc), min (bb, dd)) else 0);
 simp: true;
 
 load ("multiadditive");
@@ -42,6 +48,16 @@ matchdeclare (xx, mapatom);
 tellsimpafter (B[aa, bb](xx + yy), B[limit (aa - yy), limit (bb - yy)](xx));
 tellsimpafter (B[minf, inf](aa), 1);
 tellsimpafter (B[aa, aa](bb), 0);
+
+/* not sure yet if it makes sense to test assumptions on every resimplification.
+ * maybe it does, I just don't know yet.
+ * in the meantime, put it in a separate function.
+ */
+
+matchdeclare (xx, lambda ([e], e >= aa and e <= bb));
+defrule (rule_simplify_boxcar, B[aa, bb](xx), 1);
+
+simplify_boxcar (e) := apply1 (e, rule_simplify_boxcar);
 
 /*
  *
