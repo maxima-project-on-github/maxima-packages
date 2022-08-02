@@ -1212,10 +1212,23 @@ string (f():=block([x,y],0+x+y));
  * doesn't change inner lambda
  */
 
-(block([a], lambda([v], subst('v=v, lambda([v],a*v)))),
- %%(123),
+(kill(foo),
+ block([a], lambda([v], subst('v=v, lambda([v],a*v)))),
+ foo: %%(123),
  string (%%));
 "lambda([v],a*v)";
+
+(a: 1111,
+ foo(234),
+ string(%%));
+"234*a";
+
+(foo: subst('v = 456, '(lambda([v], v + 1)(v))),
+ string (%%));
+"lambda([v],v+1)(456)";
+
+ev(foo);
+457;
 
 /* mailing list 2020-05-18: "Anonymous functions and parameter names" */
 
@@ -1635,3 +1648,13 @@ b[1] - 1;
 
 foobar(b, a);
 b[1] - a[1];
+
+/* SF bug #3993: "solve_rec: map: improper argument: all"
+ * Requires patched version of simplify_product
+ * to change name of argument from prod to myprod
+ */
+
+(load (solve_rec),
+ solve_rec((2*j+2)*y[j]-(3*j+5)*y[j+1]+(j+5/2)*y[j+2], y[j]));
+y[j] = (sqrt(%pi)*%k[1]*j!)/gamma((2*j+3)/2)$
+

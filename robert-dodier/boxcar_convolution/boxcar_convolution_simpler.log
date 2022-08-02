@@ -1,0 +1,55 @@
+(%i42) %o6;
+(%o42)                                                   B    (t) B            (t)
+                                                          a, b     x - d, x - c
+(%i43) %o39;
+(%o43)                                 B        (t) B            (x) + B        (t) B            (x)
+                                        x - d, b     d + a, d + b       a, x - c     c + a, c + b
+(%i44) conv(B[a,b](t)*f(t), B[c,d](t)*g(t))(x) = 'integrate(B[a + c, b + c](x)*B[a, x - c](t)*f(t)*g(x-t) + B[a + d, b + d](x)*B[x - d, b](t)*f(t)*g(x - t), t, minf, inf);
+                                                inf
+                                               /
+                                               [
+(%o44) conv(B    (t) f(t), B    (t) g(t))(x) = I     (f(t) B        (t) B            (x) g(x - t)
+             a, b           c, d               ]            x - d, b     d + a, d + b
+                                               /
+                                                minf
+                                                                                           + B        (t) f(t) B            (x) g(x - t)) dt
+                                                                                              a, x - c          c + a, c + b
+(%i45) declare(nounify(integrate), linear);
+(%o45)                                                              done
+(%i46) ''%o44;
+                                                                 inf
+                                                                /
+                                                                [
+(%o46) conv(B    (t) f(t), B    (t) g(t))(x) = B            (x) I     f(t) B        (t) g(x - t) dt
+             a, b           c, d                d + a, d + b    ]           x - d, b
+                                                                /
+                                                                 minf
+                                                                                                          inf
+                                                                                                         /
+                                                                                                         [
+                                                                                      + B            (x) I     B        (t) f(t) g(x - t) dt
+                                                                                         c + a, c + b    ]      a, x - c
+                                                                                                         /
+                                                                                                          minf
+(%i47) grind(%);
+
+conv(B[a,b](t)*f(t),B[c,d](t)*g(t))(x) = B[d+a,d+b](x)*'integrate(f(t)*B[x-d,b](t)*g(x-t),t,minf,inf)
+                                       +B[c+a,c+b](x)*'integrate(B[a,x-c](t)*f(t)*g(x-t),t,minf,inf)$
+(%o47)                                                              done
+(%i48) conv(B[a,b](t)*f(t),B[c,d](t)*g(t))(x) = B[d+a,d+b](x)*'integrate(f(t)*g(x-t),t,x-d,b)
+ +B[c+a,c+b](x)*'integrate(f(t)*g(x-t),t,a,x-c);
+                                                                  b                                          x - c
+                                                                 /                                          /
+                                                                 [                                          [
+(%o48)  conv(B    (t) f(t), B    (t) g(t))(x) = B            (x) I      f(t) g(x - t) dt + B            (x) I      f(t) g(x - t) dt
+              a, b           c, d                d + a, d + b    ]                          c + a, c + b    ]
+                                                                 /                                          /
+                                                                  x - d                                      a
+(%i49) %, a=0, b=1, c=0, d=1, f(u):= 1, g(u):=1;
+(%o49)                                  conv(B    (t), B    (t))(x) = (2 - x) B    (x) + x B    (x)
+                                              0, 1      0, 1                   1, 2         0, 1
+(%i50) rhs(%)
+;
+(%o50)                                                 (2 - x) B    (x) + x B    (x)
+                                                                1, 2         0, 1
+(%i51)       

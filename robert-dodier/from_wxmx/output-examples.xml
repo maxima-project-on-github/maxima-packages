@@ -1,0 +1,74 @@
+<outputs>
+<output>
+<mth><lbl>(%o1) </lbl><v>cc</v><v>+</v><v>bb</v><v>+</v><v>aa</v>
+</mth></output>
+<output>
+<mth><lbl>(%o2) </lbl><v>cc</v><v>-</v><v>bb</v><v>+</v><v>aa</v>
+</mth></output>
+<output>
+<mth><lbl>(%o3) </lbl><v>-</v><v>cc</v><v>-</v><v>bb</v><v>+</v><v>aa</v>
+</mth></output>
+<output>
+<mth><lbl>(%o4) </lbl><v>cc</v><v>+</v><v>bb</v><v>-</v><v>aa</v>
+</mth></output>
+<output>
+<mth><lbl>(%o5) </lbl><e><r><v>abc</v></r><r><n>123</n></r></e>
+</mth></output>
+<output>
+<mth><lbl>(%o5) </lbl><v>aa</v><h>*</h><v>bb</v><h>*</h><v>cc</v>
+</mth></output>
+<output>
+<mth><lbl>(%o6) </lbl><fn><r><fnm>foo</fnm></r><r><p><v>abc</v><t>,</t><n>123</n></p></r></fn>
+</mth></output>
+<output>
+<mth><lbl>(%o6) </lbl><v>cc</v><h>*</h><v>dd</v><h>*</h><v>ee</v><v>+</v><v>aa</v><h>*</h><v>bb</v>
+</mth></output>
+<output>
+<mth><lbl>(%o7) </lbl><v>xyz</v><v>+</v><fn><r><fnm>foo</fnm></r><r><p><v>abc</v><t>,</t><n>123</n></p></r></fn>
+</mth></output>
+<output>
+<mth><lbl>(%o7) </lbl><f><r><n>1234</n></r><r><v>abcd</v></r></f>
+</mth></output>
+<output>
+<mth><lbl>(%o7) </lbl><v>nn</v><t>!</t>
+</mth></output>
+<output>
+<mth><lbl>(%o8) </lbl><v>-</v><v>aa</v>
+</mth></output>
+<output>
+<mth><lbl>(%t73) </lbl><i><r><v>ric</v></r><r><n>1</n><v>,</v><n>1</n></r></i><v>=</v><v>−</v><f><r><n>2</n><h>·</h><v>M</v><h>·</h><r><p><v>M</v><h>·</h><v>r</v><v>−</v><n>2</n><h>·</h><e><r><v>M</v></r><r><n>2</n></r></e></p></r></r><r><e><r><v>r</v></r><r><n>3</n></r></e><h>·</h><r><p><e><r><v>r</v></r><r><n>2</n></r></e><v>−</v><n>2</n><h>·</h><v>M</v><h>·</h><v>r</v></p></r></r></f><v>−</v><f><r><v>M</v><h>·</h><v>r</v><v>−</v><n>2</n><h>·</h><e><r><v>M</v></r><r><n>2</n></r></e></r><r><e><r><v>r</v></r><r><n>4</n></r></e></r></f><v>+</v><f><r><v>M</v></r><r><e><r><v>r</v></r><r><n>3</n></r></e></r></f><lbl>(%t74) </lbl><i><r><v>ric</v></r><r><n>2</n><v>,</v><n>2</n></r></i><v>=</v><v>−</v><f><r><n>2</n><h>·</h><v>M</v></r><r><v>r</v><h>·</h><r><p><e><r><v>r</v></r><r><n>2</n></r></e><v>−</v><n>2</n><h>·</h><v>M</v><h>·</h><v>r</v></p></r></r></f><v>+</v><f><r><v>M</v><h>·</h><r><p><n>2</n><h>·</h><v>r</v><v>−</v><n>2</n><h>·</h><v>M</v></p></r></r><r><e><r><r><p><e><r><v>r</v></r><r><n>2</n></r></e><v>−</v><n>2</n><h>·</h><v>M</v><h>·</h><v>r</v></p></r></r><r><n>2</n></r></e></r></f><v>−</v><f><r><n>2</n><h>·</h><e><r><v>M</v></r><r><n>2</n></r></e></r><r><e><r><r><p><e><r><v>r</v></r><r><n>2</n></r></e><v>−</v><n>2</n><h>·</h><v>M</v><h>·</h><v>r</v></p></r></r><r><n>2</n></r></e></r></f><lbl>(%o74) </lbl><v>done</v>
+</mth></output>
+<output>
+<mth><lbl>(%o7) </lbl><sm type="sum"><r><v>k</v><v>=</v><n>1</n></r><r><v>n</v></r><r><ie><r><v>x</v></r><r><v>k</v></r><r><n>2</n></r></ie></r></sm>
+</mth></output>
+<output>
+<mth><lbl>(%o3) </lbl><sm type="sum"><r><v>k</v><v>=</v><v>m</v><v>−</v><n>1</n></r><r><v>m</v><v>+</v><n>1</n></r><r><e><r><r><p><i><r><v>y</v></r><r><v>k</v></r></i><v>−</v><i><r><v>x</v></r><r><v>k</v></r></i></p></r></r><r><n>2</n></r></e></r></sm>
+</mth></output>
+<output>
+<mth><lbl>(%o4) </lbl><sm type="lsum"><r><v>a</v><fnm>in</fnm><t>[</t><n>1</n><t>,</t><n>2</n><t>,</t><n>3</n><t>,</t><n>4</n><t>]</t></r><r><t>FOO</t></r><r><f><r><e><r><v>a</v></r><r><n>2</n></r></e></r><r><n>2</n></r></f></r></sm>
+</mth></output>
+<output>
+<mth><lbl>(%o8) </lbl><sm type="lsum"><r><v>u</v><fnm>in</fnm><v>L</v></r><r><t>BAR</t></r><r><f><r><n>1</n><v>−</v><v>u</v></r><r><v>u</v><v>+</v><n>1</n></r></f></r></sm>
+</mth></output>
+<output>
+<mth><lbl>(%o5) </lbl><sm type="prod"><r><v>k</v><v>=</v><n>1</n></r><r><s>inf</s></r><r><f><r><ie><r><v>u</v></r><r><v>k</v></r><r><v>k</v></r></ie></r><r><n>5</n></r></f></r></sm>
+</mth></output>
+<output>
+<mth><lbl>(%o8) </lbl><v>−</v><f><r><ie><r><v>a</v></r><r><n>5</n></r><r><n>5</n></r></ie></r><r><n>120</n></r></f><v>+</v><f><r><ie><r><v>a</v></r><r><n>4</n></r><r><n>4</n></r></ie></r><r><n>24</n></r></f><v>−</v><f><r><ie><r><v>a</v></r><r><n>3</n></r><r><n>3</n></r></ie></r><r><n>6</n></r></f><v>+</v><f><r><ie><r><v>a</v></r><r><n>2</n></r><r><n>2</n></r></ie></r><r><n>2</n></r></f><v>−</v><i><r><v>a</v></r><r><n>1</n></r></i>
+</mth></output>
+<output>
+<mth><lbl>(%o1) </lbl><t>[</t><n>1</n><t>,</t><n>2</n><t>,</t><n>3</n><t>,</t><n>4</n><t>,</t><n>5</n><t>,</t><n>6</n><t>,</t><n>7</n><t>,</t><n>8</n><t>,</t><n>9</n><t>,</t><n>10</n><t>,</t><n>11</n><t>,</t><n>12</n><t>,</t><n>13</n><t>,</t><n>14</n><t>,</t><n>15</n><t>,</t><n>16</n><t>,</t><n>17</n><t>,</t><n>18</n><t>,</t><n>19</n><t>,</t><n>20</n><t>,</t><n>21</n><t>,</t><n>22</n><t>,</t><n>23</n><t>,</t><n>24</n><t>,</t><n>25</n><t>,</t><n>26</n><t>,</t><n>27</n><t>,</t><n>28</n><t>,</t><n>29</n><t>,</t><n>30</n><t>,</t><n>31</n><t>,</t><n>32</n><t>,</t><n>33</n><t>,</t><n>34</n><t>,</t><n>35</n><t>,</t><n>36</n><t>,</t><n>37</n><t>,</t><n>38</n><t>,</t><n>39</n><t>,</t><n>40</n><t>,</t><n>41</n><t>,</t><n>42</n><t>,</t><n>43</n><t>,</t><n>44</n><t>,</t><n>45</n><t>,</t><n>46</n><t>,</t><n>47</n><t>,</t><n>48</n><t>,</t><n>49</n><t>,</t><n>50</n><t>,</t><n>51</n><t>,</t><n>52</n><t>,</t><n>53</n><t>,</t><n>54</n><t>,</t><n>55</n><t>,</t><n>56</n><t>,</t><n>57</n><t>,</t><n>58</n><t>,</t><n>59</n><t>,</t><n>60</n><t>,</t><n>61</n><t>,</t><n>62</n><t>,</t><n>63</n><t>,</t><n>64</n><t>,</t><n>65</n><t>,</t><n>66</n><t>,</t><n>67</n><t>,</t><n>68</n><t>,</t><n>69</n><t>,</t><n>70</n><t>,</t><n>71</n><t>,</t><n>72</n><t>,</t><n>73</n><t>,</t><n>74</n><t>,</t><n>75</n><t>,</t><n>76</n><t>,</t><n>77</n><t>,</t><n>78</n><t>,</t><n>79</n><t>,</t><n>80</n><t>,</t><n>81</n><t>,</t><n>82</n><t>,</t><n>83</n><t>,</t><n>84</n><t>,</t><n>85</n><t>,</t><n>86</n><t>,</t><n>87</n><t>,</t><n>88</n><t>,</t><n>89</n><t>,</t><n>90</n><t>,</t><n>91</n><t>,</t><n>92</n><t>,</t><n>93</n><t>,</t><n>94</n><t>,</t><n>95</n><t>,</t><n>96</n><t>,</t><n>97</n><t>,</t><n>98</n><t>,</t><n>99</n><t>,</t><n>100</n><t>]</t>
+</mth></output>
+<output>
+<mth><lbl>(%o2) </lbl><t>[</t><i><r><v>a</v></r><r><n>1</n></r></i><t>,</t><f><r><ie><r><v>a</v></r><r><n>2</n></r><r><n>2</n></r></ie></r><r><n>2</n></r></f><t>,</t><f><r><ie><r><v>a</v></r><r><n>3</n></r><r><n>3</n></r></ie></r><r><n>6</n></r></f><t>,</t><f><r><ie><r><v>a</v></r><r><n>4</n></r><r><n>4</n></r></ie></r><r><n>24</n></r></f><t>,</t><f><r><ie><r><v>a</v></r><r><n>5</n></r><r><n>5</n></r></ie></r><r><n>120</n></r></f><t>,</t><f><r><ie><r><v>a</v></r><r><n>6</n></r><r><n>6</n></r></ie></r><r><n>720</n></r></f><t>,</t><f><r><ie><r><v>a</v></r><r><n>7</n></r><r><n>7</n></r></ie></r><r><n>5040</n></r></f><t>,</t><f><r><ie><r><v>a</v></r><r><n>8</n></r><r><n>8</n></r></ie></r><r><n>40320</n></r></f><t>,</t><f><r><ie><r><v>a</v></r><r><n>9</n></r><r><n>9</n></r></ie></r><r><n>362880</n></r></f><t>,</t><f><r><ie><r><v>a</v></r><r><n>10</n></r><r><n>10</n></r></ie></r><r><n>3628800</n></r></f><t>,</t><f><r><ie><r><v>a</v></r><r><n>11</n></r><r><n>11</n></r></ie></r><r><n>39916800</n></r></f><t>,</t><f><r><ie><r><v>a</v></r><r><n>12</n></r><r><n>12</n></r></ie></r><r><n>479001600</n></r></f><t>]</t>
+</mth></output>
+<output>
+<mth><lbl>(%o3) </lbl><t>[</t><i><r><v>a</v></r><r><n>1</n></r></i><t>,</t><f><r><ie><r><v>a</v></r><r><n>2</n></r><r><n>2</n></r></ie></r><r><n>2</n></r></f><t>,</t><f><r><ie><r><v>a</v></r><r><n>3</n></r><r><n>3</n></r></ie></r><r><n>6</n></r></f><t>,</t><f><r><ie><r><v>a</v></r><r><n>4</n></r><r><n>4</n></r></ie></r><r><n>24</n></r></f><t>,</t><f><r><ie><r><v>a</v></r><r><n>5</n></r><r><n>5</n></r></ie></r><r><n>120</n></r></f><t>,</t><f><r><ie><r><v>a</v></r><r><n>6</n></r><r><n>6</n></r></ie></r><r><n>720</n></r></f><t>,</t><f><r><ie><r><v>a</v></r><r><n>7</n></r><r><n>7</n></r></ie></r><r><n>5040</n></r></f><t>,</t><f><r><ie><r><v>a</v></r><r><n>8</n></r><r><n>8</n></r></ie></r><r><n>40320</n></r></f><t>,</t><f><r><ie><r><v>a</v></r><r><n>9</n></r><r><n>9</n></r></ie></r><r><n>362880</n></r></f><t>,</t><f><r><ie><r><v>a</v></r><r><n>10</n></r><r><n>10</n></r></ie></r><r><n>3628800</n></r></f><t>,</t><f><r><ie><r><v>a</v></r><r><n>11</n></r><r><n>11</n></r></ie></r><r><n>39916800</n></r></f><t>,</t><f><r><ie><r><v>a</v></r><r><n>12</n></r><r><n>12</n></r></ie></r><r><n>479001600</n></r></f><t>,</t><f><r><ie><r><v>a</v></r><r><n>13</n></r><r><n>13</n></r></ie></r><r><n>6227020800</n></r></f><t>,</t><f><r><ie><r><v>a</v></r><r><n>14</n></r><r><n>14</n></r></ie></r><r><n>87178291200</n></r></f><t>,</t><f><r><ie><r><v>a</v></r><r><n>15</n></r><r><n>15</n></r></ie></r><r><n>1307674368000</n></r></f><t>,</t><f><r><ie><r><v>a</v></r><r><n>16</n></r><r><n>16</n></r></ie></r><r><n>20922789888000</n></r></f><t>]</t>
+</mth></output>
+<output>
+<mth><lbl>(%o4) </lbl><f><r><ie><r><v>a</v></r><r><n>16</n></r><r><n>16</n></r></ie></r><r><n>20922789888000</n></r></f><v>+</v><f><r><ie><r><v>a</v></r><r><n>15</n></r><r><n>15</n></r></ie></r><r><n>1307674368000</n></r></f><v>+</v><f><r><ie><r><v>a</v></r><r><n>14</n></r><r><n>14</n></r></ie></r><r><n>87178291200</n></r></f><v>+</v><f><r><ie><r><v>a</v></r><r><n>13</n></r><r><n>13</n></r></ie></r><r><n>6227020800</n></r></f><v>+</v><f><r><ie><r><v>a</v></r><r><n>12</n></r><r><n>12</n></r></ie></r><r><n>479001600</n></r></f><v>+</v><f><r><ie><r><v>a</v></r><r><n>11</n></r><r><n>11</n></r></ie></r><r><n>39916800</n></r></f><v>+</v><f><r><ie><r><v>a</v></r><r><n>10</n></r><r><n>10</n></r></ie></r><r><n>3628800</n></r></f><v>+</v><f><r><ie><r><v>a</v></r><r><n>9</n></r><r><n>9</n></r></ie></r><r><n>362880</n></r></f><v>+</v><f><r><ie><r><v>a</v></r><r><n>8</n></r><r><n>8</n></r></ie></r><r><n>40320</n></r></f><v>+</v><f><r><ie><r><v>a</v></r><r><n>7</n></r><r><n>7</n></r></ie></r><r><n>5040</n></r></f><v>+</v><f><r><ie><r><v>a</v></r><r><n>6</n></r><r><n>6</n></r></ie></r><r><n>720</n></r></f><v>+</v><f><r><ie><r><v>a</v></r><r><n>5</n></r><r><n>5</n></r></ie></r><r><n>120</n></r></f><v>+</v><f><r><ie><r><v>a</v></r><r><n>4</n></r><r><n>4</n></r></ie></r><r><n>24</n></r></f><v>+</v><f><r><ie><r><v>a</v></r><r><n>3</n></r><r><n>3</n></r></ie></r><r><n>6</n></r></f><v>+</v><f><r><ie><r><v>a</v></r><r><n>2</n></r><r><n>2</n></r></ie></r><r><n>2</n></r></f><v>+</v><i><r><v>a</v></r><r><n>1</n></r></i>
+</mth></output>
+<output>
+<mth><lbl>(%o9) </lbl><f><r><ie><r><v>a</v></r><r><n>16</n></r><r><n>16</n></r></ie></r><r><n>20922789888000</n></r></f><v>−</v><f><r><ie><r><v>a</v></r><r><n>15</n></r><r><n>15</n></r></ie></r><r><n>1307674368000</n></r></f><v>+</v><f><r><ie><r><v>a</v></r><r><n>14</n></r><r><n>14</n></r></ie></r><r><n>87178291200</n></r></f><v>−</v><f><r><ie><r><v>a</v></r><r><n>13</n></r><r><n>13</n></r></ie></r><r><n>6227020800</n></r></f><v>+</v><f><r><ie><r><v>a</v></r><r><n>12</n></r><r><n>12</n></r></ie></r><r><n>479001600</n></r></f><v>−</v><f><r><ie><r><v>a</v></r><r><n>11</n></r><r><n>11</n></r></ie></r><r><n>39916800</n></r></f><v>+</v><f><r><ie><r><v>a</v></r><r><n>10</n></r><r><n>10</n></r></ie></r><r><n>3628800</n></r></f><v>−</v><f><r><ie><r><v>a</v></r><r><n>9</n></r><r><n>9</n></r></ie></r><r><n>362880</n></r></f><v>+</v><f><r><ie><r><v>a</v></r><r><n>8</n></r><r><n>8</n></r></ie></r><r><n>40320</n></r></f><v>−</v><f><r><ie><r><v>a</v></r><r><n>7</n></r><r><n>7</n></r></ie></r><r><n>5040</n></r></f><v>+</v><f><r><ie><r><v>a</v></r><r><n>6</n></r><r><n>6</n></r></ie></r><r><n>720</n></r></f><v>−</v><f><r><ie><r><v>a</v></r><r><n>5</n></r><r><n>5</n></r></ie></r><r><n>120</n></r></f><v>+</v><f><r><ie><r><v>a</v></r><r><n>4</n></r><r><n>4</n></r></ie></r><r><n>24</n></r></f><v>−</v><f><r><ie><r><v>a</v></r><r><n>3</n></r><r><n>3</n></r></ie></r><r><n>6</n></r></f><v>+</v><f><r><ie><r><v>a</v></r><r><n>2</n></r><r><n>2</n></r></ie></r><r><n>2</n></r></f><v>−</v><i><r><v>a</v></r><r><n>1</n></r></i>
+</mth></output>
+</outputs>
