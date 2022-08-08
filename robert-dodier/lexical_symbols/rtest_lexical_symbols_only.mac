@@ -1670,3 +1670,22 @@ expand(f(x,f(y,z)) - f(f(x,y),z));
 
 expand(f(a,f(b,c)) - f(f(a,b),c));
 [0, 0];
+
+/* maxima-discuss 2022-08-08: "In what way do names of function parameters matter?" */
+
+(kill (f, a, b, c),
+ f(a, b) := [a[1], b[2]],
+ 0);
+0;
+
+f(c, b);
+[c[1], b[2]];
+
+f(b, c);
+[b[1], c[2]];
+
+f(a, b);
+[a[1], b[2]];
+
+f(b, a);
+[b[1], a[2]];
