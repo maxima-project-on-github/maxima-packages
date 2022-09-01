@@ -1658,3 +1658,34 @@ b[1] - a[1];
  solve_rec((2*j+2)*y[j]-(3*j+5)*y[j+1]+(j+5/2)*y[j+2], y[j]));
 y[j] = (sqrt(%pi)*%k[1]*j!)/gamma((2*j+3)/2)$
 
+/* maxima-discuss 2022-08-01: "In what way do names of function parameters matter?" */
+
+(kill (f, a, b, c, x, y, z),
+ f(a,b) := [a[1]*b[1] - a[2]*b[2], a[1]*b[2] + a[2]*b[1]],
+ 0);
+0;
+
+expand(f(x,f(y,z)) - f(f(x,y),z));
+[0, 0];
+
+expand(f(a,f(b,c)) - f(f(a,b),c));
+[0, 0];
+
+/* maxima-discuss 2022-08-08: "In what way do names of function parameters matter?" */
+
+(kill (f, a, b, c),
+ f(a, b) := [a[1], b[2]],
+ 0);
+0;
+
+f(c, b);
+[c[1], b[2]];
+
+f(b, c);
+[b[1], c[2]];
+
+f(a, b);
+[a[1], b[2]];
+
+f(b, a);
+[b[1], a[2]];
