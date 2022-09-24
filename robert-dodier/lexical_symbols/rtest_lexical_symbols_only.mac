@@ -1689,3 +1689,15 @@ f(a, b);
 
 f(b, a);
 [b[1], a[2]];
+
+/* SF bug #2519: "global and local name mismatch for tables in block" */
+
+(kill(a), buggy(a):=block([], a[1,1]:0), 0);
+0;
+
+(a[1]:1, b:matrix([1, 2]), 0);
+0;
+
+buggy(b);
+0;
+
