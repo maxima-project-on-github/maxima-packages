@@ -46,6 +46,13 @@ string(g(4));
 g(4)(5);
 9;
 
+/* similar case, maxima-discuss 2022-11-21: "lambda([a], lambda([b], 10*a+b)) (2) (3);" */
+
+(kill (F),
+ F : lambda([a], lambda([b], 10*a+b)),
+ F(2)(3));
+23;
+
 /* maxima-discuss 2017-03-17: "Functions as parameters to lambda"
 
   square(f) := lambda([x],(f(x))^2);

@@ -38,13 +38,13 @@
 ;; NOT SURE IF FREEOF IS THE APPROPRIATE TEST HERE !!
 (defun freeof-env (e x)
   (let (symbols)
-    (maphash #'(lambda (s v) (push s symbols)) e)
+    (maphash #'(lambda (s v) (declare (ignore v)) (push s symbols)) e)
     (if (and (consp x) (eq (caar x) '$closure))
       (and (every #'(lambda (e1)
                       (let ((e1-env (get e1 'env)))
                         (if e1-env
                           (let (l)
-                            (maphash #'(lambda (k v) (push v l)) e1-env)
+                            (maphash #'(lambda (k v) (declare (ignore k)) (push v l)) e1-env)
                             ($lfreeof (cons '(mlist) symbols) (cons '(mlist) l))))))
                   (rest (second x)))
            ($lfreeof (cons '(mlist) symbols) (third x)))
@@ -80,7 +80,7 @@
                            (every #'(lambda (inner-env)
                                       (every #'(lambda (inner-env-value)
                                                  (freeof-env e-env inner-env-value))
-                                             (let (l) (maphash #'(lambda (k v) (push v l)) inner-env) l)))
+                                             (let (l) (maphash #'(lambda (k v) (declare (ignore k)) (push v l)) inner-env) l)))
                                   ;; Assume here that the list of environments goes from outer to inner.
                                   ;; Extract environment tables, omitting any symbols which don't have an associated table.
                                   (remove nil (mapcar #'(lambda (e) (get e 'env)) (rest (member e-env env-name-list)))))))))
@@ -119,6 +119,7 @@
 ;; MAPPLY1 looks for a hook attached to the operator, let's use that.
 
 (defun mapply1-extension-$closure (fn args fnname form)
+  (declare (ignore fnname))
   (let*
     ((is-array-ref (and (consp form) (member 'array (car form)))) ;; I DUNNO; IS THIS REALLY GUARANTEED TO DETECT ARRAY REFS ??
      (array-foo (if is-array-ref (list 'array))))
