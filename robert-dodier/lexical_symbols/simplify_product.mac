@@ -1,0 +1,92 @@
+simplify_product(myprod) := block(
+  [term, %n, lo, hi, %kk : 0, nu, de, comm : [], p% : 1,
+   deg : simplify_products_deg, %j1],
+  if simplify_products=false then return(myprod),
+  if atom(myprod) then return(myprod),
+  if member(part(myprod, 0), ["+", "-", "*", "/", "^"]) then
+    return(apply(part(myprod, 0), map('simplify_product, args(myprod)))),
+  if part(myprod, 0)#nounify('product) then return(myprod),
+
+  /* Read product arguments. */
+  %n : part(myprod, 2),
+  lo : part(myprod, 3),
+  hi : part(myprod, 4),
+  term : factor(part(myprod, 1)),
+
+  if lo#1 then return(simplify_product(changevar(myprod, %j1=%n-lo+1, %j1, %n))),
+
+  /* Check for simple cases.   */
+  if term=%n then return(hi!/(lo-1)!),
+
+  if atom(term) or freeof(%n, term) then return(term^(hi-lo+1)),
+
+  /* Distribute over products.  */
+  if part(term, 0)="*" then (
+      p%*apply("*", map(lambda([u], simplify_product(apply(nounify('product),
+                [u, %n, lo, hi]))),
+          args(term)))
+  )
+  /* Take care of fractions. */
+  else if part(term, 0)="/" then block(
+    [nu : num(term), de : denom(term)],
+    /* Check for cancellations. */
+    for %kk:-deg thru deg do block(
+      [g],
+      g : gcd(expand(subst(%n+%kk, %n, nu)), de),
+      if not(freeof(%n, g)) then (
+        comm : append(comm, [[%kk, g, subst(%n-%kk, %n, g)]]),
+        de : ratsimp(de/g),
+        nu : ratsimp(nu/subst(%n-%kk, %n, g))
+      )
+    ),
+    /* Cancel common terms. */
+    for c in comm do block(
+      [kk : c[1], d],
+      if kk<0 then (
+        p% : p%*my_prod(c[3], %n, hi+kk+1, hi),
+        d : my_prod(c[2], %n, lo, lo-kk-1),
+        p% : p%/d
+      )
+      else (
+        p% : p%*1/my_prod(c[2], %n, hi-kk+1, hi),
+        d : my_prod(c[3], %n, lo, lo+kk-1),
+        p% : p%*d
+      )
+    ),
+    /* Distribute over fractions. */
+    nu : simplify_product(apply(nounify('product), [nu, %n, lo, hi])),
+    de : simplify_product(apply(nounify('product), [de, %n, lo, hi])),
+    p%*nu/de
+  )
+  else if part(term, 0)="^" and integerp(part(term, 2)) then (
+    simplify_product(apply(nounify('product), [part(term, 1), %n, lo, hi]))^
+      part(term, 2)
+  )
+  /* Assume we have a poly. */
+  else block(
+    [aa, bb, lcoeff, %m],
+    bb : bothcoef(term, %n), aa : bb[1], bb : bb[2],
+
+    /* Take care of linear products. */
+    if freeof(%n, aa) and freeof(%n, bb) then (
+      if aa=1 then (
+        %m : term - %n,
+        (hi+%m)!/(lo+%m-1)!
+      )
+      else if aa=-1 then (
+        %m : term + %n,
+        (%m-lo)!/(%m-hi-1)!
+      )
+      else if product_use_gamma and integerp(aa) then
+        gamma(subst(hi+1, %n, expand(term/aa)))/
+        gamma(subst(lo, %n, expand(term/aa)))*aa^(hi-lo+1)
+      else
+        myprod
+    )
+    else if part(term, 0)="-" and length(args(term))=1 then
+      (-1)^(hi-lo+1)*simplify_product(apply(nounify('product), [-term, %n, lo, hi]))
+    /* Give up! */
+    else
+      p%*apply(nounify('product), [factor(term), %n, lo, hi])
+  )
+)$
