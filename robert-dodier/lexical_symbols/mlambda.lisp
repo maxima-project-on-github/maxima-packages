@@ -25,7 +25,7 @@
                                  (t (meval (car args)))) a)))
             (t (merror (intl:gettext "lambda: formal argument must be a symbol or quoted symbol; found: ~M") (car params))))
       (setq args (cdr args) params (cdr params)))
-    (let (finish2033 (finish2032 params) (ar *mlambda-call-stack*))
+    (let (finish2033 #+nil (finish2032 params) (ar *mlambda-call-stack*))
       (declare (type (vector t) ar))
       (unwind-protect
            (progn
