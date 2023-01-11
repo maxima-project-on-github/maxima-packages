@@ -1,0 +1,16 @@
+"verify qmpe recovers parameters" $
+
+load ("qmpe.mac") $
+load ("distrib") $
+
+foo: construct_qmpe (cdf_lognormal (u, mu, sigma), 'u, '[mu, sigma], mle_lognormal_weighted, 1e-4, [1, 0]);
+
+[mu1, sigma1]: [2, 1];
+
+(p: [0, 0.1, 0.2, 0.5, 0.8, 0.9, 0.9999],
+ q: ev (map (lambda ([p1], quantile_lognormal (p1, mu1, sigma1)), p), numer),
+ [q, p]);
+
+baz: foo (q, p);
+
+plot_qmpe_comparison (q, p, assoc ('initial, baz), assoc ('final, baz));

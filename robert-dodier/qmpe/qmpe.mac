@@ -1,0 +1,103 @@
+/* qmpe.mac -- QMPE (quantile maximum probability estimate)
+ *
+ * Reimplementation of the QMPE method of Heathcote et al. [1].
+ * Heathcote et al. formulate the likelihood function differently
+ * (but arrive at the same expression) and apply a specific 
+ * line search algorithm to it. I'll formulate the likelihood function
+ * in terms of censored data and apply an off-the-shelf minimization
+ * algorithm; I picked LBFGS, but I expect other methods would work.
+ *
+ * See also:
+ * https://stats.stackexchange.com/a/442966/13562
+ */
+
+gradef (unit_step(x), kron_delta(0, x));
+
+:lisp (sb-ext::set-floating-point-modes :traps nil)
+
+float_inf: 1.0/0.0;
+float_minf: - float_inf;
+
+simp: false;
+tellsimp (log(0), minf);
+tellsimp (log(inf), inf);
+tellsimp (log(float_inf), float_inf);
+tellsimp (erf(float_inf), 1.0);
+tellsimp (erf(float_minf), -1.0);
+tellsimp (float_inf^2, float_inf);
+tellsimp (float_minf^2, float_inf);
+tellsimp (exp(float_inf), float_inf);
+tellsimp (exp(float_minf), 0.0);
+simp: true;
+
+if ?fboundp ('lbfgs) = false then load ("lbfgs");
+
+construct_qmpe (cdf, var, parameters, weighted_mle_method, tol, iprint) :=
+           buildq ([cdf, var, parameters, weighted_mle_method, tol, iprint],
+                   lambda ([q, p],
+                           initial: ev (approximate_mle_by_bins (q, p, weighted_mle_method), numer),
+                           nll: - 'sum(('p[i] - 'p[i - 1])*log(at(cdf, var = 'q[i]) - at(cdf, var = 'q[i - 1])), i, 2, length(p)),
+                           grad_nll: map (lambda ([x], diff (nll, x)), parameters),
+                           nll_function: gensym ("nll"),
+                           buildq ([nll, f_args: funmake (nll_function, parameters)],
+                                   f_args := (ev (nll, nouns), ev (%%, numer))),
+                           ev (%%),
+                           grad_nll_function: gensym ("grad_nll"),
+                           buildq ([grad_nll, f_args: funmake (grad_nll_function, parameters)],
+                                   f_args := (ev (grad_nll, nouns), ev (%%, numer))),
+                           ev (%%),
+                           apply ('trace, [nll_function, grad_nll_function]),
+                           ['initial = initial, 'nll = nll, 'final = lbfgs ([nll_function, grad_nll_function], parameters, initial, tol, iprint)]));
+
+approximate_mle_by_bins (q, p, weighted_mle_method) :=
+    block ([bin_centers, bin_masses, m],
+           m: length (p),
+           /* When one endpoint (left or right) is infinite,
+            * assume width of the infinite bin is the same
+            * as the mean width of any finite bins. 
+            */
+           mfbw: mean_finite_bin_width (q),
+           bin_centers: append ([if q[1] = minf or q[1] = float_minf then (q[2] - mfbw/2) else q[1] + (q[2] - q[1])/2],
+                                if m >= 4 then makelist (q[i - 1] + (q[i] - q[i - 1])/2, i, 3, m - 1) else [],
+                                [if q[m] = inf or q[m] = float_inf then (q[m - 1] + mfbw/2) else q[m - 1] + (q[m] - q[m - 1])/2]),
+           bin_masses: makelist (p[i] - p[i - 1], i, 2, m),
+           weighted_mle_method (bin_centers, bin_masses));
+
+mean_finite_bin_width (q) :=
+    block ([m: length (q)],
+           if (q[1] = minf or q[1] = float_minf) and (q[m] = inf or q[m] = float_inf)
+               then (if m >= 4 then (q[m - 1] - q[2])/(m - 3)
+                         else error ("mean_finite_bin_width: not enough points in", q))
+           elseif q[1] = minf or q[1] = float_minf
+               then (if m >= 3 then (q[m] - q[2])/(m - 2)
+                         else error ("mean_finite_bin_width: not enough points in", q))
+           elseif q[m] = inf or q[m] = float_inf
+               then (if m >= 3 then (q[m - 1] - q[2])/(m - 2)
+                         else error ("mean_finite_bin_width: not enough points in", q))
+               else (if m >= 2 then (q[m] - q[1])/(m - 1)
+                         else error ("mean_finite_bin_width: not enough points in", q)));
+
+mle_gaussian_weighted (xx, w) :=
+    block ([n: length (xx), sum0, sum1, sum2],
+           sum0: sum (w[i], i, 1, n),
+           sum1: sum (w[i] * xx[i], i, 1, n),
+           sum2: sum (w[i] * xx[i]^2, i, 1, n),
+           [sum1/sum0, sqrt (sum2/sum0 - (sum1/sum0)^2)]);
+
+mle_lognormal_weighted (xx, w) :=
+    mle_gaussian_weighted (log (xx), w);
+
+weighted_mle_generic (pdf, var, parameters, xx, w) :=
+    block ([nll, log_pdf],
+           n: length (xx),
+           log_pdf: log (pdf),
+           nll: - sum (w[i] * at (log_pdf, var = xx[i]), i, 1, n),
+           ev (%%, logexpand = super),
+           grad_nll: map (lambda ([v], diff (nll, v)), parameters),
+           solve (grad_nll, parameters));
+
+plot_qmpe_comparison (q, p, initial, final) :=
+    plot2d ([[discrete, q, p],
+             subst ([mu = initial[1], sigma = initial[2]], cdf_lognormal (x, mu, sigma)),
+             subst (final, cdf_lognormal (x, mu, sigma))],
+             [x, 0, 1.05*last(q)]);
