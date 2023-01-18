@@ -75,15 +75,6 @@ mean_finite_bin_width (q) :=
                else (if m >= 2 then (q[m] - q[1])/(m - 1)
                          else error ("mean_finite_bin_width: not enough points in", q)));
 
-weighted_mle_generic (pdf, var, parameters, xx, w) :=
-    block ([nll, log_pdf],
-           n: length (xx),
-           log_pdf: log (pdf),
-           nll: - sum (w[i] * at (log_pdf, var = xx[i]), i, 1, n),
-           ev (%%, logexpand = super),
-           grad_nll: map (lambda ([v], diff (nll, v)), parameters),
-           solve (grad_nll, parameters));
-
 plot_qmpe_comparison (q, p, cdf, var, parameters, quantile, initial, final) :=
     block ([q99: subst (final, quantile)],
            plot2d ([[discrete, q, p],
