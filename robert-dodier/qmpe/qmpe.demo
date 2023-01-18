@@ -1,6 +1,6 @@
 "verify qmpe recovers parameters" $
 
-batch ("qmpe.mac") $
+load ("qmpe.mac") $
 load ("distrib") $
 
 "example with lognormal" $

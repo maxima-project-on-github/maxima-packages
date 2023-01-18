@@ -13,11 +13,6 @@
 
 gradef (unit_step(x), kron_delta(0, x));
 
-:lisp (sb-ext::set-floating-point-modes :traps nil)
-
-float_inf: 1.0/0.0;
-float_minf: - float_inf;
-
 tellsimp (is_inf(inf), true);
 tellsimp (is_minf(minf), true);
 matchdeclare (xx, numberp);
@@ -33,19 +28,14 @@ tellsimp (is_minf(zz), false);
 simp: false;
 tellsimp (log(0), minf);
 tellsimp (log(inf), inf);
-tellsimp (log(float_inf), float_inf);
-tellsimp (erf(float_inf), 1.0);
-tellsimp (erf(float_minf), -1.0);
-tellsimp (float_inf^2, float_inf);
-tellsimp (float_minf^2, float_inf);
-tellsimp (exp(float_inf), float_inf);
-tellsimp (exp(float_minf), 0.0);
 simp: true;
 
 matchdeclare ([aa, bb, cc], all, xx, symbolp) $
-'diff (if aa then bb else cc, xx) $
-/* ignoring discontinuities */
-tellsimpafter (''%, apply ("if", [aa, diff (bb, xx), true, diff (cc, xx)])) $
+/* ignoring discontinuities
+ * quote-quote argument to ensure it's simplified
+ * by the time tellsimpafter sees it
+ */
+tellsimpafter (''('diff (if aa then bb else cc, xx)), apply ("if", [aa, diff (bb, xx), true, diff (cc, xx)]));
 
 if ?fboundp ('lbfgs) = false then load ("lbfgs");
 
@@ -74,22 +64,22 @@ approximate_mle_by_bins (q, p, weighted_mle_method, parameters) :=
             * as the mean width of any finite bins. 
             */
            mfbw: mean_finite_bin_width (q),
-           bin_centers: append ([if q[1] = minf or q[1] = float_minf then (q[2] - mfbw/2) else q[1] + (q[2] - q[1])/2],
+           bin_centers: append ([if q[1] = minf then (q[2] - mfbw/2) else q[1] + (q[2] - q[1])/2],
                                 if m >= 4 then makelist (q[i - 1] + (q[i] - q[i - 1])/2, i, 3, m - 1) else [],
-                                [if q[m] = inf or q[m] = float_inf then (q[m - 1] + mfbw/2) else q[m - 1] + (q[m] - q[m - 1])/2]),
+                                [if q[m] = inf then (q[m - 1] + mfbw/2) else q[m - 1] + (q[m] - q[m - 1])/2]),
            bin_masses: makelist (p[i] - p[i - 1], i, 2, m),
            weighted_mle_method (bin_centers, bin_masses),
            map (lambda ([parameter], assoc (parameter, %%)), parameters));
 
 mean_finite_bin_width (q) :=
     block ([m: length (q)],
-           if (q[1] = minf or q[1] = float_minf) and (q[m] = inf or q[m] = float_inf)
+           if q[1] = minf and q[m] = inf
                then (if m >= 4 then (q[m - 1] - q[2])/(m - 3)
                          else error ("mean_finite_bin_width: not enough points in", q))
-           elseif q[1] = minf or q[1] = float_minf
+           elseif q[1] = minf
                then (if m >= 3 then (q[m] - q[2])/(m - 2)
                          else error ("mean_finite_bin_width: not enough points in", q))
-           elseif q[m] = inf or q[m] = float_inf
+           elseif q[m] = inf
                then (if m >= 3 then (q[m - 1] - q[2])/(m - 2)
                          else error ("mean_finite_bin_width: not enough points in", q))
                else (if m >= 2 then (q[m] - q[1])/(m - 1)
