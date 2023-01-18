@@ -44,17 +44,7 @@ construct_qmpe (cdf, var, parameters, weighted_mle_method, tol, iprint) :=
                    lambda ([q, p],
                            initial: ev (approximate_mle_by_bins (q, p, weighted_mle_method, parameters), numer),
                            nll: - 'sum(('p[i] - 'p[i - 1])*log(at(cdf, var = 'q[i]) - at(cdf, var = 'q[i - 1])), i, 2, length(p)),
-                           grad_nll: map (lambda ([x], diff (nll, x)), parameters),
-                           nll_function: gensym ("nll"),
-                           buildq ([nll, f_args: funmake (nll_function, parameters)],
-                                   f_args := (ev (nll, nouns), ev (%%, numer))),
-                           ev (%%),
-                           grad_nll_function: gensym ("grad_nll"),
-                           buildq ([grad_nll, f_args: funmake (grad_nll_function, parameters)],
-                                   f_args := (ev (grad_nll, nouns), ev (%%, numer))),
-                           ev (%%),
-                           apply ('trace, [nll_function, grad_nll_function]),
-                           ['initial = initial, 'nll = nll, 'final = lbfgs ([nll_function, grad_nll_function], parameters, initial, tol, iprint)]));
+                           ['initial = initial, 'nll = nll, 'final = lbfgs (nll, parameters, initial, tol, iprint)]));
 
 approximate_mle_by_bins (q, p, weighted_mle_method, parameters) :=
     block ([bin_centers, bin_masses, m],
