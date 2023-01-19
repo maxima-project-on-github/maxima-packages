@@ -75,10 +75,18 @@ mean_finite_bin_width (q) :=
                else (if m >= 2 then (q[m] - q[1])/(m - 1)
                          else error ("mean_finite_bin_width: not enough points in", q)));
 
-plot_qmpe_comparison (q, p, cdf, var, parameters, quantile, initial, final) :=
+plot_qmpe_comparison_cdf (q, p, cdf, var, parameters, quantile, initial, final) :=
     block ([q99: subst (final, quantile)],
            plot2d ([[discrete, q, p],
                    subst (map (lambda ([a, b], a = b), parameters, initial), cdf),
                    subst (final, cdf)],
+                   [var, 0, q99],
+                   [style, points, lines, lines]));
+
+plot_qmpe_comparison_pdf (q, p, pdf, var, parameters, quantile, initial, final) :=
+    block ([q99: subst (final, quantile), dp: (rest (p) - rest (p, -1)) / (rest (q) - rest (q, -1))],
+           plot2d ([[discrete, q, cons (0, dp)],
+                   subst (map (lambda ([a, b], a = b), parameters, initial), pdf),
+                   subst (final, pdf)],
                    [var, 0, q99],
                    [style, points, lines, lines]));
