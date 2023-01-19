@@ -1,0 +1,32 @@
+(load ("qmpe.mac"),
+ if get ('descriptive, 'version) = false
+     then load ("descriptive"),
+ 0);
+0;
+
+mle_gaussian_weighted ([1, 2, 3, 4, 5], [1, 1, 1, 1, 1]);
+''([mean ([1, 2, 3, 4, 5]), std ([1, 2, 3, 4, 5])]);
+
+mle_gaussian_weighted ([1, 2, 3, 4, 5], [2, 2, 2, 2, 2]);
+''([mean ([1, 2, 3, 4, 5]), std ([1, 2, 3, 4, 5])]);
+
+mle_gaussian_weighted ([1, 2, 3, 4, 5], [1/5, 1/5, 1/5, 1/5, 1/5]);
+''([mean ([1, 2, 3, 4, 5]), std ([1, 2, 3, 4, 5])]);
+
+mle_gaussian_weighted ([10, 20, 30, 40, 50], [1/10, 1/10, 1/10, 1/10, 6/10]);
+''([mean ([10, 20, 30, 40, 50, 50, 50, 50, 50, 50]), std ([10, 20, 30, 40, 50, 50, 50, 50, 50, 50])]);
+
+(data: makelist (random (5), 20),
+ unique_data: unique (data),
+ weights: map (length, map (lambda ([u], sublist (data, lambda ([v], v = u))), unique_data)),
+ mle_gaussian_weighted (unique_data, weights));
+''([mean (data), std (data)]);
+
+approximate_mle_by_bins ([10, 20, 30, 40, 50], [0, 1/10, 6/10, 8/10, 1], mle_gaussian_weighted);
+''(mle_gaussian_weighted ([15, 25, 35, 45], [1/10, 5/10, 2/10, 2/10]));
+
+mle_lognormal_weighted (exp ([1/4, 1/2, 1, 2, 4]), [1, 1, 1, 1, 1]);
+''([mean ([1/4, 1/2, 1, 2, 4]), std ([1/4, 1/2, 1, 2, 4])]);
+
+mle_lognormal_weighted (exp ([10, 20, 30, 40, 50]), [1/10, 1/10, 1/10, 1/10, 6/10]);
+''([mean ([10, 20, 30, 40, 50, 50, 50, 50, 50, 50]), std ([10, 20, 30, 40, 50, 50, 50, 50, 50, 50])]);

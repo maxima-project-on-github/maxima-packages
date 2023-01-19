@@ -1702,3 +1702,19 @@ f(b, a);
 buggy(b);
 0;
 
+/* maxima-discuss 2022-12-22: "Unexpected myFunc(x) := ev(x);" */
+
+kill (myFunc, a, b, x, y);
+done;
+
+(myFunc(x) := ev(x), 0);
+0;
+
+myFunc(a*b);
+a*b;
+
+myFunc(a*y);
+a*y;
+
+myFunc(a*x);
+a*x;

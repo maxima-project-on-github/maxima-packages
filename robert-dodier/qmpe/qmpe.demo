@@ -1,0 +1,32 @@
+"verify qmpe recovers parameters" $
+
+load ("qmpe.mac") $
+load ("distrib") $
+
+"example with lognormal" $
+
+if is_inf(u) then 1 else ''(cdf_lognormal (u, location, scale));
+foo: construct_qmpe (%, 'u, '[location, scale], mle_lognormal, 1e-4, [1, 0]);
+
+[mu1, sigma1]: [2, 1];
+
+(p: [0, 0.1, 0.2, 0.5, 0.8, 0.9, 1],
+ q: ev (map (lambda ([p1], if p1 = 1 then inf else quantile_lognormal (p1, mu1, sigma1)), p), numer),
+ [q, p]);
+
+baz: foo (q, p);
+
+plot_qmpe_comparison (q, p, cdf_lognormal (u, location, scale), u, '[location, scale], quantile_lognormal (0.99, location, scale), assoc ('initial, baz), assoc ('final, baz));
+
+"example with weibull" $
+
+(p: [0, 1/3, 2/3, 1],
+ q: [0, 1, 2, inf],
+ [q, p]);
+
+if is_inf(u) then 1 else ''(cdf_weibull (u, shape, scale));
+quux: construct_qmpe (%, 'u, '[shape, scale], mle_weibull, 1e-4, [1, 0]);
+
+mumble: quux (q, p);
+
+plot_qmpe_comparison (q, p, cdf_weibull (u, shape, scale), u, '[shape, scale], quantile_weibull (0.99, shape, scale), assoc ('initial, mumble), assoc ('final, mumble));

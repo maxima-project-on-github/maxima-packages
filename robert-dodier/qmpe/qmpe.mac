@@ -1,0 +1,92 @@
+/* qmpe.mac -- QMPE (quantile maximum probability estimate)
+ *
+ * Reimplementation of the QMPE method of Heathcote et al. [1].
+ * Heathcote et al. formulate the likelihood function differently
+ * (but arrive at the same expression) and apply a specific 
+ * line search algorithm to it. I'll formulate the likelihood function
+ * in terms of censored data and apply an off-the-shelf minimization
+ * algorithm; I picked LBFGS, but I expect other methods would work.
+ *
+ * See also:
+ * https://stats.stackexchange.com/a/442966/13562
+ */
+
+gradef (unit_step(x), kron_delta(0, x));
+
+tellsimp (is_inf(inf), true);
+tellsimp (is_minf(minf), true);
+matchdeclare (xx, numberp);
+tellsimp (is_inf(xx), false);
+tellsimp (is_minf(xx), false);
+matchdeclare (yy, lambda ([e], atom(e) and constantp(e) and numberp (ev(e, numer))));
+tellsimp (is_inf(yy), false);
+tellsimp (is_minf(yy), false);
+matchdeclare (zz, lambda ([e], atom(e) and featurep (e, 'finite)));
+tellsimp (is_inf(zz), false);
+tellsimp (is_minf(zz), false);
+
+simp: false;
+tellsimp (log(0), minf);
+tellsimp (log(inf), inf);
+simp: true;
+
+matchdeclare ([aa, bb, cc], all, xx, symbolp) $
+/* ignoring discontinuities
+ * quote-quote argument to ensure it's simplified
+ * by the time tellsimpafter sees it
+ */
+tellsimpafter (''('diff (if aa then bb else cc, xx)), apply ("if", [aa, diff (bb, xx), true, diff (cc, xx)]));
+
+if ?fboundp ('lbfgs) = false then load ("lbfgs");
+
+construct_qmpe (cdf, var, parameters, weighted_mle_method, tol, iprint) :=
+           buildq ([cdf, var, parameters, weighted_mle_method, tol, iprint],
+                   lambda ([q, p],
+                           initial: ev (approximate_mle_by_bins (q, p, weighted_mle_method, parameters), numer),
+                           nll: - 'sum(('p[i] - 'p[i - 1])*log(at(cdf, var = 'q[i]) - at(cdf, var = 'q[i - 1])), i, 2, length(p)),
+                           ['initial = initial, 'nll = nll, 'final = lbfgs (nll, parameters, initial, tol, iprint)]));
+
+approximate_mle_by_bins (q, p, weighted_mle_method, parameters) :=
+    block ([bin_centers, bin_masses, m],
+           m: length (p),
+           /* When one endpoint (left or right) is infinite,
+            * assume width of the infinite bin is the same
+            * as the mean width of any finite bins. 
+            */
+           mfbw: mean_finite_bin_width (q),
+           bin_centers: append ([if q[1] = minf then (q[2] - mfbw/2) else q[1] + (q[2] - q[1])/2],
+                                if m >= 4 then makelist (q[i - 1] + (q[i] - q[i - 1])/2, i, 3, m - 1) else [],
+                                [if q[m] = inf then (q[m - 1] + mfbw/2) else q[m - 1] + (q[m] - q[m - 1])/2]),
+           bin_masses: makelist (p[i] - p[i - 1], i, 2, m),
+           weighted_mle_method (bin_centers, bin_masses),
+           map (lambda ([parameter], assoc (parameter, %%)), parameters));
+
+mean_finite_bin_width (q) :=
+    block ([m: length (q)],
+           if q[1] = minf and q[m] = inf
+               then (if m >= 4 then (q[m - 1] - q[2])/(m - 3)
+                         else error ("mean_finite_bin_width: not enough points in", q))
+           elseif q[1] = minf
+               then (if m >= 3 then (q[m] - q[2])/(m - 2)
+                         else error ("mean_finite_bin_width: not enough points in", q))
+           elseif q[m] = inf
+               then (if m >= 3 then (q[m - 1] - q[2])/(m - 2)
+                         else error ("mean_finite_bin_width: not enough points in", q))
+               else (if m >= 2 then (q[m] - q[1])/(m - 1)
+                         else error ("mean_finite_bin_width: not enough points in", q)));
+
+plot_qmpe_comparison_cdf (q, p, cdf, var, parameters, quantile, initial, final) :=
+    block ([q99: subst (final, quantile)],
+           plot2d ([[discrete, q, p],
+                   subst (map (lambda ([a, b], a = b), parameters, initial), cdf),
+                   subst (final, cdf)],
+                   [var, 0, q99],
+                   [style, points, lines, lines]));
+
+plot_qmpe_comparison_pdf (q, p, pdf, var, parameters, quantile, initial, final) :=
+    block ([q99: subst (final, quantile), dp: (rest (p) - rest (p, -1)) / (rest (q) - rest (q, -1))],
+           plot2d ([[discrete, q, cons (0, dp)],
+                   subst (map (lambda ([a, b], a = b), parameters, initial), pdf),
+                   subst (final, pdf)],
+                   [var, 0, q99],
+                   [style, points, lines, lines]));
