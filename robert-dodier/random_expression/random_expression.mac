@@ -1,0 +1,80 @@
+/* random_expression.mac -- generate a random expression
+ * copyright 2023 by Robert Dodier
+ * I release this work under terms of the GNU General Public License, v2
+ */
+
+/* test:
+
+       L:makelist (random_expression (random_expression_ops_arithmetic, 6), 100)  $
+
+       for i thru length(L) do block ([x:L[i]], if not equal (x, parse_string (string (x))) then (print ("i=",i), grind(x)));
+
+   should not display anything (just "done").
+
+ */
+
+random_expression_args_max["+"]: 4;
+random_expression_args_max["*"]: 3;
+random_expression_args_max["and"]: 3;
+random_expression_args_max["or"]: 4;
+
+random_expression_ops_arithmetic:
+    [["+", lambda ([], 2 + random (random_expression_args_max["+"] - 1))],
+     ["-", lambda ([], 1)],
+     ["*", lambda ([], 2 + random (random_expression_args_max["*"] - 1))],
+     ["/", lambda ([], 2)],
+     ["^", lambda ([], 2)]
+     /* (n!)! displayed as n!! which means double factorial */
+     /* , ["!", lambda ([], 1)] */
+     ];
+
+random_expression_ops_logical:
+    [["=", lambda ([], 2)],
+     [equal, lambda ([], 2)],
+     ["<", lambda ([], 2)],
+     ["<=", lambda ([], 2)],
+     [">=", lambda ([], 2)],
+     [">", lambda ([], 2)],
+     ["and", lambda ([], 2 + random (random_expression_args_max["and"] - 1))],
+     ["or", lambda ([], 2 + random (random_expression_args_max["or"] - 1))],
+     ["not", lambda ([], 1)]];
+
+random_expression_ops_programmatic:
+    [[":", lambda ([], 2)]];
+
+random_expression (ops, depth) :=
+    block ([e: next_variable ()],
+           for k thru depth do e: maybe_expand_random_expression (ops, e),
+           e);
+
+maybe_expand_random_expression (ops, e) :=
+    scanmap (lambda ([x], maybe_replace_symbol (ops, x)), e, bottomup);
+
+maybe_replace_symbol (ops, e) :=
+    if symbolp(e) then maybe_generate_expression (ops, e) else e;
+
+random_expression_expansion_probability: 0.5;
+
+maybe_generate_expression (ops, e) :=
+    if random (1.0) < random_expression_expansion_probability
+        then generate_expression (ops)
+        else e;
+
+generate_expression (ops) :=
+    block ([op1, args1, nargs],
+           [op1, nargs_func]: choose_at_random (ops),
+           args1: makelist (next_variable (), nargs_func ()),
+           apply (op1, args1));
+
+choose_at_random (l) := l [1 + random (length (l))];
+
+letters: makelist (ascii (k), k, 97, 97 + 25);
+strings: map (lambda ([l], apply (sconcat, l)), cartesian_product_list (letters, letters));
+random_expressions_variables:
+   (map (lambda ([s], if (s: errcatch (parse_string (s))) # [] then s[1]), strings),
+    sublist (%%, lambda ([x], x # false)));
+prev_variable_index: -1;
+
+next_variable () :=
+    random_expressions_variables [1 + mod (prev_variable_index: prev_variable_index + 1, length (random_expressions_variables))];
+
