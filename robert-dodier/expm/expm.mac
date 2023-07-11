@@ -41,10 +41,8 @@ expm_pade_N (p, q, A) := sum (((p + q - j)! * p!) / ((p + q)! * j! * (p - j)!) *
 expm_pade_D (p, q, A) := sum (((p + q - j)! * q!) / ((p + q)! * j! * (q - j)!) * (-A)^^j, j, 0, q);
 
 expm_pade_R (p, q, A) :=
-    block ([N_polynomial, D_polynomial, N_matrix, D_matrix, dotident: I],
-           N_polynomial: subst ("*" = ".", horner (subst ("^^" = "^", expm_pade_N (p, q, 'A)), 'A)),
-           D_polynomial: subst ("*" = ".", horner (subst ("^^" = "^", expm_pade_D (p, q, 'A)), 'A)),
-           N_matrix: psubst ([I = ident (length (A)), 'A = A],  N_polynomial),
-           D_matrix: psubst ([I = ident (length (A)), 'A = A],  D_polynomial),
+    block ([N_matrix, D_matrix],
+           N_matrix: expm_pade_N (p, q, A),
+           D_matrix: expm_pade_D (p, q, A),
            invert_by_lu (D_matrix, complexfield) . N_matrix);
 
