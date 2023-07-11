@@ -34,7 +34,7 @@
  *     Retrieved from: https://www.cs.jhu.edu/~misha/ReadingSeminar/Papers/Moler03.pdf
  */
 
-expm (A) := expm_pade_R (6, 6, A);
+expm (A) := expm_pade_R (11, 11, A);
 
 expm_pade_N (p, q, A) := sum (((p + q - j)! * p!) / ((p + q)! * j! * (p - j)!) * A^^j, j, 0, p);
 
