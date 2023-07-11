@@ -1,0 +1,50 @@
+/* expm.mac -- matrix exponential
+ * copyright 2023 by Robert Dodier
+ * I release this work under terms of the GNU General Public License
+ */
+
+/* Naive implementation of R[q,q](A) Padé approximation,
+ * as stated by Moler and van Loan [1], "Method 2. Padé approximation."
+ * Scaling and unscaling (e.g. via the scaling and squaring approach)
+ * is omitted here in the interest of simplicity; that is the obvious
+ * next step, if ever this function is revisited.
+ *
+ * Moler and van Loan state:
+ *
+ * <quote>
+ *
+ *     The (p, q) Padé approximation to e^A is defined by
+ *
+ *         R[p,q](A) = [D[p,q](A)]^-1 N[p,q](A),
+ *
+ *     where
+ *
+ *         N[p,q](A) = sum_{j=0}^p ((p + q - j)! p!) / ((p + q)! j! (p - j)!) A^j
+ *
+ *     and
+ *
+ *         D[p,q](A) = sum_{j=0}^q ((p + q - j)! q!) / ((p + q)! j! (q - j)!) (-A)^j
+ *
+ * </quote>
+ *
+ * 
+ * [1] C. Moler and C. van Loan.
+ *     "Nineteen Dubious Ways to Compute the Exponential of a Matrix, Twenty-Five Years Later."
+ *     SIAM Review, Vol. 45, No. 1 (2003).
+ *     Retrieved from: https://www.cs.jhu.edu/~misha/ReadingSeminar/Papers/Moler03.pdf
+ */
+
+expm (A) := expm_pade_R (6, 6, A);
+
+expm_pade_N (p, q, A) := sum (((p + q - j)! * p!) / ((p + q)! * j! * (p - j)!) * A^^j, j, 0, p);
+
+expm_pade_D (p, q, A) := sum (((p + q - j)! * q!) / ((p + q)! * j! * (q - j)!) * (-A)^^j, j, 0, q);
+
+expm_pade_R (p, q, A) :=
+    block ([N_polynomial, D_polynomial, N_matrix, D_matrix, dotident: I],
+           N_polynomial: subst ("*" = ".", horner (subst ("^^" = "^", expm_pade_N (p, q, 'A)), 'A)),
+           D_polynomial: subst ("*" = ".", horner (subst ("^^" = "^", expm_pade_D (p, q, 'A)), 'A)),
+           N_matrix: psubst ([I = ident (length (A)), 'A = A],  N_polynomial),
+           D_matrix: psubst ([I = ident (length (A)), 'A = A],  D_polynomial),
+           invert_by_lu (D_matrix, complexfield) . N_matrix);
+
