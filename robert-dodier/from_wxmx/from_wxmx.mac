@@ -13,6 +13,10 @@ op1(e%) := if not atom(e%) then if not atom(op(e%)) then op1(op(e%)) else op(e%)
 
 defrule (rule_split_mth, output () (mm), apply (output (), split_mth (mm)));
 
+extract_ops (e, op1) :=
+    block ([L: []],
+           scanmap (lambda ([e1], if not atom(e1) and op(e1) = op1 then push (e1, L), e1), e),
+           reverse (L));
 
 /* MIGHT BE UNNEEDED !!
 extract_outputs (e) :=
