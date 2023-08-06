@@ -4,6 +4,11 @@
 
 (ql:quickload :plump)
 
+;; By default, plump assumes some stuff applicable to HTML tags -- avoid that.
+;; (In particular, it is assumed that <input> is a self-closing tag.)
+
+(setq plump:*tag-dispatchers* plump:*xml-tags*)
+
 ;; about elements vs nodes, see for example:
 ;; https://stackoverflow.com/questions/132564/whats-the-difference-between-an-element-and-a-node-in-xml
 ;;
