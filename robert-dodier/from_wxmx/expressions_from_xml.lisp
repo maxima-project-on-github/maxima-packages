@@ -49,3 +49,16 @@
          (plump:parse (plump:slurp-stream s))))
       (t
         (plump:parse (string f))))))
+
+(ql:quickload "zippy")
+(ql:quickload "flexi-streams")
+
+(defun $open_zip_input_stream (zipfile-name entry-name)
+  (let*
+    ((z (org.shirakumo.zippy:open-zip-file zipfile-name))
+     (ee (mapcar (lambda (e) (list (org.shirakumo.zippy:file-name e) e)) (coerce (org.shirakumo.zippy:entries z) 'list)))
+     (a (second (assoc entry-name ee :test #'string=)))
+     (c (org.shirakumo.zippy:entry-to-vector a))
+     (s0 (flexi-streams:make-in-memory-input-stream c)))
+    (flexi-streams:make-flexi-stream s0 :external-format :utf-8)))
+
