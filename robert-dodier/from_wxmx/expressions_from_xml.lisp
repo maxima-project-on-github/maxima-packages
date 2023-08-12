@@ -33,7 +33,8 @@
              `((mqapply) ((,op) ,@attribute-values) ,first-child-expr))
            `((mqapply) ((,op) ,@attribute-values))))))
      (x
-       (merror "expressions_from_xml: nonnull argument ~A is not a text or nesting node in an XML parse tree." x))
+       (mtell "expressions_from_xml: ~A is not a text or nesting node in an XML parse tree; return it as it is.~%" x)
+       x)
      (t
        (merror "expressions_from_xml: null argument; how did that happen?"))))
 
