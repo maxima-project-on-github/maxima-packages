@@ -24,12 +24,12 @@
 (defmfun $parse_xml (f)
   (cond
     ((stringp f)
-     (xmls:parse f))
+     (xmls:parse f :compress-whitespace nil))
     ((streamp f)
-     (xmls:parse f))
+     (xmls:parse f :compress-whitespace nil))
     ((pathnamep f)
      (with-open-file (s f)
-       (xmls:parse s)))
+       (xmls:parse s :compress-whitespace nil)))
     (t
       (merror "parse_xml: argument must be a string, stream, or Lisp pathname; found ~M~%" f))))
 
