@@ -1,18 +1,22 @@
-load ("expressions_from_xml.mac");
+load ("expressions_from_dom.mac");
 load ("parse_token_list.lisp");
 
 from_wxmx (filename) :=
-    block ([S: openr (filename)],
-           parse_tree: parse_xml (S),
-           close (S),
-           expr_verbatim: expressions_from_xml (parse_tree),
-           apply1 (expr_verbatim, rule_split_mth));
+    block ([parse_tree, expr_verbatim, expr_mogrified],
+           parse_tree: parse_xml (?pathname (filename)),
+           expr_verbatim: expressions_from_dom (parse_tree),
+           expr_mogrified: apply1 (expr_verbatim, rule_split_mth),
+           [parse_tree, expr_verbatim, expr_mogrified]);
 
 matchdeclare (mm, lambda ([e%], op1(e%) = 'mth));
 op1(e%) := if not atom(e%) then if not atom(op(e%)) then op1(op(e%)) else op(e%);
 
 defrule (rule_split_mth, output () (mm), apply (output (), split_mth (mm)));
 
+extract_ops (e, op1) :=
+    block ([L: []],
+           scanmap (lambda ([e1], if not atom(e1) and op(e1) = op1 then push (e1, L), e1), e),
+           reverse (L));
 
 /* MIGHT BE UNNEEDED !!
 extract_outputs (e) :=

@@ -1718,3 +1718,39 @@ a*y;
 
 myFunc(a*x);
 a*x;
+
+/* SF bug #3251: "declare(foo, constant) interferes with foo as a function argument"
+ * reported bug was fixed by commit 051789,
+ * following example is mentioned in comment 2023-01-26
+ */
+
+/*
+    (%i1) callfun(fun) := fun()$
+    (%i2) foo() := print("Hey")$
+    (%i3) callfun(foo)$
+    Hey 
+    (%i4) fun() := print("Bye")$
+    (%i5) callfun(foo)$ /* One expects to hear "Hey" again */
+    Bye 
+    (%i6) fun(x) := print("Bye,", x)$
+    (%i7) callfun(foo)$
+
+    Too few arguments supplied to fun(x); found: []
+    #0: callfun(fun=foo)
+     -- an error. To debug this try: debugmode(true);
+ */
+
+(kill (callfun, fun, foo),
+ callfun(fun) := fun(),
+ foo() := print("Hey"),
+ callfun(foo));
+"Hey";
+
+(fun() := print("Bye"),
+ callfun(foo));
+"Hey";
+
+(fun(x) := print("Bye,", x),
+ callfun(foo));
+"Hey";
+

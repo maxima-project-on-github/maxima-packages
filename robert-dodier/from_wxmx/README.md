@@ -10,11 +10,11 @@ parse\_xml -- parse XML input into a parse tree representation
 
     parse\_xml(f) where f is an XML string (containing XML, not a filename), input stream, or Lisp pathname
 
-    Returns an XML parse tree (specific to the XML parser implementation, which is Plump [1] at the moment.)
+    Returns an XML parse tree (specific to the XML parser implementation, which is XMLS [1] at the moment.)
 
-expressions\_from\_xml -- convert an XML parse tree into a Maxima expression
+expressions\_from\_dom -- convert an XML parse tree (domain object model, DOM) into a Maxima expression
 
-    expressions\_from\_xml(e) where e is a text node or nesting node in an XML parse tree
+    expressions\_from\_dom(e) where e is a text node or nesting node in an XML parse tree
 
     Returns a Maxima expression which is a verbatim reprepresentation of the parse tree
 
@@ -44,7 +44,7 @@ load ("from_wxmx.mac");
 S: openr ("output-examples-simple.xml");
 parse_tree: parse_xml (S);
 close (S);
-expr_verbatim: expressions_from_xml (parse_tree);
+expr_verbatim: expressions_from_dom (parse_tree);
 /* COPY THIS TO LEXICAL_SYMBOLS TEST CASES */
 extract_outputs (e) :=
   block ([L: [], f],
@@ -66,4 +66,4 @@ for x in outputs_expressions_labeled do ?displa(x);
 References
 ----------
 
-[1] https://github.com/Shinmera/plump
+[1] https://github.com/rpgoldman/xmls
