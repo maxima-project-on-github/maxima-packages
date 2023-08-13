@@ -10,7 +10,7 @@ parse\_xml -- parse XML input into a parse tree representation
 
     parse\_xml(f) where f is an XML string (containing XML, not a filename), input stream, or Lisp pathname
 
-    Returns an XML parse tree (specific to the XML parser implementation, which is Plump [1] at the moment.)
+    Returns an XML parse tree (specific to the XML parser implementation, which is XMLS [1] at the moment.)
 
 expressions\_from\_xml -- convert an XML parse tree into a Maxima expression
 
@@ -66,4 +66,4 @@ for x in outputs_expressions_labeled do ?displa(x);
 References
 ----------
 
-[1] https://github.com/Shinmera/plump
+[1] https://github.com/rpgoldman/xmls
