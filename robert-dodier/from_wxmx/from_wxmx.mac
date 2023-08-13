@@ -1,10 +1,10 @@
-load ("expressions_from_xml.mac");
+load ("expressions_from_dom.mac");
 load ("parse_token_list.lisp");
 
 from_wxmx (filename) :=
     block ([parse_tree, expr_verbatim, expr_mogrified],
            parse_tree: parse_xml (?pathname (filename)),
-           expr_verbatim: expressions_from_xml (parse_tree),
+           expr_verbatim: expressions_from_dom (parse_tree),
            expr_mogrified: apply1 (expr_verbatim, rule_split_mth),
            [parse_tree, expr_verbatim, expr_mogrified]);
 

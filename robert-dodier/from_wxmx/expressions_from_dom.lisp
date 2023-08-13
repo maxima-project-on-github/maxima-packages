@@ -1,4 +1,4 @@
-;; expressions_from_xml.lisp -- construct Maxima expressions from XML
+;; expressions_from_dom.lisp -- construct Maxima expressions from DOM parsed from XML
 ;; copyright 2021 by Robert Dodier
 ;; I release this work under terms of the GNU General Public License
 
@@ -10,14 +10,14 @@
 ;; apparently element is the only kind of node which can contain child nodes and attributes.
 ;; probably need to think more carefully about elements, nodes, children, etc.
 
-(defmfun $expressions_from_xml (x)
+(defmfun $expressions_from_dom (x)
   (cond
     ((stringp x) x)
     (x
      (let*
        ((op (mfuncall '$parse_string (xmls:node-name x)))
         (attribute-eqs (mapcar (lambda (pq) (cons '(mequal) pq)) (xmls:node-attrs x)))
-        (children-exprs (mapcar (symbol-function '$expressions_from_xml) (xmls:node-children x))))
+        (children-exprs (mapcar (symbol-function '$expressions_from_dom) (xmls:node-children x))))
        `((mqapply) ((,op) ,@attribute-eqs) ,@children-exprs)))
      (t x)))
 

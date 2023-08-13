@@ -1,5 +1,5 @@
   
-/* expressions_from_xml.mac -- process Maxima expressions constructed from wxmx output XML
+/* expressions_from_dom.mac -- process Maxima expressions constructed from DOM parsed from wxmx content XML
  *
  * Note that these pattern matching rules work only for
  * expressions created from wxMaxima wxmx <output> XML tags.
@@ -11,7 +11,7 @@
  * I release this work under terms of the GNU General Public License
  */
 
-load ("expressions_from_xml.lisp");
+load ("expressions_from_dom.lisp");
 
 matchdeclare ([aa, bb, cc, dd,ee,ff,ele1,ele2,ele3,ele4,ele5,ele6], all);
 
