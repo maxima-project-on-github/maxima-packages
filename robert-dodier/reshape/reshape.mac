@@ -1,0 +1,45 @@
+reshape (x, dims, [major_flag]) :=
+
+    block ([major_flag1, dims_integer, i_any, dims1, dim_any, l],
+
+           if major_flag = []
+               then major_flag1: 'by_rows
+           elseif major_flag = '[by_rows] or major_flag = '[by_columns]
+               then major_flag1: major_flag[1]
+               else error ("reshape: optional argument must be 'by_rows or 'by_columns; found:", major_flag),
+
+           dims_integer: sublist (dims, integerp),
+
+           if not every (integerp, dims) and (i_any: exactly_one (dims, 'any)) = false
+               then error ("reshape: dimensions must contain exactly one 'any, if not all integers; found:", dims),
+
+           if mod (n_elements (x), apply ("*", dims_integer)) = 0
+               then if every (integerp, dims)
+                        then dims1: dims
+                    else
+                       (dims1: copy (dims),
+                        dim_any: n_elements (x) / apply ("*", dims_integer),
+                        dims1[i_any]: dim_any)
+               else error (printf (false, "reshape: dimensions do not evenly divide the number of elements; found #elements = ~M, dims = ~M~%", n_elements (x), dims)),
+
+           l: flatten (x),
+
+           if major_flag1 = 'by_rows
+               then reshape_by_rows (l, 0, [], dims1)
+               else error ("reshape: optional argument 'by_columns not yet supported."));
+
+exactly_one (l, a) :=
+    (sublist_indices (l, lambda ([l1], l1 = a)),
+     if length (%%) = 1 then %%[1]);
+
+n_elements (x) :=
+    if listp (x) then n_elements_list (x)
+        else error ("n_elements: argument must be a list.");
+
+n_elements_list (x) := length (flatten (x));
+
+reshape_by_rows (l, l_offset, dims0, dims1) :=
+    if length (dims1) = 1
+        then makelist (l[l_offset + i], i, 1, dims1[1])
+        else block ([stride: apply ("*", rest (dims1))],
+                    makelist (reshape_by_rows (l, l_offset + (i - 1)*stride, endcons (first (dims1), dims0), rest (dims1)), i, 1, first (dims1)));
