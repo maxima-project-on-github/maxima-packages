@@ -26,7 +26,7 @@ reshape (x, dims, [major_flag]) :=
 
            if major_flag1 = 'by_rows
                then reshape_by_rows (l, 0, [], dims1)
-               else error ("reshape: optional argument 'by_columns not yet supported."));
+               else reshape_by_columns (l, [], [], dims1));
 
 exactly_one (l, a) :=
     (sublist_indices (l, lambda ([l1], l1 = a)),
@@ -40,6 +40,14 @@ n_elements_list (x) := length (flatten (x));
 
 reshape_by_rows (l, l_offset, dims0, dims1) :=
     if length (dims1) = 1
-        then makelist (l[l_offset + i], i, 1, dims1[1])
+        then makelist (l[l_offset + i], i, 1, first (dims1))
         else block ([stride: apply ("*", rest (dims1))],
                     makelist (reshape_by_rows (l, l_offset + (i - 1)*stride, endcons (first (dims1), dims0), rest (dims1)), i, 1, first (dims1)));
+
+reshape_by_columns (l, ii, dims0, dims1) :=
+    if length (ii) = length (dims0) + length (dims1) - 1
+        then block ([i, n0: apply ("*", dims0)],
+                    i: last (ii),
+                    for j: (length (dims0) - 1) step -1 thru 1 do i: i*dims0[j] + ii[j],
+                    makelist (l [1 + i + c*n0], c, 0, first (dims1) - 1))
+        else makelist (reshape_by_columns (l, endcons (i, ii), endcons (first (dims1), dims0), rest (dims1)), i, 0, first (dims1) - 1);
