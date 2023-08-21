@@ -24,9 +24,16 @@ reshape (x, dims, [major_flag]) :=
 
            l: flatten (x),
 
-           if major_flag1 = 'by_rows
-               then reshape_by_rows (l, 0, [], dims1)
-               else reshape_by_columns (l, [], [], dims1));
+           if length (dims1) = 1
+               then /* We have already ensured that dims[1] = 'any or dims[1] = length(l).
+                     * Not guaranteed, from what I can tell, that the result of flatten(x)
+                     * is distinct from x; copy x to play it safe.
+                     */
+                    copy (x)
+
+               elseif major_flag1 = 'by_rows
+                   then reshape_by_rows (l, 0, [], dims1)
+                   else reshape_by_columns (l, [], [], dims1));
 
 exactly_one (l, a) :=
     (sublist_indices (l, lambda ([l1], l1 = a)),

@@ -81,3 +81,18 @@ reshape (x, ['any, 5, 2]);
 is (reshape (reshape (x, [5, 4]), [2, 5, 2]) = reshape (x, [2, 5, 2]));
 true;
 
+is (reshape (x, [5, 4]) = reshape (x, [5, 4], 'by_rows));
+true;
+
+is (reshape (x, [5, 2, 2]) = reshape (x, [5, 2, 2], 'by_rows));
+true;
+
+is (reshape (x, [2, 10]) = reshape (x, [2, 10], 'by_rows));
+true;
+
+reshape (x, ['any], 'by_columns);
+[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
+
+reshape (x, [5, 'any], 'by_columns);
+[[1, 6, 11, 16], [2, 7, 12, 17], [3, 8, 13, 18], [4, 9, 14, 19], [5, 10, 15, 20]];
+
