@@ -143,3 +143,100 @@ reshape (x, [5, 'any], 'by_columns);
            20),
  unique (%%));
 [true];
+
+(array_from_list (x) := (make_array ('any, length (x)), fillarray (%%, x)),
+ array_from_nested_list (x) :=
+     block ([m: nesting_depth (x), dims: [], x1: x, y],
+            for k thru m - 1 do (push (length (x1), dims), x1: x1[1]),
+            push (length (x1), dims),
+            dims: reverse (dims),
+            y: apply ('make_array, cons ('any, dims)),
+            fillarray (y, flatten (x))),
+ nesting_depth (x) := if listp (x) then 1 + nesting_depth (x[1]) else 0,
+ 0);
+0;
+
+reshape (array_from_list (x), [2, 10]);
+''(array_from_nested_list ([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [11, 12, 13, 14, 15, 16, 17, 18, 19, 20]]));
+
+reshape (array_from_list (x), [10, 2]);
+''(array_from_nested_list ([[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12], [13, 14], [15, 16], [17, 18], [19, 20]]));
+
+reshape (array_from_list (x), [20]);
+''(array_from_nested_list ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]));
+
+reshape (array_from_list (x), ['any]);
+''(array_from_nested_list ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]));
+
+reshape (array_from_list (x), ['any, 1]);
+''(array_from_nested_list ([[1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12], [13], [14], [15], [16], [17], [18], [19], [20]]));
+
+reshape (array_from_list (x), [20, 'any]);
+''(array_from_nested_list ([[1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12], [13], [14], [15], [16], [17], [18], [19], [20]]));
+
+reshape (array_from_list (x), ['any, 2]);
+''(array_from_nested_list ([[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12], [13, 14], [15, 16], [17, 18], [19, 20]]));
+
+reshape (array_from_list (x), [10, 'any]);
+''(array_from_nested_list ([[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12], [13, 14], [15, 16], [17, 18], [19, 20]]));
+
+reshape (array_from_list (x), ['any, 4]);
+''(array_from_nested_list ([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16], [17, 18, 19, 20]]));
+
+reshape (array_from_list (x), [5, 'any]);
+''(array_from_nested_list ([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16], [17, 18, 19, 20]]));
+
+reshape (array_from_list (x), ['any, 5]);
+''(array_from_nested_list ([[1, 2, 3, 4, 5], [6, 7, 8, 9, 10], [11, 12, 13, 14, 15], [16, 17, 18, 19, 20]]));
+
+reshape (array_from_list (x), [4, 'any]);
+''(array_from_nested_list ([[1, 2, 3, 4, 5], [6, 7, 8, 9, 10], [11, 12, 13, 14, 15], [16, 17, 18, 19, 20]]));
+
+reshape (array_from_list (x), ['any, 10]);
+''(array_from_nested_list ([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [11, 12, 13, 14, 15, 16, 17, 18, 19, 20]]));
+
+reshape (array_from_list (x), [2, 'any]);
+''(array_from_nested_list ([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [11, 12, 13, 14, 15, 16, 17, 18, 19, 20]]));
+
+reshape (array_from_list (x), ['any, 20]);
+''(array_from_nested_list ([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]]));
+
+reshape (array_from_list (x), [1, 'any]);
+''(array_from_nested_list ([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]]));
+
+reshape (array_from_list (x), [2, 5, 2]);
+''(array_from_nested_list ([[[1, 2], [3, 4], [5, 6], [7, 8], [9, 10]], [[11, 12], [13, 14], [15, 16], [17, 18], [19, 20]]]));
+
+reshape (array_from_list (x), [2, 5, 'any]);
+''(array_from_nested_list ([[[1, 2], [3, 4], [5, 6], [7, 8], [9, 10]], [[11, 12], [13, 14], [15, 16], [17, 18], [19, 20]]]));
+
+reshape (array_from_list (x), [2, 'any, 2]);
+''(array_from_nested_list ([[[1, 2], [3, 4], [5, 6], [7, 8], [9, 10]], [[11, 12], [13, 14], [15, 16], [17, 18], [19, 20]]]));
+
+reshape (array_from_list (x), ['any, 5, 2]);
+''(array_from_nested_list ([[[1, 2], [3, 4], [5, 6], [7, 8], [9, 10]], [[11, 12], [13, 14], [15, 16], [17, 18], [19, 20]]]));
+
+reshape (reshape (array_from_list (x), ['any, 5, 2]), [20]);
+''(array_from_nested_list ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]));
+
+reshape (reshape (array_from_list (x), ['any, 5, 2]), ['any]);
+''(array_from_nested_list ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]));
+
+is (reshape (reshape (array_from_list (x), [5, 4]), [2, 5, 2]) = reshape (array_from_list (x), [2, 5, 2]));
+true;
+
+is (reshape (array_from_list (x), [5, 4]) = reshape (array_from_list (x), [5, 4], 'by_rows));
+true;
+
+is (reshape (array_from_list (x), [5, 2, 2]) = reshape (array_from_list (x), [5, 2, 2], 'by_rows));
+true;
+
+is (reshape (array_from_list (x), [2, 10]) = reshape (array_from_list (x), [2, 10], 'by_rows));
+true;
+
+reshape (array_from_list (x), ['any], 'by_columns);
+''(array_from_nested_list ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]));
+
+reshape (array_from_list (x), [5, 'any], 'by_columns);
+''(array_from_nested_list ([[1, 6, 11, 16], [2, 7, 12, 17], [3, 8, 13, 18], [4, 9, 14, 19], [5, 10, 15, 20]]));
+

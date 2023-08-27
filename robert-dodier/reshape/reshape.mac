@@ -1,3 +1,5 @@
+load ("reshape-array.lisp");
+
 reshape (x, dims, [major_flag]) :=
 
     block ([major_flag1, dims_integer, i_any, dims1, dim_any, l],
@@ -22,14 +24,23 @@ reshape (x, dims, [major_flag]) :=
                         dims1[i_any]: dim_any)
                else error (printf (false, "reshape: dimensions do not evenly divide the number of elements; found #elements = ~M, dims = ~M~%", n_elements (x), dims)),
 
-           l: flatten (x),
+           if listp (x)
+               then l: flatten (x)
+           elseif ?arrayp (x)
+               then l: flatten_array (x)
+               else merror ("reshape: first argument must be a list or array; found: ~M", x),
 
            if length (dims1) = 1
-               then /* We have already ensured that dims[1] = 'any or dims[1] = length(l).
-                     * Not guaranteed, from what I can tell, that the result of flatten(x)
-                     * is distinct from x; copy l to play it safe.
-                     */
-                    copy (l)
+               then
+                    if listp (l)
+                        /* We have already ensured that dims[1] = 'any or dims[1] = length(l).
+                         * Not guaranteed, from what I can tell, that the result of flatten(x)
+                         * is distinct from x; copy l to play it safe.
+                         */
+                        then copy (l)
+                        /* flatten_array always makes a distinct return value, no need to copy
+                         */
+                        else l
 
                elseif major_flag1 = 'by_rows
                    then reshape_by_rows (l, 0, [], dims1)
@@ -41,17 +52,28 @@ exactly_one (l, a) :=
 
 n_elements (x) :=
     if listp (x) then n_elements_list (x)
-        else error ("n_elements: argument must be a list.");
+    elseif ?arrayp (x) then ?array\-total\-size (x)
+        else error ("n_elements: argument must be a list or array.");
 
 n_elements_list (x) := length (flatten (x));
 
 reshape_by_rows (l, l_offset, dims0, dims1) :=
+    if listp (l)
+        then reshape_list_by_rows (l, l_offset, dims0, dims1)
+        else reshape_array_by_rows (l, dims1);
+
+reshape_list_by_rows (l, l_offset, dims0, dims1) :=
     if length (dims1) = 1
         then makelist (l[l_offset + i], i, 1, first (dims1))
         else block ([stride: apply ("*", rest (dims1))],
                     makelist (reshape_by_rows (l, l_offset + (i - 1)*stride, endcons (first (dims1), dims0), rest (dims1)), i, 1, first (dims1)));
 
 reshape_by_columns (l, ii, dims0, dims1) :=
+    if listp (l)
+        then reshape_list_by_columns (l, ii, dims0, dims1)
+        else reshape_array_by_columns (l, dims1);
+
+reshape_list_by_columns (l, ii, dims0, dims1) :=
     if length (ii) = length (dims0) + length (dims1) - 1
         then block ([i, n0: apply ("*", dims0)],
                     i: last (ii),
