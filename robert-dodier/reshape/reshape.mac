@@ -27,9 +27,9 @@ reshape (x, dims, [major_flag]) :=
            if length (dims1) = 1
                then /* We have already ensured that dims[1] = 'any or dims[1] = length(l).
                      * Not guaranteed, from what I can tell, that the result of flatten(x)
-                     * is distinct from x; copy x to play it safe.
+                     * is distinct from x; copy l to play it safe.
                      */
-                    copy (x)
+                    copy (l)
 
                elseif major_flag1 = 'by_rows
                    then reshape_by_rows (l, 0, [], dims1)
