@@ -26,8 +26,8 @@ reshape (x, dims, [major_flag]) :=
 
            if listp (x)
                then l: flatten (x)
-           elseif ?arrayp (x)
-               then l: flatten_array (x)
+           elseif ?arrayp (x) or declared_arrayp (x)
+               then l: x
                else merror ("reshape: first argument must be a list or array; found: ~M", x),
 
            if length (dims1) = 1
@@ -38,9 +38,7 @@ reshape (x, dims, [major_flag]) :=
                          * is distinct from x; copy l to play it safe.
                          */
                         then copy (l)
-                        /* flatten_array always makes a distinct return value, no need to copy
-                         */
-                        else l
+                        else flatten_array (l)
 
                elseif major_flag1 = 'by_rows
                    then reshape_by_rows (l, 0, [], dims1)
@@ -53,6 +51,7 @@ exactly_one (l, a) :=
 n_elements (x) :=
     if listp (x) then n_elements_list (x)
     elseif ?arrayp (x) then ?array\-total\-size (x)
+    elseif declared_arrayp (x) then ?array\-total\-size (get_array_from_declared_array (x))
         else error ("n_elements: argument must be a list or array.");
 
 n_elements_list (x) := length (flatten (x));
