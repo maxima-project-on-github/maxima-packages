@@ -54,11 +54,15 @@
     b))
 
 (defmfun $flatten_array (x)
-  (if (arrayp x)
-    (let ((y ($make_array '$any (array-total-size x))))
-      (dotimes (i (array-total-size x)) (setf (aref y i) (row-major-aref x i)))
-      y)
-    (merror "flatten_array: argument must be an array; found: ~M" x)))
+  (cond
+    ((arrayp x)
+     (let ((y ($make_array '$any (array-total-size x))))
+       (dotimes (i (array-total-size x)) (setf (aref y i) (row-major-aref x i)))
+       y))
+    (($declared_arrayp x)
+     (reshape-declared-maxima-array-by-rows x (list '(mlist) (array-total-size ($get_array_from_declared_array x)))))
+    (t
+      (merror "flatten_array: argument must be an array; found: ~M" x))))
 
 (defmfun $get_array_from_declared_array (x)
    (if ($declared_arrayp x)
