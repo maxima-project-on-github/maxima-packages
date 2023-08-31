@@ -6,10 +6,11 @@
     (t
       (merror "reshape_array_by_rows: first argument must be an array value or declared array symbol; found: ~M" a))))
 
-(defun reshape-lisp-array-by-rows (a new-dims)
+(defun reshape-lisp-array-by-rows (a new-dims &optional b)
   (let
-    ((b (apply '$make_array '$any new-dims))
-     (n-elements (apply '* new-dims)))
+    ((n-elements (apply '* new-dims)))
+    (when (null b)
+      (setq b (apply '$make_array '$any new-dims)))
     (dotimes (i n-elements) (setf (row-major-aref b i) (row-major-aref a i)))
     b))
 
@@ -26,15 +27,13 @@
   ;; that the return value is the same kind of thing as the argument.
   (let*
     ((reshaped-a-symbol ($gensym "a"))
-     (n-elements (apply '* new-dims))
      (a-array ($get_array_from_declared_array a))
      reshaped-a-array)
     (meval `(($array) ,reshaped-a-symbol ,@(mapcar #'1- new-dims)))
     (setq reshaped-a-array ($get_array_from_declared_array reshaped-a-symbol))
     (if (eq rows-or-columns 'by-rows)
-      (dotimes (i n-elements) (setf (row-major-aref reshaped-a-array i) (row-major-aref a-array i)))
-      ;; need to handle by-columns here
-      )
+      (reshape-lisp-array-by-rows a-array new-dims reshaped-a-array)
+      (reshape-lisp-array-by-columns a-array new-dims reshaped-a-array))
     reshaped-a-symbol))
 
 (defmfun $reshape_array_by_columns (a new-dims)
@@ -45,10 +44,11 @@
     (t
       (merror "reshape_array_by_columns first argument must be an array value or declared array symbol; found: ~M" a))))
 
-(defun reshape-lisp-array-by-columns (a new-dims)
+(defun reshape-lisp-array-by-columns (a new-dims &optional b)
   (let
-    ((b (apply '$make_array '$any new-dims))
-     (n-elements (apply '* new-dims)))
+    ((n-elements (apply '* new-dims)))
+    (when (null b)
+      (setq b (apply '$make_array '$any new-dims)))
     (dotimes (i n-elements)
       (let (ii (j i) (n n-elements))
         (loop for k in (reverse new-dims) do (setq n (/ n k)) (push (floor j n) ii) (setq j (mod j n)))
