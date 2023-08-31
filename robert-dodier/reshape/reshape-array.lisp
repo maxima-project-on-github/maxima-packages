@@ -1,15 +1,15 @@
 (defmfun $reshape_array_by_rows (a new-dims)
   (cond
-    ((arrayp a) (reshape-lisp-array-by-rows a new-dims))
+    ((arrayp a) (reshape-lisp-array-by-rows a (rest new-dims)))
     (($declared_arrayp a)
-     (reshape-declared-maxima-array-by-rows a new-dims))
+     (reshape-declared-maxima-array-by-rows a (rest new-dims)))
     (t
       (merror "reshape_array_by_rows: first argument must be an array value or declared array symbol; found: ~M" a))))
 
 (defun reshape-lisp-array-by-rows (a new-dims)
   (let
-    ((b (apply '$make_array '$any (rest new-dims)))
-     (n-elements (apply '* (rest new-dims))))
+    ((b (apply '$make_array '$any new-dims))
+     (n-elements (apply '* new-dims)))
     (dotimes (i n-elements) (setf (row-major-aref b i) (row-major-aref a i)))
     b))
 
@@ -26,29 +26,29 @@
   ;; that the return value is the same kind of thing as the argument.
   (let*
     ((reshaped-a-symbol ($gensym "a"))
-     (n-elements (apply '* (rest new-dims)))
+     (n-elements (apply '* new-dims))
      (a-array ($get_array_from_declared_array a))
      reshaped-a-array)
-    (meval `(($array) ,reshaped-a-symbol ,@(mapcar #'1- (rest new-dims))))
+    (meval `(($array) ,reshaped-a-symbol ,@(mapcar #'1- new-dims)))
     (setq reshaped-a-array ($get_array_from_declared_array reshaped-a-symbol))
     (dotimes (i n-elements) (setf (row-major-aref reshaped-a-array i) (row-major-aref a-array i)))
     reshaped-a-symbol))
 
 (defmfun $reshape_array_by_columns (a new-dims)
   (cond
-    ((arrayp a) (reshape-lisp-array-by-columns a new-dims))
+    ((arrayp a) (reshape-lisp-array-by-columns a (rest new-dims)))
     (($declared_arrayp a)
-     #+nil (reshape-declared-maxima-array-by-columns a new-dims))
+     #+nil (reshape-declared-maxima-array-by-columns a (rest new-dims)))
     (t
       (merror "reshape_array_by_columns first argument must be an array value or declared array symbol; found: ~M" a))))
 
 (defun reshape-lisp-array-by-columns (a new-dims)
   (let
-    ((b (apply '$make_array '$any (rest new-dims)))
-     (n-elements (apply '* (rest new-dims))))
+    ((b (apply '$make_array '$any new-dims))
+     (n-elements (apply '* new-dims)))
     (dotimes (i n-elements)
       (let (ii (j i) (n n-elements))
-        (loop for k in (reverse (rest new-dims)) do (setq n (/ n k)) (push (floor j n) ii) (setq j (mod j n)))
+        (loop for k in (reverse new-dims) do (setq n (/ n k)) (push (floor j n) ii) (setq j (mod j n)))
         #+nil (format t "HEY n-elements = ~d, i = ~d, ii = ~d~%" n-elements i ii)
         (setf (apply #'aref b ii) (row-major-aref a i))))
     b))
@@ -60,7 +60,7 @@
        (dotimes (i (array-total-size x)) (setf (aref y i) (row-major-aref x i)))
        y))
     (($declared_arrayp x)
-     (reshape-declared-maxima-array-by-rows x (list '(mlist) (array-total-size ($get_array_from_declared_array x)))))
+     (reshape-declared-maxima-array-by-rows x (list (array-total-size ($get_array_from_declared_array x)))))
     (t
       (merror "flatten_array: argument must be an array; found: ~M" x))))
 
