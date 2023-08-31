@@ -2,7 +2,7 @@
   (cond
     ((arrayp a) (reshape-lisp-array-by-rows a (rest new-dims)))
     (($declared_arrayp a)
-     (reshape-declared-maxima-array-by-rows a (rest new-dims)))
+     (reshape-declared-maxima-array a (rest new-dims) 'by-rows))
     (t
       (merror "reshape_array_by_rows: first argument must be an array value or declared array symbol; found: ~M" a))))
 
@@ -16,7 +16,7 @@
 (defun $declared_arrayp (a)
   (and (symbolp a) (mget a 'array) (symbolp (mget a 'array)) (arrayp (get (mget a 'array) 'array))))
 
-(defun reshape-declared-maxima-array-by-rows (a new-dims)
+(defun reshape-declared-maxima-array (a new-dims rows-or-columns)
   ;; A is a declared Maxima array.
   ;; Construct another declared array which is the reshaped array.
   ;; This involves putting a gensym on the arrays infolist,
@@ -31,14 +31,17 @@
      reshaped-a-array)
     (meval `(($array) ,reshaped-a-symbol ,@(mapcar #'1- new-dims)))
     (setq reshaped-a-array ($get_array_from_declared_array reshaped-a-symbol))
-    (dotimes (i n-elements) (setf (row-major-aref reshaped-a-array i) (row-major-aref a-array i)))
+    (if (eq rows-or-columns 'by-rows)
+      (dotimes (i n-elements) (setf (row-major-aref reshaped-a-array i) (row-major-aref a-array i)))
+      ;; need to handle by-columns here
+      )
     reshaped-a-symbol))
 
 (defmfun $reshape_array_by_columns (a new-dims)
   (cond
     ((arrayp a) (reshape-lisp-array-by-columns a (rest new-dims)))
     (($declared_arrayp a)
-     #+nil (reshape-declared-maxima-array-by-columns a (rest new-dims)))
+     (reshape-declared-maxima-array a (rest new-dims) 'by-columns))
     (t
       (merror "reshape_array_by_columns first argument must be an array value or declared array symbol; found: ~M" a))))
 
@@ -60,7 +63,7 @@
        (dotimes (i (array-total-size x)) (setf (aref y i) (row-major-aref x i)))
        y))
     (($declared_arrayp x)
-     (reshape-declared-maxima-array-by-rows x (list (array-total-size ($get_array_from_declared_array x)))))
+     (reshape-declared-maxima-array x (list (array-total-size ($get_array_from_declared_array x))) 'by-rows))
     (t
       (merror "flatten_array: argument must be an array; found: ~M" x))))
 
