@@ -1,3 +1,11 @@
+(defmfun $declared_arrayp (a)
+  (and (symbolp a) (mget a 'array) (symbolp (mget a 'array)) (arrayp (get (mget a 'array) 'array))))
+
+(defmfun $get_array_from_declared_array (x)
+   (if ($declared_arrayp x)
+     (get (mget x 'array) 'array)
+     (merror "get_array_from_declared_array: argument must be a declared array; found: ~M" x)))
+
 (defmfun $reshape_array_by_rows (a new-dims)
   (cond
     ((arrayp a) (reshape-lisp-array-by-rows a (rest new-dims)))
@@ -13,9 +21,6 @@
       (setq b (apply '$make_array '$any new-dims)))
     (dotimes (i n-elements) (setf (row-major-aref b i) (row-major-aref a i)))
     b))
-
-(defun $declared_arrayp (a)
-  (and (symbolp a) (mget a 'array) (symbolp (mget a 'array)) (arrayp (get (mget a 'array) 'array))))
 
 (defun reshape-declared-maxima-array (a new-dims rows-or-columns)
   ;; A is a declared Maxima array.
@@ -66,8 +71,3 @@
      (reshape-declared-maxima-array x (list (array-total-size ($get_array_from_declared_array x))) 'by-rows))
     (t
       (merror "flatten_array: argument must be an array; found: ~M" x))))
-
-(defmfun $get_array_from_declared_array (x)
-   (if ($declared_arrayp x)
-     (get (mget x 'array) 'array)
-     (merror "get_array_from_declared_array: argument must be a declared array; found: ~M" x)))
