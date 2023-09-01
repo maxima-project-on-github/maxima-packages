@@ -321,21 +321,17 @@ reshape (array_from_list (x), [5, 'any], 'by_columns);
 (reshape (reshape (declared_array_from_list (x), ['any, 5, 2]), ['any]), [declared_arrayp (%%), apply ('arrayinfo, [%%]), get_array_from_declared_array (%%)]);
 [true, [declared, 1, [19]], ''(array_from_nested_list ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]))];
 
-/* following tests are valuable but need to be adapted for declared arrays
- *
-is (reshape (reshape (declared_array_from_list (x), [5, 4]), [2, 5, 2]) = reshape (declared_array_from_list (x), [2, 5, 2]));
+is (get_array_from_declared_array (reshape (reshape (declared_array_from_list (x), [5, 4]), [2, 5, 2])) = get_array_from_declared_array (reshape (declared_array_from_list (x), [2, 5, 2])));
 true;
 
-is (reshape (declared_array_from_list (x), [5, 4]) = reshape (declared_array_from_list (x), [5, 4], 'by_rows));
+is (get_array_from_declared_array (reshape (declared_array_from_list (x), [5, 4])) = get_array_from_declared_array (reshape (declared_array_from_list (x), [5, 4], 'by_rows)));
 true;
 
-is (reshape (declared_array_from_list (x), [5, 2, 2]) = reshape (declared_array_from_list (x), [5, 2, 2], 'by_rows));
+is (get_array_from_declared_array (reshape (declared_array_from_list (x), [5, 2, 2])) = get_array_from_declared_array (reshape (declared_array_from_list (x), [5, 2, 2], 'by_rows)));
 true;
 
-is (reshape (declared_array_from_list (x), [2, 10]) = reshape (declared_array_from_list (x), [2, 10], 'by_rows));
+is (get_array_from_declared_array (reshape (declared_array_from_list (x), [2, 10])) = get_array_from_declared_array (reshape (declared_array_from_list (x), [2, 10], 'by_rows)));
 true;
- *
- */
 
 (reshape (declared_array_from_list (x), ['any], 'by_columns), [declared_arrayp (%%), apply ('arrayinfo, [%%]), get_array_from_declared_array (%%)]);
 [true, [declared, 1, [19]], ''(array_from_nested_list ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]))];
