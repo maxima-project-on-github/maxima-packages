@@ -158,6 +158,35 @@ reshape (x, [5, 'any], 'by_columns);
  0);
 0;
 
+/* test flatten_array before trying reshape */
+
+array_from_list ([1, 2, 3, 4, 5, 6]);
+''(make_array (fixnum, 6), fillarray (%%, [1, 2, 3, 4, 5, 6]));
+
+array_from_nested_list ([[1, 2, 3, 4, 5, 6]]);
+''(make_array (fixnum, 1, 6), fillarray (%%, [1, 2, 3, 4, 5, 6]));
+
+array_from_nested_list ([[1], [2], [3], [4], [5], [6]]);
+''(make_array (fixnum, 6, 1), fillarray (%%, [1, 2, 3, 4, 5, 6]));
+
+array_from_nested_list ([[1, 2], [3, 4], [5, 6]]);
+''(make_array (fixnum, 3, 2), fillarray (%%, [1, 2, 3, 4, 5, 6]));
+
+array_from_nested_list ([[[1], [2]], [[3], [4]], [[5], [6]]]);
+''(make_array (fixnum, 3, 2, 1), fillarray (%%, [1, 2, 3, 4, 5, 6]));
+
+flatten_array (array_from_list (x));
+''(array_from_list ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]));
+
+flatten_array (array_from_nested_list ([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [11, 12, 13, 14, 15, 16, 17, 18, 19, 20]]));
+''(array_from_list ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]));
+
+flatten_array (array_from_nested_list ([[[1, 2, 3, 4, 5], [6, 7, 8, 9, 10]], [[11, 12, 13, 14, 15], [16, 17, 18, 19, 20]]]));
+''(array_from_list ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]));
+
+flatten_array (array_from_nested_list ([[[[1], [2], [3], [4], [5]], [[6], [7], [8], [9], [10]]], [[[11], [12], [13], [14], [15]], [[16], [17], [18], [19], [20]]]]));
+''(array_from_list ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]));
+
 reshape (array_from_list (x), [2, 10]);
 ''(array_from_nested_list ([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [11, 12, 13, 14, 15, 16, 17, 18, 19, 20]]));
 
