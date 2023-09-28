@@ -368,3 +368,77 @@ true;
 (reshape (declared_array_from_list (x), [5, 'any], 'by_columns), [declared_arrayp (%%), apply ('arrayinfo, [%%]), get_array_from_declared_array (%%)]);
 [true, [declared, 2, [4, 3]], ''(array_from_nested_list ([[1, 6, 11, 16], [2, 7, 12, 17], [3, 8, 13, 18], [4, 9, 14, 19], [5, 10, 15, 20]]))];
 
+/* matrices */
+
+reshape (matrix (x), [2, 10]);
+matrix ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [11, 12, 13, 14, 15, 16, 17, 18, 19, 20]);
+
+reshape (matrix (x), [10, 2]);
+matrix ([1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12], [13, 14], [15, 16], [17, 18], [19, 20]);
+
+errcatch (reshape (matrix (x), [20]));
+[];
+
+errcatch (reshape (matrix (x), ['any]));
+[];
+
+reshape (matrix (x), ['any, 1]);
+matrix ([1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12], [13], [14], [15], [16], [17], [18], [19], [20]);
+
+reshape (matrix (x), [20, 'any]);
+matrix ([1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12], [13], [14], [15], [16], [17], [18], [19], [20]);
+
+reshape (matrix (x), ['any, 2]);
+matrix ([1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12], [13, 14], [15, 16], [17, 18], [19, 20]);
+
+reshape (matrix (x), [10, 'any]);
+matrix ([1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12], [13, 14], [15, 16], [17, 18], [19, 20]);
+
+reshape (matrix (x), ['any, 4]);
+matrix ([1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16], [17, 18, 19, 20]);
+
+reshape (matrix (x), [5, 'any]);
+matrix ([1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16], [17, 18, 19, 20]);
+
+reshape (matrix (x), ['any, 5]);
+matrix ([1, 2, 3, 4, 5], [6, 7, 8, 9, 10], [11, 12, 13, 14, 15], [16, 17, 18, 19, 20]);
+
+reshape (matrix (x), [4, 'any]);
+matrix ([1, 2, 3, 4, 5], [6, 7, 8, 9, 10], [11, 12, 13, 14, 15], [16, 17, 18, 19, 20]);
+
+reshape (matrix (x), ['any, 10]);
+matrix ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [11, 12, 13, 14, 15, 16, 17, 18, 19, 20]);
+
+reshape (matrix (x), [2, 'any]);
+matrix ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [11, 12, 13, 14, 15, 16, 17, 18, 19, 20]);
+
+reshape (matrix (x), ['any, 20]);
+matrix ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]);
+
+reshape (matrix (x), [1, 'any]);
+matrix ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]);
+
+errcatch (reshape (matrix (x), [2, 5, 2]));
+[];
+
+errcatch (reshape (matrix (x), [2, 5, 'any]));
+[];
+
+is (reshape (reshape (matrix (x), [5, 4]), [2, 10]) = reshape (matrix (x), [2, 10]));
+true;
+
+is (reshape (matrix (x), [5, 4]) = reshape (matrix (x), [5, 4], 'by_rows));
+true;
+
+reshape (matrix (x), [5, 'any], 'by_columns);
+matrix ([1, 6, 11, 16], [2, 7, 12, 17], [3, 8, 13, 18], [4, 9, 14, 19], [5, 10, 15, 20]);
+
+(makelist (block ([n1: 1 + random (10), n2: 1 + random (10)],
+                  block ([matrix_x: apply (matrix, makelist (makelist (random (100), n2), n1)), y1, y2],
+                         y1: reshape (matrix_x, [n2, n1], 'by_columns),
+                         y2: transpose (matrix_x),
+                         if y1 = y2 then true else FAILED ('reshape (matrix_x, [n2, n1], 'by_columns), 'expected = y2, 'actual = y1))),
+           20),
+ unique (%%));
+[true];
+

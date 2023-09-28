@@ -26,9 +26,14 @@ reshape (x, dims, [major_flag]) :=
 
            if listp (x)
                then l: flatten (x)
+           elseif matrixp (x)
+               then l: flatten (args (x))
            elseif ?arrayp (x) or declared_arrayp (x)
                then l: x
                else merror ("reshape: first argument must be a list or array; found: ~M", x),
+
+           if matrixp (x) and length (dims) # 2
+               then error (printf (false, "reshape: when first argument is a matrix, number of dimensions must be exactly two; found; ~M~%", dims)),
 
            if length (dims1) = 1
                then
@@ -40,9 +45,13 @@ reshape (x, dims, [major_flag]) :=
                         then copy (l)
                         else flatten_array (l)
 
-               elseif major_flag1 = 'by_rows
-                   then reshape_by_rows (l, 0, [], dims1)
-                   else reshape_by_columns (l, [], [], dims1));
+               else
+                   (if major_flag1 = 'by_rows
+                        then reshape_by_rows (l, 0, [], dims1)
+                        else reshape_by_columns (l, [], [], dims1),
+                    if matrixp (x)
+                        then apply ('matrix, %%)
+                        else %%));
 
 exactly_one (l, a) :=
     (sublist_indices (l, lambda ([l1], l1 = a)),
@@ -50,11 +59,18 @@ exactly_one (l, a) :=
 
 n_elements (x) :=
     if listp (x) then n_elements_list (x)
+    elseif matrixp (x) then n_elements_matrix (x)
     elseif ?arrayp (x) then ?array\-total\-size (x)
     elseif declared_arrayp (x) then ?array\-total\-size (get_array_from_declared_array (x))
         else error ("n_elements: argument must be a list or array.");
 
 n_elements_list (x) := length (flatten (x));
+
+n_elements_matrix (x) :=
+    block ([a: args (x)],
+           if length (a) = 0
+               then 0
+               else (length (a) * length (a[1])));
 
 reshape_by_rows (l, l_offset, dims0, dims1) :=
     if listp (l)
