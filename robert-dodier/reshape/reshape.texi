@@ -9,7 +9,7 @@
 
 @chapter Package reshape
 
-@node Introduction to package reshape, Definitions for package reshape, , 
+@node Introduction to package reshape, Definitions for package reshape, (dir), (dir)
 @section Introduction to package reshape
 
 Package @code{reshape} provides a function, @code{reshape},
@@ -90,6 +90,15 @@ Reshaping a nested list, first with two dimensions and then with three dimension
 @c reshape ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], [3, 2, 2]);
 @c ===end===
 @example
+(%i1) load ("reshape.mac") $
+@group
+(%i2) reshape ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], [6, 2]);
+(%o2)  [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12]]
+@end group
+@group
+(%i3) reshape ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], [3, 2, 2]);
+(%o3) [[[1, 2], [3, 4]], [[5, 6], [7, 8]], [[9, 10], [11, 12]]]
+@end group
 @end example
 
 Reshaping a list with an inferred dimension via @code{any}.
@@ -100,6 +109,11 @@ The operation shown here is equivalent to taking the elements of @var{x} "by two
 @c reshape ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], ['any, 2]);
 @c ===end===
 @example
+(%i1) load ("reshape.mac") $
+@group
+(%i2) reshape ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], ['any, 2]);
+(%o2)  [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12]]
+@end group
 @end example
 
 Another example of reshaping a list with an inferred dimension.
@@ -109,6 +123,11 @@ Another example of reshaping a list with an inferred dimension.
 @c reshape ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], [2, 'any, 2]);
 @c ===end===
 @example
+(%i1) load ("reshape.mac") $
+@group
+(%i2) reshape ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], [2, 'any, 2]);
+(%o2) [[[1, 2], [3, 4], [5, 6]], [[7, 8], [9, 10], [11, 12]]]
+@end group
 @end example
 
 Reshaping a value array.
@@ -120,9 +139,26 @@ Reshaping a value array.
 @c reshape (%, [2, 3, 2]);
 @c ===end===
 @example
+(%i1) load ("reshape.mac") $
+@group
+(%i2) make_array (fixnum, 4, 3);
+(%o2)  @{Lisp Array: #2A((0 0 0) (0 0 0) (0 0 0) (0 0 0))@}
+@end group
+@group
+(%i3) fillarray (%, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+(%o3) @{Lisp Array: #2A((1 2 3) (4 5 6) (7 8 9) (10 11 12))@}
+@end group
+@group
+(%i4) reshape (%, [2, 3, 2]);
+(%o4) 
+    @{Lisp Array: #3A(((1 2) (3 4) (5 6)) ((7 8) (9 10) (11 12)))@}
+@end group
 @end example
 
 Reshaping a declared array.
+Note that the actual number of elements of the array @code{b} is 24 (i.e., @code{(3 + 1)*(5 + 1)});
+this is an idiosyncrasy of Maxima's declared arrays.
+The product of dimensions for @code{reshape} is equal to the the actual number of elements.
 
 @c ===beg===
 @c load ("reshape.mac") $
@@ -132,16 +168,46 @@ Reshaping a declared array.
 @c get_array_from_declared_array (%);
 @c ===end===
 @example
+(%i1) load ("reshape.mac") $
+@group
+(%i2) array (b, 3, 5);
+(%o2)                           b
+@end group
+@group
+(%i3) fillarray (b, makelist (i, i, 1, 20));
+(%o3)                           b
+@end group
+@group
+(%i4) reshape (b, [3, 2, 2, 2]);
+(%o4)                         a196
+@end group
+@group
+(%i5) get_array_from_declared_array (%);
+(%o5) @{Lisp Array: #4A((((1 2) (3 4)) ((5 6) (7 8)))
+                 (((9 10) (11 12)) ((13 14) (15 16)))
+                 (((17 18) (19 20)) ((20 20) (20 20))))@}
+@end group
 @end example
 
-@c Reshaping a matrix.
-@c 
-@c @c ===beg===
-@c @c load ("reshape.mac") $
-@c @c reshape (matrix ([1, 2, 3, 4, 5, 6], [7, 8, 9, 10, 11, 12]), [4, 3]);
-@c @c ===end===
-@c @example
-@c @end example
+Reshaping a matrix.
+
+@c ===beg===
+@c load ("reshape.mac") $
+@c reshape (matrix ([1, 2, 3, 4, 5, 6], [7, 8, 9, 10, 11, 12]), [4, 3]);
+@c ===end===
+@example
+(%i1) load ("reshape.mac") $
+@group
+(%i2) reshape (matrix ([1, 2, 3, 4, 5, 6], [7, 8, 9, 10, 11, 12]), [4, 3]);
+                         [ 1   2   3  ]
+                         [            ]
+                         [ 4   5   6  ]
+(%o2)                    [            ]
+                         [ 7   8   9  ]
+                         [            ]
+                         [ 10  11  12 ]
+@end group
+@end example
 
 Reshaping a list by columns; compare by rows.
 
@@ -151,6 +217,124 @@ Reshaping a list by columns; compare by rows.
 @c reshape ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], [3, 2, 2], 'by_rows);
 @c ===end===
 @example
+(%i1) load ("reshape.mac") $
+@group
+(%i2) reshape ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], [3, 2, 2], 'by_columns);
+(%o2) [[[1, 7], [4, 10]], [[2, 8], [5, 11]], [[3, 9], [6, 12]]]
+@end group
+@group
+(%i3) reshape ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], [3, 2, 2], 'by_rows);
+(%o3) [[[1, 2], [3, 4]], [[5, 6], [7, 8]], [[9, 10], [11, 12]]]
+@end group
+@end example
+
+@end deffn
+
+@deffn {Function} get_array_from_declared_array (@var{x})
+
+Returns the array value from @var{x},
+which must be a declared array.
+That is, @var{x} must be a symbol which was declared as an array
+via the function @code{array}.
+
+@code{get_array_from_declared_array} returns the array value itself,
+not a copy.
+
+Examples:
+
+@c ===beg===
+@c load ("reshape.mac") $
+@c array (aa, fixnum, 2, 4);
+@c fillarray (aa, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]);
+@c get_array_from_declared_array (aa);
+@c ===end===
+@example
+(%i1) load ("reshape.mac") $
+@group
+(%i2) array (aa, fixnum, 2, 4);
+(%o2)                          aa
+@end group
+@group
+(%i3) fillarray (aa, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]);
+(%o3)                          aa
+@end group
+@group
+(%i4) get_array_from_declared_array (aa);
+(%o4) @{Lisp Array: #2A((0 1 2 3 4) (5 6 7 8 9) (10 11 12 13 14))@}
+@end group
+@end example
+
+@end deffn
+
+@deffn {Function} flatten_array (@var{x})
+
+Returns a new array which is one-dimensional and has the same elements
+(in row-major order) as @var{x},
+which must be an array value or a declared array.
+
+When @var{x} is an array value,
+@code{flatten_array} returns an array value;
+when @var{x} is a declared array,
+@code{flatten_array} returns a new declared array,
+with a constructed name comprising the letter "a" followed by a number
+which makes the resulting symbol unique.
+
+@code{flatten_array} always returns a new array,
+even if @var{x} is already one-dimensional.
+
+Examples:
+
+Flattening an array value.
+
+@c ===beg===
+@c load ("reshape.mac") $
+@c aa: make_array (fixnum, 3, 2);
+@c fillarray (aa, [0, 1, 2, 3, 4, 5]);
+@c flatten_array (aa);
+@c ===end===
+@example
+(%i1) load ("reshape.mac") $
+@group
+(%i2) aa: make_array (fixnum, 3, 2);
+(%o2)         @{Lisp Array: #2A((0 0) (0 0) (0 0))@}
+@end group
+@group
+(%i3) fillarray (aa, [0, 1, 2, 3, 4, 5]);
+(%o3)         @{Lisp Array: #2A((0 1) (2 3) (4 5))@}
+@end group
+@group
+(%i4) flatten_array (aa);
+(%o4)             @{Lisp Array: #(0 1 2 3 4 5)@}
+@end group
+@end example
+
+Flattening a declared array.
+
+@c ===beg===
+@c load ("reshape.mac") $
+@c array (bb, fixnum, 3, 3);
+@c fillarray (bb, makelist (i, i, 0, 15));
+@c flatten_array (bb);
+@c get_array_from_declared_array (%);
+@c ===end===
+@example
+(%i1) load ("reshape.mac") $
+@group
+(%i2) array (bb, fixnum, 3, 3);
+(%o2)                          bb
+@end group
+@group
+(%i3) fillarray (bb, makelist (i, i, 0, 15));
+(%o3)                          bb
+@end group
+@group
+(%i4) flatten_array (bb);
+(%o4)                         a195
+@end group
+@group
+(%i5) get_array_from_declared_array (%);
+(%o5) @{Lisp Array: #(0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15)@}
+@end group
 @end example
 
 @end deffn
