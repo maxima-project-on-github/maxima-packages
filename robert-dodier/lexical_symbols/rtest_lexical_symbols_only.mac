@@ -1754,3 +1754,23 @@ a*x;
  callfun(foo));
 "Hey";
 
+/* bug reported to mailing list 2023-09-25: "bessel_simplify on contrib_ode" */
+
+(kill (all),
+ load ("contrib_ode"),
+ f(x) := 2,
+ 0);
+0;
+
+bessel_simplify(4*bessel_j(n,x^2)*(x^2-n^2/x^2)
+  +x*((bessel_j(n-2,x^2)-bessel_j(n,x^2))*x
+  -(bessel_j(n,x^2)-bessel_j(n+2,x^2))*x)
+  -2*bessel_j(n+1,x^2)+2*bessel_j(n-1,x^2));
+0;
+
+bessel_simplify(-2*bessel_j(1,z)*z^3-10*bessel_j(2,z)*z^2
+ +15*%pi*bessel_j(1,z)*struve_h(3,z)*z-15*%pi*struve_h(1,z)*bessel_j(3,z)*z
+ -15*%pi*bessel_j(0,z)*struve_h(2,z)*z+15*%pi*struve_h(0,z)*bessel_j(2,z)*z
+ -30*%pi*bessel_j(1,z)*struve_h(2,z)+30*%pi*struve_h(1,z)*bessel_j(2,z));
+0;
+

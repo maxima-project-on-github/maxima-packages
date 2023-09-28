@@ -1,0 +1,156 @@
+@ifinfo
+@macro var {expr}
+<\expr\>
+@end macro
+@macro fname {name}
+@*\name\
+@end macro
+@end ifinfo
+
+@chapter Package reshape
+
+@node Introduction to package reshape, Definitions for package reshape, , 
+@section Introduction to package reshape
+
+Package @code{reshape} provides a function, @code{reshape},
+to reshape (change the dimensions of) a list, array, or matrix.
+That is,
+@code{reshape} creates a new list, array, or matrix,
+containing the same elements as the original,
+but arranged in different dimensions.
+In addition,
+@code{reshape} can optionally arrange the elements by rows or by columns;
+that is,
+with successive elements differing by the last index (if by rows)
+or by the first index (if by columns).
+
+@node Definitions for package reshape, , Introduction to package reshape, 
+@section Definitions for package reshape
+
+@deffn {Function} reshape @
+@fname{reshape} (@var{x}, @code{[@var{d_1}, ..., @var{d_n}]}, @code{by_rows}) @
+@fname{reshape} (@var{x}, @code{[@var{d_1}, ..., @var{d_n}]}, @code{by_columns}) @
+@fname{reshape} (@var{x}, @code{[@var{d_1}, ..., @var{d_n}]})
+
+Reshapes a list, array, or matrix.
+The result is a list if @var{x} is a list,
+an array if @var{x} is an array,
+or a matrix if @var{x} is a matrix.
+@code{reshape} cannot reshape any other type of object.
+
+The dimensions for the result are @code{[@var{d_1}, ..., @var{d_n}]},
+where @var{d_1} through @var{d_n} are positive integers or the symbol @code{any}.
+The number of dimensions @var{n} must be greater than or equal to 1;
+when @var{x} is a matrix, @var{n} must be exactly 2.
+The dimensions must always be specified as a list,
+even if the number of dimensions is 1.
+
+If present,
+@code{any} may appear only once,
+and the number of elements of @var{x} must be divisible by the product of the other, integer dimensions.
+
+If @code{any} is not present,
+all dimensions must be positive integers,
+and the product of the dimensions must be the number of elements of @var{x}.
+
+The optional final argument @code{by_rows} or @code{by_columns}
+governs whether successive elements differ by the last index (if @code{by_rows})
+or by the first index (if @code{by_columns}).
+If neither @code{by_rows} nor @code{by_columns} is specified,
+the default is @code{by_rows}.
+
+The input @var{x} can have any dimensions,
+and, if it is a list, @var{x} may be ragged
+(i.e., any sublists may be of differing lengths).
+Elements of @var{x} are always accessed by rows
+(by flattening @var{x} if it is a list,
+or accessing elements of @var{x} in row-major order if it is an array or matrix);
+the optional argument @code{by_rows} or @code{by_columns} does not affect
+the order of accessing the elements of @var{x}.
+
+@code{reshape} can reshape value arrays, as returned by @code{make_array},
+and declared arrays, as declared by @code{array}.
+When @var{x} is a value array, the result is a value array,
+and when @var{x} is a declared array, the result is a declared array,
+with a constructed name comprising the letter "a" followed by a number
+which makes the resulting symbol unique.
+
+@code{reshape} always returns a new object,
+even if the specified dimensions are the same as the dimensions of the input.
+
+@code{load("reshape.mac")} loads this function.
+
+Examples:
+
+Reshaping a nested list, first with two dimensions and then with three dimensions.
+
+@c ===beg===
+@c load ("reshape.mac") $
+@c reshape ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], [6, 2]);
+@c reshape ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], [3, 2, 2]);
+@c ===end===
+@example
+@end example
+
+Reshaping a list with an inferred dimension via @code{any}.
+The operation shown here is equivalent to taking the elements of @var{x} "by twos".
+
+@c ===beg===
+@c load ("reshape.mac") $
+@c reshape ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], ['any, 2]);
+@c ===end===
+@example
+@end example
+
+Another example of reshaping a list with an inferred dimension.
+
+@c ===beg===
+@c load ("reshape.mac") $
+@c reshape ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], [2, 'any, 2]);
+@c ===end===
+@example
+@end example
+
+Reshaping a value array.
+
+@c ===beg===
+@c load ("reshape.mac") $
+@c make_array (fixnum, 4, 3);
+@c fillarray (%, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+@c reshape (%, [2, 3, 2]);
+@c ===end===
+@example
+@end example
+
+Reshaping a declared array.
+
+@c ===beg===
+@c load ("reshape.mac") $
+@c array (b, 3, 5);
+@c fillarray (b, makelist (i, i, 1, 20));
+@c reshape (b, [3, 2, 2, 2]);
+@c get_array_from_declared_array (%);
+@c ===end===
+@example
+@end example
+
+@c Reshaping a matrix.
+@c 
+@c @c ===beg===
+@c @c load ("reshape.mac") $
+@c @c reshape (matrix ([1, 2, 3, 4, 5, 6], [7, 8, 9, 10, 11, 12]), [4, 3]);
+@c @c ===end===
+@c @example
+@c @end example
+
+Reshaping a list by columns; compare by rows.
+
+@c ===beg===
+@c load ("reshape.mac") $
+@c reshape ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], [3, 2, 2], 'by_columns);
+@c reshape ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], [3, 2, 2], 'by_rows);
+@c ===end===
+@example
+@end example
+
+@end deffn

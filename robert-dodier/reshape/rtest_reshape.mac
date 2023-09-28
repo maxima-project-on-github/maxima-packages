@@ -78,6 +78,367 @@ reshape (x, [2, 'any, 2]);
 reshape (x, ['any, 5, 2]);
 [[[1, 2], [3, 4], [5, 6], [7, 8], [9, 10]], [[11, 12], [13, 14], [15, 16], [17, 18], [19, 20]]];
 
+reshape (reshape (x, ['any, 5, 2]), [20]);
+[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
+
+reshape (reshape (x, ['any, 5, 2]), ['any]);
+[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
+
 is (reshape (reshape (x, [5, 4]), [2, 5, 2]) = reshape (x, [2, 5, 2]));
 true;
+
+is (reshape (x, [5, 4]) = reshape (x, [5, 4], 'by_rows));
+true;
+
+is (reshape (x, [5, 2, 2]) = reshape (x, [5, 2, 2], 'by_rows));
+true;
+
+is (reshape (x, [2, 10]) = reshape (x, [2, 10], 'by_rows));
+true;
+
+reshape (x, ['any], 'by_columns);
+[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
+
+reshape (x, [5, 'any], 'by_columns);
+[[1, 6, 11, 16], [2, 7, 12, 17], [3, 8, 13, 18], [4, 9, 14, 19], [5, 10, 15, 20]];
+
+(transpose2 (x, n2, n1) :=
+     block ([y: makelist (makelist (false, n1), n2)],
+            for i thru n1 do for j thru n2 do y[j][i]: x[i][j],
+            y),
+ transpose3 (x, n3, n2, n1) :=
+     block ([y: makelist (makelist (makelist (false, n1), n2), n3)],
+            for i thru n1 do for j thru n2 do for k thru n3 do y[k][j][i]: x[i][j][k],
+            y),
+ transpose4 (x, n4, n3, n2, n1) :=
+     block ([y: makelist (makelist (makelist (makelist (false, n1), n2), n3), n4)],
+            for i thru n1 do for j thru n2 do for k thru n3 do for l thru n4 do y[l][k][j][i]: x[i][j][k][l],
+            y),
+ 0);
+0;
+
+(makelist (block ([n1: 1 + random (10), n2: 1 + random (10)],
+                  block ([x: makelist (makelist (random (100), n2), n1), y1, y2],
+                         y1: reshape (x, [n2, n1], 'by_columns),
+                         y2: transpose2 (x, n2, n1),
+                         if y1 = y2 then true else FAILED ('reshape (x, [n2, n1], 'by_columns), 'expected = y2, 'actual = y1))),
+           20),
+ unique (%%));
+[true];
+
+(makelist (block ([n1: 1 + random (8), n2: 1 + random (7), n3: 1 + random (6)],
+                  block ([x: makelist (makelist (makelist (random (100), n3), n2), n1), y1, y2],
+                         y1: reshape (x, [n3, n2, n1], 'by_columns),
+                         y2: transpose3 (x, n3, n2, n1),
+                         if y1 = y2 then true else FAILED ('reshape (x, [n3, n2, n1], 'by_columns), 'expected = y2, 'actual = y1))),
+           20),
+ unique (%%));
+[true];
+
+(makelist (block ([n1: 1 + random (6), n2: 1 + random (7), n3: 1 + random (5), n4: 1 + random (4)],
+                  block ([x: makelist (makelist (makelist (makelist (random (100), n4), n3), n2), n1), y1, y2],
+                         y1: reshape (x, [n4, n3, n2, n1], 'by_columns),
+                         y2: transpose4 (x, n4, n3, n2, n1),
+                         if y1 = y2 then true else FAILED ('reshape (x, [n4, n3, n2, n1], 'by_columns), 'expected = y2, 'actual = y1))),
+           20),
+ unique (%%));
+[true];
+
+/* value arrays */
+
+(array_from_list (x) := (make_array ('any, length (x)), fillarray (%%, x)),
+ array_from_nested_list (x) :=
+     block ([m: nesting_depth (x), dims: [], x1: x, y],
+            for k thru m - 1 do (push (length (x1), dims), x1: x1[1]),
+            push (length (x1), dims),
+            dims: reverse (dims),
+            y: apply ('make_array, cons ('any, dims)),
+            fillarray (y, flatten (x))),
+ nesting_depth (x) := if listp (x) then 1 + nesting_depth (x[1]) else 0,
+ 0);
+0;
+
+/* test flatten_array before trying reshape */
+
+array_from_list ([1, 2, 3, 4, 5, 6]);
+''(make_array (fixnum, 6), fillarray (%%, [1, 2, 3, 4, 5, 6]));
+
+array_from_nested_list ([[1, 2, 3, 4, 5, 6]]);
+''(make_array (fixnum, 1, 6), fillarray (%%, [1, 2, 3, 4, 5, 6]));
+
+array_from_nested_list ([[1], [2], [3], [4], [5], [6]]);
+''(make_array (fixnum, 6, 1), fillarray (%%, [1, 2, 3, 4, 5, 6]));
+
+array_from_nested_list ([[1, 2], [3, 4], [5, 6]]);
+''(make_array (fixnum, 3, 2), fillarray (%%, [1, 2, 3, 4, 5, 6]));
+
+array_from_nested_list ([[[1], [2]], [[3], [4]], [[5], [6]]]);
+''(make_array (fixnum, 3, 2, 1), fillarray (%%, [1, 2, 3, 4, 5, 6]));
+
+flatten_array (array_from_list (x));
+''(array_from_list ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]));
+
+flatten_array (array_from_nested_list ([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [11, 12, 13, 14, 15, 16, 17, 18, 19, 20]]));
+''(array_from_list ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]));
+
+flatten_array (array_from_nested_list ([[[1, 2, 3, 4, 5], [6, 7, 8, 9, 10]], [[11, 12, 13, 14, 15], [16, 17, 18, 19, 20]]]));
+''(array_from_list ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]));
+
+flatten_array (array_from_nested_list ([[[[1], [2], [3], [4], [5]], [[6], [7], [8], [9], [10]]], [[[11], [12], [13], [14], [15]], [[16], [17], [18], [19], [20]]]]));
+''(array_from_list ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]));
+
+reshape (array_from_list (x), [2, 10]);
+''(array_from_nested_list ([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [11, 12, 13, 14, 15, 16, 17, 18, 19, 20]]));
+
+reshape (array_from_list (x), [10, 2]);
+''(array_from_nested_list ([[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12], [13, 14], [15, 16], [17, 18], [19, 20]]));
+
+reshape (array_from_list (x), [20]);
+''(array_from_nested_list ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]));
+
+reshape (array_from_list (x), ['any]);
+''(array_from_nested_list ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]));
+
+reshape (array_from_list (x), ['any, 1]);
+''(array_from_nested_list ([[1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12], [13], [14], [15], [16], [17], [18], [19], [20]]));
+
+reshape (array_from_list (x), [20, 'any]);
+''(array_from_nested_list ([[1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12], [13], [14], [15], [16], [17], [18], [19], [20]]));
+
+reshape (array_from_list (x), ['any, 2]);
+''(array_from_nested_list ([[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12], [13, 14], [15, 16], [17, 18], [19, 20]]));
+
+reshape (array_from_list (x), [10, 'any]);
+''(array_from_nested_list ([[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12], [13, 14], [15, 16], [17, 18], [19, 20]]));
+
+reshape (array_from_list (x), ['any, 4]);
+''(array_from_nested_list ([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16], [17, 18, 19, 20]]));
+
+reshape (array_from_list (x), [5, 'any]);
+''(array_from_nested_list ([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16], [17, 18, 19, 20]]));
+
+reshape (array_from_list (x), ['any, 5]);
+''(array_from_nested_list ([[1, 2, 3, 4, 5], [6, 7, 8, 9, 10], [11, 12, 13, 14, 15], [16, 17, 18, 19, 20]]));
+
+reshape (array_from_list (x), [4, 'any]);
+''(array_from_nested_list ([[1, 2, 3, 4, 5], [6, 7, 8, 9, 10], [11, 12, 13, 14, 15], [16, 17, 18, 19, 20]]));
+
+reshape (array_from_list (x), ['any, 10]);
+''(array_from_nested_list ([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [11, 12, 13, 14, 15, 16, 17, 18, 19, 20]]));
+
+reshape (array_from_list (x), [2, 'any]);
+''(array_from_nested_list ([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [11, 12, 13, 14, 15, 16, 17, 18, 19, 20]]));
+
+reshape (array_from_list (x), ['any, 20]);
+''(array_from_nested_list ([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]]));
+
+reshape (array_from_list (x), [1, 'any]);
+''(array_from_nested_list ([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]]));
+
+reshape (array_from_list (x), [2, 5, 2]);
+''(array_from_nested_list ([[[1, 2], [3, 4], [5, 6], [7, 8], [9, 10]], [[11, 12], [13, 14], [15, 16], [17, 18], [19, 20]]]));
+
+reshape (array_from_list (x), [2, 5, 'any]);
+''(array_from_nested_list ([[[1, 2], [3, 4], [5, 6], [7, 8], [9, 10]], [[11, 12], [13, 14], [15, 16], [17, 18], [19, 20]]]));
+
+reshape (array_from_list (x), [2, 'any, 2]);
+''(array_from_nested_list ([[[1, 2], [3, 4], [5, 6], [7, 8], [9, 10]], [[11, 12], [13, 14], [15, 16], [17, 18], [19, 20]]]));
+
+reshape (array_from_list (x), ['any, 5, 2]);
+''(array_from_nested_list ([[[1, 2], [3, 4], [5, 6], [7, 8], [9, 10]], [[11, 12], [13, 14], [15, 16], [17, 18], [19, 20]]]));
+
+reshape (reshape (array_from_list (x), ['any, 5, 2]), [20]);
+''(array_from_nested_list ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]));
+
+reshape (reshape (array_from_list (x), ['any, 5, 2]), ['any]);
+''(array_from_nested_list ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]));
+
+is (reshape (reshape (array_from_list (x), [5, 4]), [2, 5, 2]) = reshape (array_from_list (x), [2, 5, 2]));
+true;
+
+is (reshape (array_from_list (x), [5, 4]) = reshape (array_from_list (x), [5, 4], 'by_rows));
+true;
+
+is (reshape (array_from_list (x), [5, 2, 2]) = reshape (array_from_list (x), [5, 2, 2], 'by_rows));
+true;
+
+is (reshape (array_from_list (x), [2, 10]) = reshape (array_from_list (x), [2, 10], 'by_rows));
+true;
+
+reshape (array_from_list (x), ['any], 'by_columns);
+''(array_from_nested_list ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]));
+
+reshape (array_from_list (x), [5, 'any], 'by_columns);
+''(array_from_nested_list ([[1, 6, 11, 16], [2, 7, 12, 17], [3, 8, 13, 18], [4, 9, 14, 19], [5, 10, 15, 20]]));
+
+/* declared arrays */
+
+(declared_array_from_list (x) := block ([a: gensym ("a")], apply ('array, [a, length (x) - 1]), fillarray (a, x)),
+ declared_array_from_nested_list (x) :=
+     block ([m: nesting_depth (x), dims: [], x1: x, y],
+            for k thru m - 1 do (push (length (x1), dims), x1: x1[1]),
+            push (length (x1), dims),
+            dims: reverse (dims),
+            y: apply ('array, cons (gensym ("a"), dims - 1)),
+            fillarray (y, flatten (x))),
+ 0);
+0;
+
+(reshape (declared_array_from_list (x), [2, 10]), [declared_arrayp (%%), apply ('arrayinfo, [%%]), get_array_from_declared_array (%%)]);
+[true, [declared, 2, [1, 9]], ''(array_from_nested_list ([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [11, 12, 13, 14, 15, 16, 17, 18, 19, 20]]))];
+
+(reshape (declared_array_from_list (x), [10, 2]), [declared_arrayp (%%), apply ('arrayinfo, [%%]), get_array_from_declared_array (%%)]);
+[true, [declared, 2, [9, 1]], ''(array_from_nested_list ([[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12], [13, 14], [15, 16], [17, 18], [19, 20]]))];
+
+(reshape (declared_array_from_list (x), [20]), [declared_arrayp (%%), apply ('arrayinfo, [%%]), get_array_from_declared_array (%%)]);
+[true, [declared, 1, [19]], ''(array_from_nested_list ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]))];
+
+(reshape (declared_array_from_list (x), ['any]), [declared_arrayp (%%), apply ('arrayinfo, [%%]), get_array_from_declared_array (%%)]);
+[true, [declared, 1, [19]], ''(array_from_nested_list ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]))];
+
+(reshape (declared_array_from_list (x), ['any, 1]), [declared_arrayp (%%), apply ('arrayinfo, [%%]), get_array_from_declared_array (%%)]);
+[true, [declared, 2, [19, 0]], ''(array_from_nested_list ([[1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12], [13], [14], [15], [16], [17], [18], [19], [20]]))];
+
+(reshape (declared_array_from_list (x), [20, 'any]), [declared_arrayp (%%), apply ('arrayinfo, [%%]), get_array_from_declared_array (%%)]);
+[true, [declared, 2, [19, 0]], ''(array_from_nested_list ([[1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12], [13], [14], [15], [16], [17], [18], [19], [20]]))];
+
+(reshape (declared_array_from_list (x), ['any, 2]), [declared_arrayp (%%), apply ('arrayinfo, [%%]), get_array_from_declared_array (%%)]);
+[true, [declared, 2, [9, 1]], ''(array_from_nested_list ([[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12], [13, 14], [15, 16], [17, 18], [19, 20]]))];
+
+(reshape (declared_array_from_list (x), [10, 'any]), [declared_arrayp (%%), apply ('arrayinfo, [%%]), get_array_from_declared_array (%%)]);
+[true, [declared, 2, [9, 1]], ''(array_from_nested_list ([[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12], [13, 14], [15, 16], [17, 18], [19, 20]]))];
+
+(reshape (declared_array_from_list (x), ['any, 4]), [declared_arrayp (%%), apply ('arrayinfo, [%%]), get_array_from_declared_array (%%)]);
+[true, [declared, 2, [4, 3]], ''(array_from_nested_list ([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16], [17, 18, 19, 20]]))];
+
+(reshape (declared_array_from_list (x), [5, 'any]), [declared_arrayp (%%), apply ('arrayinfo, [%%]), get_array_from_declared_array (%%)]);
+[true, [declared, 2, [4, 3]], ''(array_from_nested_list ([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16], [17, 18, 19, 20]]))];
+
+(reshape (declared_array_from_list (x), ['any, 5]), [declared_arrayp (%%), apply ('arrayinfo, [%%]), get_array_from_declared_array (%%)]);
+[true, [declared, 2, [3, 4]], ''(array_from_nested_list ([[1, 2, 3, 4, 5], [6, 7, 8, 9, 10], [11, 12, 13, 14, 15], [16, 17, 18, 19, 20]]))];
+
+(reshape (declared_array_from_list (x), [4, 'any]), [declared_arrayp (%%), apply ('arrayinfo, [%%]), get_array_from_declared_array (%%)]);
+[true, [declared, 2, [3, 4]], ''(array_from_nested_list ([[1, 2, 3, 4, 5], [6, 7, 8, 9, 10], [11, 12, 13, 14, 15], [16, 17, 18, 19, 20]]))];
+
+(reshape (declared_array_from_list (x), ['any, 10]), [declared_arrayp (%%), apply ('arrayinfo, [%%]), get_array_from_declared_array (%%)]);
+[true, [declared, 2, [1, 9]], ''(array_from_nested_list ([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [11, 12, 13, 14, 15, 16, 17, 18, 19, 20]]))];
+
+(reshape (declared_array_from_list (x), [2, 'any]), [declared_arrayp (%%), apply ('arrayinfo, [%%]), get_array_from_declared_array (%%)]);
+[true, [declared, 2, [1, 9]], ''(array_from_nested_list ([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [11, 12, 13, 14, 15, 16, 17, 18, 19, 20]]))];
+
+(reshape (declared_array_from_list (x), ['any, 20]), [declared_arrayp (%%), apply ('arrayinfo, [%%]), get_array_from_declared_array (%%)]);
+[true, [declared, 2, [0, 19]], ''(array_from_nested_list ([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]]))];
+
+(reshape (declared_array_from_list (x), [1, 'any]), [declared_arrayp (%%), apply ('arrayinfo, [%%]), get_array_from_declared_array (%%)]);
+[true, [declared, 2, [0, 19]], ''(array_from_nested_list ([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]]))];
+
+(reshape (declared_array_from_list (x), [2, 5, 2]), [declared_arrayp (%%), apply ('arrayinfo, [%%]), get_array_from_declared_array (%%)]);
+[true, [declared, 3, [1, 4, 1]], ''(array_from_nested_list ([[[1, 2], [3, 4], [5, 6], [7, 8], [9, 10]], [[11, 12], [13, 14], [15, 16], [17, 18], [19, 20]]]))];
+
+(reshape (declared_array_from_list (x), [2, 5, 'any]), [declared_arrayp (%%), apply ('arrayinfo, [%%]), get_array_from_declared_array (%%)]);
+[true, [declared, 3, [1, 4, 1]], ''(array_from_nested_list ([[[1, 2], [3, 4], [5, 6], [7, 8], [9, 10]], [[11, 12], [13, 14], [15, 16], [17, 18], [19, 20]]]))];
+
+(reshape (declared_array_from_list (x), [2, 'any, 2]), [declared_arrayp (%%), apply ('arrayinfo, [%%]), get_array_from_declared_array (%%)]);
+[true, [declared, 3, [1, 4, 1]], ''(array_from_nested_list ([[[1, 2], [3, 4], [5, 6], [7, 8], [9, 10]], [[11, 12], [13, 14], [15, 16], [17, 18], [19, 20]]]))];
+
+(reshape (declared_array_from_list (x), ['any, 5, 2]), [declared_arrayp (%%), apply ('arrayinfo, [%%]), get_array_from_declared_array (%%)]);
+[true, [declared, 3, [1, 4, 1]], ''(array_from_nested_list ([[[1, 2], [3, 4], [5, 6], [7, 8], [9, 10]], [[11, 12], [13, 14], [15, 16], [17, 18], [19, 20]]]))];
+
+(reshape (reshape (declared_array_from_list (x), ['any, 5, 2]), [20]), [declared_arrayp (%%), apply ('arrayinfo, [%%]), get_array_from_declared_array (%%)]);
+[true, [declared, 1, [19]], ''(array_from_nested_list ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]))];
+
+(reshape (reshape (declared_array_from_list (x), ['any, 5, 2]), ['any]), [declared_arrayp (%%), apply ('arrayinfo, [%%]), get_array_from_declared_array (%%)]);
+[true, [declared, 1, [19]], ''(array_from_nested_list ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]))];
+
+is (get_array_from_declared_array (reshape (reshape (declared_array_from_list (x), [5, 4]), [2, 5, 2])) = get_array_from_declared_array (reshape (declared_array_from_list (x), [2, 5, 2])));
+true;
+
+is (get_array_from_declared_array (reshape (declared_array_from_list (x), [5, 4])) = get_array_from_declared_array (reshape (declared_array_from_list (x), [5, 4], 'by_rows)));
+true;
+
+is (get_array_from_declared_array (reshape (declared_array_from_list (x), [5, 2, 2])) = get_array_from_declared_array (reshape (declared_array_from_list (x), [5, 2, 2], 'by_rows)));
+true;
+
+is (get_array_from_declared_array (reshape (declared_array_from_list (x), [2, 10])) = get_array_from_declared_array (reshape (declared_array_from_list (x), [2, 10], 'by_rows)));
+true;
+
+(reshape (declared_array_from_list (x), ['any], 'by_columns), [declared_arrayp (%%), apply ('arrayinfo, [%%]), get_array_from_declared_array (%%)]);
+[true, [declared, 1, [19]], ''(array_from_nested_list ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]))];
+
+(reshape (declared_array_from_list (x), [5, 'any], 'by_columns), [declared_arrayp (%%), apply ('arrayinfo, [%%]), get_array_from_declared_array (%%)]);
+[true, [declared, 2, [4, 3]], ''(array_from_nested_list ([[1, 6, 11, 16], [2, 7, 12, 17], [3, 8, 13, 18], [4, 9, 14, 19], [5, 10, 15, 20]]))];
+
+/* matrices */
+
+reshape (matrix (x), [2, 10]);
+matrix ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [11, 12, 13, 14, 15, 16, 17, 18, 19, 20]);
+
+reshape (matrix (x), [10, 2]);
+matrix ([1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12], [13, 14], [15, 16], [17, 18], [19, 20]);
+
+errcatch (reshape (matrix (x), [20]));
+[];
+
+errcatch (reshape (matrix (x), ['any]));
+[];
+
+reshape (matrix (x), ['any, 1]);
+matrix ([1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12], [13], [14], [15], [16], [17], [18], [19], [20]);
+
+reshape (matrix (x), [20, 'any]);
+matrix ([1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12], [13], [14], [15], [16], [17], [18], [19], [20]);
+
+reshape (matrix (x), ['any, 2]);
+matrix ([1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12], [13, 14], [15, 16], [17, 18], [19, 20]);
+
+reshape (matrix (x), [10, 'any]);
+matrix ([1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12], [13, 14], [15, 16], [17, 18], [19, 20]);
+
+reshape (matrix (x), ['any, 4]);
+matrix ([1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16], [17, 18, 19, 20]);
+
+reshape (matrix (x), [5, 'any]);
+matrix ([1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16], [17, 18, 19, 20]);
+
+reshape (matrix (x), ['any, 5]);
+matrix ([1, 2, 3, 4, 5], [6, 7, 8, 9, 10], [11, 12, 13, 14, 15], [16, 17, 18, 19, 20]);
+
+reshape (matrix (x), [4, 'any]);
+matrix ([1, 2, 3, 4, 5], [6, 7, 8, 9, 10], [11, 12, 13, 14, 15], [16, 17, 18, 19, 20]);
+
+reshape (matrix (x), ['any, 10]);
+matrix ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [11, 12, 13, 14, 15, 16, 17, 18, 19, 20]);
+
+reshape (matrix (x), [2, 'any]);
+matrix ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [11, 12, 13, 14, 15, 16, 17, 18, 19, 20]);
+
+reshape (matrix (x), ['any, 20]);
+matrix ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]);
+
+reshape (matrix (x), [1, 'any]);
+matrix ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]);
+
+errcatch (reshape (matrix (x), [2, 5, 2]));
+[];
+
+errcatch (reshape (matrix (x), [2, 5, 'any]));
+[];
+
+is (reshape (reshape (matrix (x), [5, 4]), [2, 10]) = reshape (matrix (x), [2, 10]));
+true;
+
+is (reshape (matrix (x), [5, 4]) = reshape (matrix (x), [5, 4], 'by_rows));
+true;
+
+reshape (matrix (x), [5, 'any], 'by_columns);
+matrix ([1, 6, 11, 16], [2, 7, 12, 17], [3, 8, 13, 18], [4, 9, 14, 19], [5, 10, 15, 20]);
+
+(makelist (block ([n1: 1 + random (10), n2: 1 + random (10)],
+                  block ([matrix_x: apply (matrix, makelist (makelist (random (100), n2), n1)), y1, y2],
+                         y1: reshape (matrix_x, [n2, n1], 'by_columns),
+                         y2: transpose (matrix_x),
+                         if y1 = y2 then true else FAILED ('reshape (matrix_x, [n2, n1], 'by_columns), 'expected = y2, 'actual = y1))),
+           20),
+ unique (%%));
+[true];
 
