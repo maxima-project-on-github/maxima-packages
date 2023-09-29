@@ -1,0 +1,238 @@
+This is reshape.info, produced by makeinfo version 7.0.3 from
+reshape.texi.
+
+1 Package reshape
+*****************
+
+
+File: reshape.info,  Node: Introduction to package reshape,  Next: Definitions for package reshape,  Prev: (dir),  Up: (dir)
+
+1.1 Introduction to package reshape
+===================================
+
+Package ‘reshape’ provides a function, ‘reshape’, to reshape (change the
+dimensions of) a list, array, or matrix.  That is, ‘reshape’ creates a
+new list, array, or matrix, containing the same elements as the
+original, but arranged in different dimensions.  In addition, ‘reshape’
+can optionally arrange the elements by rows or by columns; that is, with
+successive elements differing by the last index (if by rows) or by the
+first index (if by columns).
+
+
+File: reshape.info,  Node: Definitions for package reshape,  Next: Function and variable index,  Prev: Introduction to package reshape
+
+1.2 Definitions for package reshape
+===================================
+
+ -- Function: reshape
+          reshape (<x>, [<d_1>, ..., <d_n>], by_rows)
+          reshape (<x>, [<d_1>, ..., <d_n>], by_columns)
+          reshape (<x>, [<d_1>, ..., <d_n>])
+
+     Reshapes a list, array, or matrix.  The result is a list if <x> is
+     a list, an array if <x> is an array, or a matrix if <x> is a
+     matrix.  ‘reshape’ cannot reshape any other type of object.
+
+     The dimensions for the result are ‘[<d_1>, ..., <d_n>]’, where
+     <d_1> through <d_n> are positive integers or the symbol ‘any’.  The
+     number of dimensions <n> must be greater than or equal to 1; when
+     <x> is a matrix, <n> must be exactly 2.  The dimensions must always
+     be specified as a list, even if the number of dimensions is 1.
+
+     If present, ‘any’ may appear only once, and the number of elements
+     of <x> must be divisible by the product of the other, integer
+     dimensions.
+
+     If ‘any’ is not present, all dimensions must be positive integers,
+     and the product of the dimensions must be the number of elements of
+     <x>.
+
+     The optional final argument ‘by_rows’ or ‘by_columns’ governs
+     whether successive elements differ by the last index (if ‘by_rows’)
+     or by the first index (if ‘by_columns’).  If neither ‘by_rows’ nor
+     ‘by_columns’ is specified, the default is ‘by_rows’.
+
+     The input <x> can have any dimensions, and, if it is a list, <x>
+     may be ragged (i.e., any sublists may be of differing lengths).
+     Elements of <x> are always accessed by rows (by flattening <x> if
+     it is a list, or accessing elements of <x> in row-major order if it
+     is an array or matrix); the optional argument ‘by_rows’ or
+     ‘by_columns’ does not affect the order of accessing the elements of
+     <x>.
+
+     ‘reshape’ can reshape value arrays, as returned by ‘make_array’,
+     and declared arrays, as declared by ‘array’.  When <x> is a value
+     array, the result is a value array, and when <x> is a declared
+     array, the result is a declared array, with a constructed name
+     comprising the letter "a" followed by a number which makes the
+     resulting symbol unique.
+
+     ‘reshape’ always returns a new object, even if the specified
+     dimensions are the same as the dimensions of the input.
+
+     ‘load("reshape.mac")’ loads this function.
+
+     Examples:
+
+     Reshaping a nested list, first with two dimensions and then with
+     three dimensions.
+
+          (%i1) load ("reshape.mac") $
+          (%i2) reshape ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], [6, 2]);
+          (%o2)  [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12]]
+          (%i3) reshape ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], [3, 2, 2]);
+          (%o3) [[[1, 2], [3, 4]], [[5, 6], [7, 8]], [[9, 10], [11, 12]]]
+
+     Reshaping a list with an inferred dimension via ‘any’.  The
+     operation shown here is equivalent to taking the elements of <x>
+     "by twos".
+
+          (%i1) load ("reshape.mac") $
+          (%i2) reshape ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], ['any, 2]);
+          (%o2)  [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12]]
+
+     Another example of reshaping a list with an inferred dimension.
+
+          (%i1) load ("reshape.mac") $
+          (%i2) reshape ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], [2, 'any, 2]);
+          (%o2) [[[1, 2], [3, 4], [5, 6]], [[7, 8], [9, 10], [11, 12]]]
+
+     Reshaping a value array.
+
+          (%i1) load ("reshape.mac") $
+          (%i2) make_array (fixnum, 4, 3);
+          (%o2)  {Lisp Array: #2A((0 0 0) (0 0 0) (0 0 0) (0 0 0))}
+          (%i3) fillarray (%, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+          (%o3) {Lisp Array: #2A((1 2 3) (4 5 6) (7 8 9) (10 11 12))}
+          (%i4) reshape (%, [2, 3, 2]);
+          (%o4)
+              {Lisp Array: #3A(((1 2) (3 4) (5 6)) ((7 8) (9 10) (11 12)))}
+
+     Reshaping a declared array.  Note that the actual number of
+     elements of the array ‘b’ is 24 (i.e., ‘(3 + 1)*(5 + 1)’); this is
+     an idiosyncrasy of Maxima’s declared arrays.  The product of
+     dimensions for ‘reshape’ is equal to the the actual number of
+     elements.
+
+          (%i1) load ("reshape.mac") $
+          (%i2) array (b, 3, 5);
+          (%o2)                           b
+          (%i3) fillarray (b, makelist (i, i, 1, 20));
+          (%o3)                           b
+          (%i4) reshape (b, [3, 2, 2, 2]);
+          (%o4)                         a196
+          (%i5) get_array_from_declared_array (%);
+          (%o5) {Lisp Array: #4A((((1 2) (3 4)) ((5 6) (7 8)))
+                           (((9 10) (11 12)) ((13 14) (15 16)))
+                           (((17 18) (19 20)) ((20 20) (20 20))))}
+
+     Reshaping a matrix.
+
+          (%i1) load ("reshape.mac") $
+          (%i2) reshape (matrix ([1, 2, 3, 4, 5, 6], [7, 8, 9, 10, 11, 12]), [4, 3]);
+                                   [ 1   2   3  ]
+                                   [            ]
+                                   [ 4   5   6  ]
+          (%o2)                    [            ]
+                                   [ 7   8   9  ]
+                                   [            ]
+                                   [ 10  11  12 ]
+
+     Reshaping a list by columns; compare by rows.
+
+          (%i1) load ("reshape.mac") $
+          (%i2) reshape ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], [3, 2, 2], 'by_columns);
+          (%o2) [[[1, 7], [4, 10]], [[2, 8], [5, 11]], [[3, 9], [6, 12]]]
+          (%i3) reshape ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], [3, 2, 2], 'by_rows);
+          (%o3) [[[1, 2], [3, 4]], [[5, 6], [7, 8]], [[9, 10], [11, 12]]]
+
+ -- Function: get_array_from_declared_array (<x>)
+
+     Returns the array value from <x>, which must be a declared array.
+     That is, <x> must be a symbol which was declared as an array via
+     the function ‘array’.
+
+     ‘get_array_from_declared_array’ returns the array value itself, not
+     a copy.
+
+     ‘load("reshape.mac")’ loads this function.
+
+     Examples:
+
+          (%i1) load ("reshape.mac") $
+          (%i2) array (aa, fixnum, 2, 4);
+          (%o2)                          aa
+          (%i3) fillarray (aa, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]);
+          (%o3)                          aa
+          (%i4) get_array_from_declared_array (aa);
+          (%o4) {Lisp Array: #2A((0 1 2 3 4) (5 6 7 8 9) (10 11 12 13 14))}
+
+ -- Function: flatten_array (<x>)
+
+     Returns a new array which is one-dimensional and has the same
+     elements (in row-major order) as <x>, which must be an array value
+     or a declared array.
+
+     When <x> is an array value, ‘flatten_array’ returns an array value;
+     when <x> is a declared array, ‘flatten_array’ returns a new
+     declared array, with a constructed name comprising the letter "a"
+     followed by a number which makes the resulting symbol unique.
+
+     ‘flatten_array’ always returns a new array, even if <x> is already
+     one-dimensional.
+
+     ‘load("reshape.mac")’ loads this function.
+
+     Examples:
+
+     Flattening an array value.
+
+          (%i1) load ("reshape.mac") $
+          (%i2) aa: make_array (fixnum, 3, 2);
+          (%o2)         {Lisp Array: #2A((0 0) (0 0) (0 0))}
+          (%i3) fillarray (aa, [0, 1, 2, 3, 4, 5]);
+          (%o3)         {Lisp Array: #2A((0 1) (2 3) (4 5))}
+          (%i4) flatten_array (aa);
+          (%o4)             {Lisp Array: #(0 1 2 3 4 5)}
+
+     Flattening a declared array.
+
+          (%i1) load ("reshape.mac") $
+          (%i2) array (bb, fixnum, 3, 3);
+          (%o2)                          bb
+          (%i3) fillarray (bb, makelist (i, i, 0, 15));
+          (%o3)                          bb
+          (%i4) flatten_array (bb);
+          (%o4)                         a195
+          (%i5) get_array_from_declared_array (%);
+          (%o5) {Lisp Array: #(0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15)}
+
+
+File: reshape.info,  Node: Function and variable index,  Prev: Definitions for package reshape,  Up: (dir)
+
+Appendix A Function and variable index
+**************************************
+
+ [index ]
+* Menu:
+
+* flatten_array:                         Definitions for package reshape.
+                                                              (line 149)
+* get_array_from_declared_array:         Definitions for package reshape.
+                                                              (line 128)
+* reshape:                               Definitions for package reshape.
+                                                              (line   6)
+
+
+
+Tag Table:
+Node: Introduction to package reshape114
+Node: Definitions for package reshape785
+Node: Function and variable index8926
+
+End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

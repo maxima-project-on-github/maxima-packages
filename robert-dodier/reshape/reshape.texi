@@ -24,7 +24,7 @@ that is,
 with successive elements differing by the last index (if by rows)
 or by the first index (if by columns).
 
-@node Definitions for package reshape, , Introduction to package reshape, 
+@node Definitions for package reshape, Function and variable index, Introduction to package reshape, 
 @section Definitions for package reshape
 
 @deffn {Function} reshape @
@@ -240,6 +240,8 @@ via the function @code{array}.
 @code{get_array_from_declared_array} returns the array value itself,
 not a copy.
 
+@code{load("reshape.mac")} loads this function.
+
 Examples:
 
 @c ===beg===
@@ -281,6 +283,8 @@ which makes the resulting symbol unique.
 
 @code{flatten_array} always returns a new array,
 even if @var{x} is already one-dimensional.
+
+@code{load("reshape.mac")} loads this function.
 
 Examples:
 
@@ -338,3 +342,8 @@ Flattening a declared array.
 @end example
 
 @end deffn
+
+@node Function and variable index,  , Definitions for package reshape, (dir)
+@appendix Function and variable index
+@printindex fn
+@printindex vr
