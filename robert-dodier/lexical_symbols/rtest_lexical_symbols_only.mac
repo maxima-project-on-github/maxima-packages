@@ -1774,3 +1774,14 @@ bessel_simplify(-2*bessel_j(1,z)*z^3-10*bessel_j(2,z)*z^2
  -30*%pi*bessel_j(1,z)*struve_h(2,z)+30*%pi*struve_h(1,z)*bessel_j(2,z));
 0;
 
+/* bug reported to mailing list 2023-10-02: "Recommended addition to row, col, etc. functions" */
+
+(kill (M),
+ extdiag(M,i):=block([m,n,j,res:[]],
+ [m,n]:matrix_size(M),
+ for j:min(m,n-i) thru max(1,1-i) step -1 do push(M[j,j+i],res),
+     res),
+ M[6]: 3,
+ extdiag(matrix([1,2],[4,5]),0));
+[1, 5];
+
