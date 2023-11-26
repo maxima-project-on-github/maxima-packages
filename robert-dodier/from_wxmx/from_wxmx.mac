@@ -1,12 +1,27 @@
 load ("expressions_from_dom.mac");
 load ("parse_token_list.lisp");
 
-from_wxmx (filename) :=
-    block ([parse_tree, expr_verbatim, expr_mogrified],
-           parse_tree: parse_xml (?pathname (filename)),
-           expr_verbatim: expressions_from_dom (parse_tree),
-           expr_mogrified: apply1 (expr_verbatim, rule_split_mth),
-           [parse_tree, expr_verbatim, expr_mogrified]);
+wxmx_content_xml: "content.xml"; /* make it a variable in case it ever changes */
+
+expressions_from_wxmx (filename_wxmx) :=
+    (parse_xml (open_zip_input_stream (filename_wxmx, wxmx_content_xml)),
+     expressions_from_dom (%%));
+
+extract_input_lines (expr) :=
+    block ([input_ops, input_ops_lines, input_lines],
+           input_ops: extract_ops (expr, editor ("type" = "input")),
+           input_ops_lines: extract_ops (input_ops, line ()),
+           input_lines: flatten (map (args, input_ops_lines)),
+           [input_ops, input_ops_lines, input_lines]);
+
+maxima_from_wxmx (filename_wxmx, filename_mac) :=
+    (expressions_from_wxmx (filename_wxmx),
+     extract_input_lines (%%),
+     with_stdout (filename_mac,
+                  for l in last (%%) do print (l)));
+
+mogrify_wxmx_expr (expr) :=
+    apply1 (expr, rule_split_mth);
 
 matchdeclare (mm, lambda ([e%], op1(e%) = 'mth));
 op1(e%) := if not atom(e%) then if not atom(op(e%)) then op1(op(e%)) else op(e%);
@@ -25,3 +40,25 @@ extract_outputs (e) :=
            scanmap (f, e),
            reverse (L));
  */
+
+unix_single_line_terminator: ascii(10);
+unix_double_line_terminator: sconcat (ascii(10), ascii(10));
+
+dos_single_line_terminator: sconcat (ascii(13), ascii(10));
+dos_double_line_terminator: sconcat (ascii(13), ascii(10), ascii(13), ascii(10));
+
+wxmx_empty_lines: [ unix_single_line_terminator, unix_double_line_terminator, dos_single_line_terminator, dos_double_line_terminator ];
+
+exclude_leaf_nodes (leaf_nodes, e) :=
+    scanmap (lambda ([e1], if mapatom(e1) then e1 else apply (op(e1), sublist (args(e1), lambda ([e2], not member (e2, leaf_nodes))))), e, bottomup);
+
+exclude_t_nodes (regex, e) :=
+    scanmap (lambda ([e1], if mapatom(e1) then e1 else apply (op(e1), sublist (args(e1), lambda ([e2], match_t (regex, e2) = false)))), e, bottomup);
+
+load ("sregex");
+
+match_t (regex, e) :=
+    not mapatom (e)
+    and (op (e) = 't or (not atom (op (e)) and op (op (e)) = 't))
+    and length (e) = 1
+    and regex_match (regex, first (e)) # false;
