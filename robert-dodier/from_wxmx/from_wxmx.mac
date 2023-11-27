@@ -84,19 +84,20 @@ markdown_from_expressions1 (e) :=
 markdown_from_cell (c) :=
     block ([cell_type: assoc ("type", args (op (c)))],
            if cell_type = "title" or cell_type = "section" or cell_type = "subsection"
-               then markdown_from_cell_section (first (c))
+               then markdown_from_cell_section (first (c), rest (c))
            elseif cell_type = "text"
                then markdown_from_cell_text (first (c))
            elseif cell_type = "code"
-               then markdown_from_cell_code (first (first (c)), first (second (c)))
+               then markdown_from_cell_code (first (first (c)), if length (c) >= 2 then first (second (c)))
            else if cell_type = "pagebreak"
                then block () /* do nothing */
                else printf (true, "markdown_from_expressions: unrecognized type in cell; found: ~a(...)~%", op (c)));
 
-markdown_from_cell_section (e) :=
+markdown_from_cell_section (e, ee) :=
     block ([level: parse_string (assoc ("sectioning_level", args (op (e)))),
             title_line: first (first (e))],
-           printf (true, "~a ~a~%", apply (sconcat, makelist ("#", level)), title_line));
+           printf (true, "~a ~a~%", apply (sconcat, makelist ("#", level)), title_line),
+           markdown_from_expressions1 (ee));
 
 markdown_from_cell_text (e) :=
     block ([lines: map (first, args (e))],
@@ -133,19 +134,20 @@ latex_from_expressions1 (e) :=
 latex_from_cell (c) :=
     block ([cell_type: assoc ("type", args (op (c)))],
            if cell_type = "title" or cell_type = "section" or cell_type = "subsection"
-               then latex_from_cell_section (first (c))
+               then latex_from_cell_section (first (c), rest (c))
            elseif cell_type = "text"
                then latex_from_cell_text (first (c))
            elseif cell_type = "code"
-               then latex_from_cell_code (first (first (c)), first (second (c)))
+               then latex_from_cell_code (first (first (c)), if length (c) >= 2 then first (second (c)))
            else if cell_type = "pagebreak"
                then block () /* do nothing */
                else printf (true, "latex_from_expressions: unrecognized type in cell; found: ~a(...)~%", op (c)));
 
-latex_from_cell_section (e) :=
+latex_from_cell_section (e, ee) :=
     block ([level: parse_string (assoc ("sectioning_level", args (op (e)))),
             title_line: first (first (e))],
-           printf (true, "\\~asection{~a}~%", apply (sconcat, makelist ("sub", level - 1)), title_line));
+           printf (true, "\\~asection{~a}~%", apply (sconcat, makelist ("sub", level - 1)), title_line),
+           latex_from_expressions1 (ee));
 
 latex_from_cell_text (e) :=
     block ([lines: map (first, args (e))],
