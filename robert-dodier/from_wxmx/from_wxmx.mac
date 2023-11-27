@@ -96,16 +96,17 @@ markdown_from_cell (c) :=
 markdown_from_cell_section (e, ee) :=
     block ([level: parse_string (assoc ("sectioning_level", args (op (e)))),
             title_line: first (first (e))],
-           printf (true, "~a ~a~%", apply (sconcat, makelist ("#", level)), title_line),
+           printf (true, "~%~a ~a~%", apply (sconcat, makelist ("#", level)), title_line),
            markdown_from_expressions1 (ee));
 
 markdown_from_cell_text (e) :=
     block ([lines: map (first, args (e))],
+           printf (true, "~%"),
            for l in lines do printf (true, "~a~%", l));
 
 markdown_from_cell_code (input, output) :=
     block ([input_lines: map (first, args (input))],
-           printf (true, "```{maxima}~%"),
+           printf (true, "~%```maxima~%"),
            for l in input_lines
                do if l = false
                       then printf (true, "~%")
