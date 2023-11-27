@@ -62,3 +62,52 @@ match_t (regex, e) :=
     and (op (e) = 't or (not atom (op (e)) and op (op (e)) = 't))
     and length (e) = 1
     and regex_match (regex, first (e)) # false;
+
+partition_args (L, p) :=
+    block ([L0: [], L1: []],
+           for x in L do if p(x) = false then push (x, L0) else push (x, L1),
+           [reverse (L0), reverse (L1)]);
+
+markdown_from_expressions (e) :=
+    (exclude_leaf_nodes (wxmx_empty_lines, e),
+     exclude_t_nodes ("rat: replace .*", %%),
+     markdown_from_expressions1 (%%));
+
+markdown_from_expressions1 (e) :=
+    for c in e do
+        if op (op (c)) = 'cell
+            then markdown_from_cell (c)
+        elseif op (op (c)) = 'fold
+            then markdown_from_expressions1 (c)
+            else printf (true, "markdown_from_expressions: unrecognized top-level element; found: ~a(...)~%", op (c));
+
+markdown_from_cell (c) :=
+    block ([cell_type: assoc ("type", args (op (c)))],
+           if cell_type = "title" or cell_type = "section" or cell_type = "subsection"
+               then markdown_from_cell_section (first (c))
+           elseif cell_type = "text"
+               then markdown_from_cell_text (first (c))
+           elseif cell_type = "code"
+               then markdown_from_cell_code (first (first (c)), first (second (c)))
+           else if cell_type = "pagebreak"
+               then block () /* do nothing */
+               else printf (true, "markdown_from_expressions: unrecognized type in cell; found: ~a(...)~%", op (c)));
+
+markdown_from_cell_section (e) :=
+    block ([level: parse_string (assoc ("sectioning_level", args (op (e)))),
+            title_line: first (first (e))],
+           printf (true, "~a ~a~%", apply (sconcat, makelist ("#", level)), title_line));
+
+markdown_from_cell_text (e) :=
+    block ([lines: map (first, args (e))],
+           for l in lines do printf (true, "~a~%", l));
+
+markdown_from_cell_code (input, output) :=
+    block ([input_lines: map (first, args (input))],
+           printf (true, "```{maxima}~%"),
+           for l in input_lines
+               do if l = false
+                      then printf (true, "~%")
+                      else printf (true, "~a~%", l),
+           printf (true, "```~%"));
+           
