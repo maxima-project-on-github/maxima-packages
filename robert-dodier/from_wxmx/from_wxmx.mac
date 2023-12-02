@@ -102,7 +102,9 @@ markdown_from_cell_section (e, ee) :=
 markdown_from_cell_text (e) :=
     block ([lines: map (first, args (e))],
            printf (true, "~%"),
-           for l in lines do printf (true, "~a~%", l));
+           for l in lines do 
+               if l = false then printf (true, "~%")
+                   else printf (true, "~a~%", l));
 
 markdown_from_cell_code (input, output) :=
     block ([input_lines: map (first, args (input))],
