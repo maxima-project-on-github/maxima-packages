@@ -12,7 +12,7 @@ tellsimpafter (''foo,
                block([aa:args(mm), nn:length(mm)],
                      sum (product (if jj=ii then 'diff(aa[ii], xx) else aa[jj], jj, 1, nn), ii, 1, nn))) ;
 
-find_subscripts (x, e) := block ([L : []], find_subscripts1 (x, e), L);
+find_subscripts (x, e) := block ([L : []], find_subscripts1 (x, e), unique (L));
 find_subscripts1 (x, e) := block ([L1 : match_subscript (e, x)],
   if L1 = false
     then
@@ -47,7 +47,7 @@ simp : true $
  * Dunno what to call it; "find_subscripts_with_function_calls" is clumsy and still not very precise.
  * "find_subscripts_2" it is, then.
  */
-find_subscripts_2 (x, t, e) := block ([L : []], find_subscripts1_2 (x, t, e), L);
+find_subscripts_2 (x, t, e) := block ([L : []], find_subscripts1_2 (x, t, e), unique (L));
 find_subscripts1_2 (x, t, e) := block ([L1 : match_subscript_2 (e, x, t)],
   if L1 = false
     then

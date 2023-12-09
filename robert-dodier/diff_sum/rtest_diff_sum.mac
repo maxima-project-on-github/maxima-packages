@@ -56,3 +56,20 @@ if 2 <= n then 'diff(f(x[2]),x[2],1) else 0;
 
 'diff('sum((x[i])^i, i, 1, n), x[2]);
 if 2 <= n then 2*x[2] else 0;
+
+/* adapted from: https://stackoverflow.com/questions/77626748/dfferentiating-a-sum-in-sympy */
+
+kill (q, t, u);
+done;
+
+foo: 'diff ('sum (q[t]*log(q[t]), t, 1, N), q[u]);
+if (1 <= u) and (u <= N) and %elementp(u, integers) then log(q[u]) + 1 else 0;
+
+foo1: block (assume (u >= 1, u <= N), ev (foo));
+if %elementp(u, integers) then log(q[u]) + 1 else 0;
+
+block (declare (u, integer), ev (foo));
+log(q[u]) + 1;
+
+(forget (facts (u)), kill (q, u));
+done;
