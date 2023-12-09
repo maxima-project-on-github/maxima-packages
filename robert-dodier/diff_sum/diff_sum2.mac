@@ -5,7 +5,7 @@
 
 put ('diff_sum2, true, 'present);
 
-find_subscripts2 (x, e) := block ([L : []], find_subscripts21 (x, e), L);
+find_subscripts2 (x, e) := block ([L : []], find_subscripts21 (x, e), unique (L));
 find_subscripts21 (x, e) := block ([L1 : match_subscript2 (e, x)],
   if L1 = false
     then
