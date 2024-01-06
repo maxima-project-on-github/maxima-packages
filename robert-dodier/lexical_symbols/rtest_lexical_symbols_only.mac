@@ -1785,3 +1785,34 @@ bessel_simplify(-2*bessel_j(1,z)*z^3-10*bessel_j(2,z)*z^2
  extdiag(matrix([1,2],[4,5]),0));
 [1, 5];
 
+/* mailing list 2023-12-27: "Newbie question: Multivariate function to univariate function" */
+
+(kill (I, f, g, x, y, z, u, v),
+ I(f) := integrate(f('x),'x,0,1),
+ g(u,v):=u*v,
+ I(lambda([q],g(q,v))));
+v/2;
+
+I (lambda ([x], g (x, v)));
+v/2;
+
+(f (x, y) := x*y,
+ I (lambda ([x], f (x, y))));
+y/2;
+
+/* expected result is 1/3 because x is the same symbol as the global appearing in I above */
+I (lambda ([y], f (y, x)));
+1/3;
+
+/* make x a local variable to distinguish from global */
+(I1 (f) := block ([x], integrate (f (x), x, 0, 1)),
+ I1 (lambda ([y], f (y, x))));
+x/2;
+
+/* define a function asymmetrical in its arguments to help verify
+ * that arguments are only by position and not by name
+ */
+(h (x, y) := y/x,
+ I2 (f) := block ([x], integrate (f (x), x, 1, 2)),
+ I2 (lambda ([y], h (y, x))));
+log(2)*x;

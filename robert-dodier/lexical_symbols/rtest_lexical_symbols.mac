@@ -3,6 +3,23 @@
  0);
 0;
 
+/* this business about "looks like" via string matching is a concession
+ * to the difficulty of expression matching on closures ...
+ * I might try again to figure out a way to make that work.
+ */
+
+(looks_like (pattern, e, s) :=
+    (ssubst (rhs (e), lhs (e), sanitize_for_regex (pattern)),
+     regex_match (%%, s),
+     if %% # false then true else FAILED_MATCH (pattern, e, s)),
+ sanitize_for_regex (s) :=
+     sconcat ("^", sanitize_for_regex_1 (["[", "]", "(", "|", ")", "*", "+", "?", "^"], s), "$"),
+ sanitize_for_regex_1 (l, s) :=
+     if l = [] then s
+         else sanitize_for_regex_1 (rest (l), ssubst (sconcat ("\\", first (l)), first (l), s)),
+ 0);
+0;
+     
 /* examples from blex.lisp
 ;; blex ([n:100], f(x) := n : n + x, g() := display(n));
  */
@@ -40,8 +57,8 @@ g(4)(5);
 (g(x) := lambda([y], x + y), string(%%))$
 "g(x):=lambda([y],x+y)";
 
-string(g(4));
-"closure([x:4],lambda([y],x+y))";
+looks_like ("closure([?envnnnn],lambda([y],x+y))", "nnnn" = "[0-9][0-9]*", string (g (4)));
+true;
 
 g(4)(5);
 9;
@@ -67,8 +84,8 @@ but the result is f^2(0.1) and not (sin(0.1))^2.
 (kill(f, g),
  square(f) := lambda([x],(f(x))^2),
  g:square(sin),
- string(%%));
-"lambda([x],f(x)^2)";
+ looks_like ("closure([?envnnnn],lambda([x],f(x)^2))", "nnnn" = "[0-9][0-9]*", string (g)));
+true;
 
 g(1);
 sin(1)^2;
@@ -147,8 +164,8 @@ And of course it doesn't matter if there are other variables named
 
 (kill(private, f),
  f: block([private:0],lambda([],private:private+1)),
- string(f));
-"lambda([],private:private+1)";
+ looks_like ("closure([?envnnnn],lambda([],private:private+1))", "nnnn" = "[0-9][0-9]*", string(f)));
+true;
 
 [f(), f(), f()];
 [1, 2, 3];
@@ -164,8 +181,9 @@ block( [private:100], [f(),private:200,f()]);
 
 (kill (g, foo),
  g(x):= block([gg], gg():=x, 'gg),
- foo: g(23));
-closure([env27857], gg);
+ foo: g(23),
+ looks_like ("closure([?envnnnn],gg)", "nnnn" = "[0-9][0-9]*", string (foo)));
+true;
 
 foo();
 23;
@@ -174,8 +192,9 @@ g(23)();
 23;
 
 (g(x):= block([gg], gg():=x, [gg,'gg,nounify('gg),verbify('gg)]),
- foo: g(12));
-closure([env27880], [gg, gg, g27871, gg]);
+ foo: g(12),
+ looks_like ("closure([?envnnnn],[gg,gg,gg,gg])", "nnnn" = "[0-9][0-9]*", string (foo)));
+true;
 
 foo[1]();
 12;
@@ -183,8 +202,11 @@ foo[1]();
 foo[2]();
 12;
 
-foo[3]();
-g27871();
+string (foo[3]());
+"gg()";
+
+is (foo[3]() = '(gg()));
+false;
 
 foo[3](), nouns;
 12;
@@ -201,8 +223,11 @@ foo[4]();
 34;
 
 (g(x) := block([gg], gg() := x, nounify('gg)),
- g(34)());
-g28051();
+ string (g(34)()));
+"gg()";
+
+is (g(34)() = '(gg()));
+false;
 
 (g(x) := block([gg], gg() := x, nounify('gg)),
  ev (g(34)(), nouns));
@@ -227,26 +252,28 @@ g28051();
 
 (kill (vv, globalfun),
  vv(z):=globalfun:lambda([],z),
- vv(42));
-closure([env28186], lambda([], z));
+ looks_like ("closure([?envnnnn],lambda([],z))", "nnnn" = "[0-9][0-9]*", string (vv (42))));
+true;
 
 vv(42)();
 42;
 
-/* fails test at present (March 2020) */
-globalfun;
-closure([env28186], lambda([], z));
+/* fails test at present */
+looks_like ("closure([?envnnnn],lambda([],z))", "nnnn" = "[0-9][0-9]*", string (globalfun));
+true;
 
-/* fails test at present (March 2020) */
+/* fails test at present */
 globalfun();
 42;
 
 /* mailing list 2020-07-19: "bad evaluation" */
 
-foo: block([w:[a,b,c]],if w[1]>0 then w[2] else w[3]);
-closure([env123], if a > 0 then w[2] else w[3]);
+(kill (a, b, c),
+ foo: block([w:[a,b,c]],if w[1]>0 then w[2] else w[3]),
+ looks_like ("closure([?envnnnn],if a > 0 then w[2] else w[3])", "nnnn" = "[0-9][0-9]*", string (foo)));
+true;
 
-(a: -100, ev (foo));
+(a: -100, ev (foo, eval));
 c;
 
 /* implementation of function "twice" (call function twice)
@@ -256,23 +283,6 @@ c;
  * http://www.44342.com/viewforum-861.htm
  */
 
-/* this business about "looks like" via string matching is a concession
- * to the difficulty of expression matching on closures ...
- * I might try again to figure out a way to make that work.
- */
-
-(looks_like (pattern, e, s) :=
-    (ssubst (rhs (e), lhs (e), sanitize_for_regex (pattern)),
-     regex_match (%%, s),
-     if %% # false then true else FAILED_MATCH (pattern, e, s)),
- sanitize_for_regex (s) :=
-     sconcat ("^", sanitize_for_regex_1 (["[", "]", "(", "|", ")", "*", "+", "?"], s), "$"),
- sanitize_for_regex_1 (l, s) :=
-     if l = [] then s
-         else sanitize_for_regex_1 (rest (l), ssubst (sconcat ("\\", first (l)), first (l), s)),
- 0);
-0;
-     
 (twice(f) := lambda([[a]], apply(f, apply(f, a))),
  foo: lambda ([x, y], [x*y, x + y]),
  twicefoo: twice (foo),
@@ -294,3 +304,70 @@ foo(1, 3);
 
 foo(3, 4);
 [12, 7];
+
+/* maxima-discuss 2023-11-21: "lambda([a], lambda([b], 10*a+b)) (2) (3);" */
+
+(kill (F),
+ F : lambda([a], lambda([b], 10*a+b)),
+ F2: F(2),
+ looks_like ("closure([?envnnnn],lambda([b],10*a+b))", "nnnn" = "[0-9][0-9]*", string (F2)));
+true;
+
+looks_like ("[?envnnnn = [a = 2]]", "nnnn" = "[0-9][0-9]*", string (get_envs (F2)));
+true;
+
+F2(3);
+23;
+
+F(2)(3);
+23;
+
+/* maxima-discuss 2023-12-21: "Are Maxima functions first-class?" */
+
+(kill (u, du, z, h, y, dy, g, foo, bar, baz, quux),
+ Dell (f, x, dx) := lambda ([x], f(x + dx) - f(x)), 0);
+0;
+
+(foo: Dell (sin, u, du),
+ looks_like ("closure([?envnnnn],lambda([x],f(x+dx)-f(x)))", "nnnn" = "[0-9][0-9]*", string (foo)));
+true;
+
+looks_like ("[?envnnnn = [dx = du,f = sin,x = u]]", "nnnn" = "[0-9][0-9]*", string (get_envs (foo)));
+true;
+
+foo(2);
+sin(du + 2) - sin(2);
+
+(bar: Dell (lambda ([a], a^3), z, h),
+ looks_like ("closure([?envnnnn],lambda([x],f(x+dx)-f(x)))", "nnnn" = "[0-9][0-9]*", string (bar)));
+true;
+
+looks_like ("[?envnnnn = [dx = h,f = lambda([a],a^3),x = z]]", "nnnn" = "[0-9][0-9]*", string (get_envs (bar)));
+true;
+
+bar(2);
+(h + 2)^3  - 8;
+
+(g(x) := x^3,
+ baz: Dell (g, y, dy),
+ looks_like ("closure([?envnnnn],lambda([x],f(x+dx)-f(x)))", "nnnn" = "[0-9][0-9]*", string (baz)));
+true;
+
+looks_like ("[?envnnnn = [dx = dy,f = g,x = y]]", "nnnn" = "[0-9][0-9]*", string (get_envs (baz)));
+true;
+
+baz(2);
+(dy + 2)^3  - 8;
+
+(quux: Dell (Dell (g, u, h), u, h),
+ looks_like ("closure([?envnnnn],lambda([x],f(x+dx)-f(x)))", "nnnn" = "[0-9][0-9]*", string (quux)));
+true;
+
+looks_like ("[?envnnnn = [dx = h,f = closure([?envnnnn],lambda([x],f(x+dx)-f(x))),x = u]]", "nnnn" = "[0-9][0-9]*", string (get_envs (quux)));
+true;
+
+quux(2);
+(2*h + 2)^3  - 2*(h + 2)^3  + 8;
+
+Dell (g, u, h)(2 + h) - Dell (g, u, h)(2);
+(2*h + 2)^3  - 2*(h + 2)^3  + 8;
