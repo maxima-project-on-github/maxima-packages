@@ -282,6 +282,8 @@
 (defmethod apply-default-style (expr style modes lop rop)
   (texify-quote (format nil "~A" expr)))
 
+($load "nregex.lisp")
+
 (defun texify-parse-symbol (sym)
   (loop with name = (symbol-name sym)
         with number-search = #.(maxima-nregex::regex-compile "_*([0-9]+)$")
