@@ -1,0 +1,44 @@
+/* plottable_steps: from a list of points or two separate lists of coordinates,
+ * construct a single list of points which, when displayed by plot2d([discrete, ...])
+ * or draw2d(points(...)), shows stair steps which have the
+ * "treads" represented by ((x1, y1), (x2, y1)), ((x2, y2), (x3, y2)), etc.,
+ * and the "risers" represented by ((x2, y1), (x2, y2)), ((x3, y2), (x3, y3)), etc.
+ *
+ * Only construct the list of stair-drawing points; do not display them.
+ */
+
+plottable_steps ([xy_or_x_and_y]) :=
+    if length (xy_or_x_and_y) = 1
+        then plottable_steps1 (first (xy_or_x_and_y))
+    elseif length (xy_or_x_and_y) = 2
+        then plottable_steps2 (first (xy_or_x_and_y), second (xy_or_x_and_y))
+    else error ("plottable_steps: expected 1 or 2 arguments.");
+
+/* plottable_steps1: extract separate lists of coordinates from a list of points
+ * and construct plottable points.
+ */
+
+plottable_steps1 (xy) :=
+    plottable_steps2 (map (first, xy), map (second, xy));
+
+/* plottable_steps2: from two lists, (x1, x2, x3, ...), (y1, y2, y3, ...),
+ * construct plottable points.
+ */
+
+plottable_steps2 (x, y) := 
+
+    block ([xx, yy, n, nx: length (x), ny: length (y)],
+
+           if ny # nx
+               then error ("plottable_steps: arguments not the same length.")
+               else n: nx,
+
+           xx: append ([x[1]], apply (append, makelist ([x[i], x[i]], i, 2, n))),
+           yy: append ([y[1]], apply (append, makelist ([y[i - 1], y[i]], i, 2, n))),
+
+           by_twos (xx, yy));
+
+by_twos (a, b) :=
+    if length (b) # length (a)
+        then error ("by_twos: arguments not the same length.")
+        else map (lambda ([a1, b1], [a1, b1]), a, b);
