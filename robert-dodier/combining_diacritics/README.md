@@ -18,13 +18,6 @@ The function `define_input_alias` defines an input alias,
 taking three arguments:
 
  * `y`: symbol for the alias (this is the symbol which will appear in input)
- * `diacritic`: one of the diacritic strings mentioned above
- * `x`: symbol to which the diacritic will be applied
-
-The function `define_input_alias` defines an input alias,
-taking three arguments:
-
- * `y`: symbol for the alias (this is the symbol which will appear in input)
  * `x`: symbol to which the diacritic will be applied
  * `diacritic`: one of the diacritic strings mentioned above
 
