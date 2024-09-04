@@ -38,3 +38,32 @@ flatten_json ([baz, quux], blob ("mumble" = 456, "blurf" = 789));
 flatten_json ([baz, quux], blob ("foo" = blob ("bar" = 123), "mumble" = 456, "blurf" = 789));
 [[baz . quux . foo . bar = 123], baz . quux . mumble = 456, baz . quux . blurf = 789];
 
+(foo: blob("aa" = 123, "bb" = blob("cc" = [11, 22, 33])),
+ foo //~ "aa");
+blob("bb" = blob("cc" = [11, 22, 33]));
+
+foo //~ "bb";
+blob("aa" = 123);
+
+foo //~ "aa" //~ "bb";
+blob();
+
+foo //~ ["aa", "bb"];
+blob();
+
+foo //~ "zz";
+blob("aa" = 123, "bb" = blob("cc" = [11, 22, 33]));
+
+(bar: blob("aa" = 789, "dd" = 111, "zz" = [1, 2, 3]),
+ baz: blob("bb" = 777, "ee" = x - y),
+ [foo, bar, baz] //~ "aa");
+''([foo //~ "aa", bar //~ "aa", baz //~ "aa"]);
+
+[foo //~ "aa", bar //~ "aa", baz //~ "aa"];
+[blob("bb" = blob("cc" = [11, 22, 33])), blob("dd" = 111, "zz" = [1, 2, 3]), blob("bb" = 777, "ee" = x - y)];
+
+[foo, bar, baz] //~ ["aa", "bb"];
+''([foo //~ "aa" //~ "bb", bar //~ "aa" //~ "bb", baz //~ "aa" //~ "bb"]);
+
+[foo //~ "aa" //~ "bb", bar //~ "aa" //~ "bb", baz //~ "aa" //~ "bb"];
+[blob(), blob("dd" = 111, "zz" = [1, 2, 3]), blob("ee" = x - y)];
