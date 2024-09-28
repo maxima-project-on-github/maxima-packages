@@ -1,0 +1,139 @@
+/* tex_document.mac -- generate LaTeX document from Maxima batch file
+ *
+ * Copyright 2024 by Robert Dodier
+ * I release this work under terms of the GNU General Public License, version 2
+ */
+
+defstruct (input (type, content_string, visible));
+
+document_prologue:
+"\\documentclass{article}
+\\title{A document derived from {\\tt ~a}}
+\\author{Automatically generated}
+\\date{\\today}
+\\begin{document}
+\\maketitle
+";
+
+document_epilogue: "\\end{document}";
+
+set_tex_environment_default ("\\begin{equation}
+", "
+\\end{equation}");
+
+tex_document (input_filename, output_filename) :=
+
+  block ([lines, inputs, S: openw (output_filename)],
+         lines: slurp (input_filename),
+         inputs: parse_from (lines),
+
+         printf (S, document_prologue, sanitize_underscores (filename_proper (input_filename))),
+
+         for i in inputs
+             do if i@type = 'text
+                    then output_text (i@content_string, S)
+                    else /* must be expression */
+                        block ([result: %: eval_string (i@content_string)],
+                               output_verbatim (i@content_string, S),
+                               if i@visible then output_tex (result, S)),
+
+         with_stdout (S, print (document_epilogue)),
+         close (S));
+
+slurp (f, [delimiter]) :=
+
+    block ([L: [], l, s],
+           s: openr (f),
+           while (l: readline(s)) # false
+               do if delimiter = []
+                    then push (l, L)
+                    else push (split (l, delimiter[1], false), L),
+           reverse (L));
+
+parse_from (lines) :=
+
+    block ([inputs: []],
+
+           for i thru length (lines)
+
+               do if matches_comment_start_and_end (lines[i])
+                      then push (input ('text, text_from_comment_lines ([lines[i]]), true), inputs)
+
+                  elseif matches_comment_start (lines[i])
+                      then block ([accumulator: []],
+                                  while not matches_comment_end (lines[i])
+                                      do (push (lines[i], accumulator),
+                                          i: i + 1),
+                                  push (lines[i], accumulator),
+                                  push (input ('text, text_from_comment_lines (reverse (accumulator)), true), inputs))
+
+                  elseif matches_blank_line (lines[i])
+                      then true
+
+                  else block ([accumulator: []],
+                              while not matches_expression_end (lines[i])
+                                  do (push (lines[i], accumulator),
+                                      i: i + 1),
+                              push (lines[i], accumulator),
+                              push (input ('expression, apply (sconcat, reverse (accumulator)), is_visible_expression (lines[i])), inputs)),
+
+           reverse (inputs));
+
+load ("sregex");
+
+matches_comment_start (line) :=
+    is (regex_match ("^\\s*/\\*.*$", line) # false);
+
+matches_comment_end (line) :=
+    is (regex_match ("^.*\\*/\\s*$", line) # false);
+
+matches_comment_start_and_end (line) :=
+    is (regex_match ("^\\s*/\\*.*\\*/\\s*$", line) # false);
+
+text_from_comment_lines (lines) :=
+   (map (strip_off_comment_punctuation, lines),
+    printf (false, "~{~a~%~}", %%));
+
+strip_off_comment_punctuation (line) :=
+    block ([mm],
+           if (mm: regex_match ("\\s*/\\* ?(.*) ?\\*/\\s*$", line)) # false
+               then second (mm)
+           elseif (mm: regex_match ("^\\s*(.*) ?\\*/\\s*$", line)) # false
+               then second (mm)
+           elseif (mm: regex_match ("^\\s*/\\* ?(.*)$", line)) # false
+               then second (mm)
+           elseif (mm: regex_match ("^\\s*\\* ?(.*)$", line)) # false
+               then second (mm)
+           elseif (mm: regex_match ("^\\s*(\\S.*\\S|\\S)\\s*$", line)) # false
+               then second (mm)
+           elseif (mm: regex_match ("^\\s*$", line)) # false
+               then ""
+           else line);
+
+matches_blank_line (line) :=
+    is (regex_match ("^\\s*$", line) # false);
+
+matches_expression_end (line) :=
+    is (regex_match ("^.*(\\$|;)\\s*$", line) # false);
+
+is_visible_expression (line) :=
+    is (regex_match ("^.*;\\s*$", line) # false);
+
+sanitize_underscores (name) :=
+    ssubst ("\\_", "_", name);
+
+filename_proper (path) :=
+    block ([mm: regex_match ("^.*/([^/]+)$", path)],
+           if mm # false then second (mm) else path);
+
+output_text (content_string, S) :=
+    with_stdout (S, print (content_string));
+
+output_verbatim (content_string, S) :=
+    with_stdout (S,
+        print ("\\begin{verbatim}"),
+        print (content_string),
+        print ("\\end{verbatim}"));
+
+output_tex (result, S) :=
+    tex (result, S);

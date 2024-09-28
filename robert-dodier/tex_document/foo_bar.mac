@@ -1,0 +1,45 @@
+/* First establish the equation which we are going to work with.
+ * This is a second order (quadratic) polynomial
+ * in one variable $x$.
+ */
+
+/* Here's a second comment block.
+ * I wonder
+ * how many lines will appear.
+ */
+
+e: a*x^2 + b*x + c;
+
+/* Solving for $x$ yields the well-known ``quadratic formula.'' */
+
+/* Another all-in-one-line comment. */
+
+solve(e, x);
+
+/* We can also solve for one of the coefficients. */
+
+solve(e, b);
+
+/* Look for an extremum by differentiating and solving for the derivative equal to zero.
+ * I
+ * have
+ * put
+ * one
+ * word
+ * per
+ * line.
+ */
+
+/* And then
+   a comment which
+   doesn't have the
+   asterisk at the start
+   of the line,
+   how does that
+   turn out?  */
+
+diff (e, x);
+
+solve (%, x);
+
+/* All done for now. No more expressions, no more comments. */
