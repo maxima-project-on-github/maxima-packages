@@ -23,22 +23,22 @@ set_tex_environment_default ("\\begin{equation}
 
 tex_document (input_filename, output_filename) :=
 
-  block ([lines, inputs, S: openw (output_filename)],
+  block ([lines, inputs, output_stream: openw (output_filename)],
          lines: slurp (input_filename),
          inputs: parse_from (lines),
 
-         printf (S, document_prologue, sanitize_underscores (filename_proper (input_filename))),
+         printf (output_stream, document_prologue, sanitize_underscores (filename_proper (input_filename))),
 
          for i in inputs
              do if i@type = 'text
-                    then output_text (i@content_string, S)
+                    then output_text (i@content_string, output_stream)
                     else /* must be expression */
                         block ([result: %: eval_string (i@content_string)],
-                               output_verbatim (i@content_string, S),
-                               if i@visible then output_tex (result, S)),
+                               output_verbatim (i@content_string, output_stream),
+                               if i@visible then output_tex (result, output_stream)),
 
-         with_stdout (S, print (document_epilogue)),
-         close (S));
+         with_stdout (output_stream, print (document_epilogue)),
+         close (output_stream));
 
 slurp (f, [delimiter]) :=
 
@@ -126,14 +126,14 @@ filename_proper (path) :=
     block ([mm: regex_match ("^.*/([^/]+)$", path)],
            if mm # false then second (mm) else path);
 
-output_text (content_string, S) :=
-    with_stdout (S, print (content_string));
+output_text (content_string, output_stream) :=
+    with_stdout (output_stream, print (content_string));
 
-output_verbatim (content_string, S) :=
-    with_stdout (S,
+output_verbatim (content_string, output_stream) :=
+    with_stdout (output_stream,
         print ("\\begin{verbatim}"),
         print (content_string),
         print ("\\end{verbatim}"));
 
-output_tex (result, S) :=
-    tex (result, S);
+output_tex (result, output_stream) :=
+    tex (result, output_stream);
