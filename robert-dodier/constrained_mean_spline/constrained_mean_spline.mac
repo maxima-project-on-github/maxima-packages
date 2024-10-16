@@ -1,0 +1,51 @@
+/* constrained_mean_spline.mac -- construct a cubic spline to equal a specified mean value on each interval
+ *
+ * copyright 2024 by Robert Dodier
+ * I release this work under terms of the GNU General Public License, version 2.
+ */
+
+S[i](u) := a[i] + b[i]*u + c[i]*u^2 + d[i]*u^3;
+
+/* data as stated in: https://stackoverflow.com/questions/79086802/monthly-data-to-daily-cubic-spline-interp */
+
+x: [0, 31, 31 + 30, 31 + 30 + 31];
+mu: [100, 150, 400];
+n: length (mu);
+
+/* mean value on each interval equals a specified value */
+
+Lmu: ev (makelist ((integrate (S[i](u), u, x[i], x[i + 1]))/(x[i + 1] - x[i]) = mu[i], i, 1, n), expand);
+
+/* values at endpoints of intervals are equal */
+
+L0: makelist (S[i](x[i + 1]) = S[i + 1](x[i + 1]), i, 1, n - 1);
+
+/* first derivatives at endpoints of intervals are equal */
+
+L1: makelist (at (diff (S[i](u), u, 1), u = x[i + 1]) = at (diff (S[i + 1](u), u, 1), u = x[i + 1]), i, 1, n - 1);
+
+/* second derivatives at endpoints of intervals are equal */
+
+L2: makelist (at (diff (S[i](u), u, 2), u = x[i + 1]) = at (diff (S[i + 1](u), u, 2), u = x[i + 1]), i, 1, n - 1);
+
+/* At this point we have n + 3*(n - 1) = 4*n - 3 equations.
+ * It's conventional to have second derivatives at the end equal to some value, such as zero.
+ * That gives two more equations.
+ */
+
+eq_d2_0_left: at (diff (S[1](u), u, 2), u = x[1]) = 0;
+eq_d2_0_right: at (diff (S[n](u), u, 2), u = x[n + 1]) = 0;
+
+/* We're still short an equation. */
+
+LL: append (Lmu, L0, L1, L2, [eq_d2_0_left, eq_d2_0_right]);
+
+listofvars (LL);
+
+solution: linsolve (LL, listofvars (LL));
+
+/* Assume that whatever free variable appears in solution is zero.
+ * That's only one of many possible choices.
+ */
+
+ev (plot2d ([S[1](u), S[2](u), S[3](u)], [u, x[1], x[4]]), solution, listofvars (map (rhs, solution))[1] = 0);
