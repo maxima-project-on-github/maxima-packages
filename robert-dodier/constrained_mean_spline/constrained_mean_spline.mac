@@ -36,16 +36,37 @@ L2: makelist (at (diff (S[i](u), u, 2), u = x[i + 1]) = at (diff (S[i + 1](u), u
 eq_d2_0_left: at (diff (S[1](u), u, 2), u = x[1]) = 0;
 eq_d2_0_right: at (diff (S[n](u), u, 2), u = x[n + 1]) = 0;
 
-/* We're still short an equation. */
+/* We're still short an equation.
+ * Go ahead and solve the equations we have on hand; linsolve will introduce a free parameter that all the coeffcients depend on.
+ * Augmented coefficient matrix isn't needed for linsolve, but it is interesting to examine.
+ */
 
 LL: append (Lmu, L0, L1, L2, [eq_d2_0_left, eq_d2_0_right]);
 
 listofvars (LL);
 
+augcoefmatrix (LL, listofvars (LL));
+
 solution: linsolve (LL, listofvars (LL));
 
-/* Assume that whatever free variable appears in solution is zero.
- * That's only one of many possible choices.
+free_parameter: first (listofvars (map (rhs, solution)));
+
+/* Let's say that the curvature must be minimal, curvature being defined as the integral of the square of the second derivative.
  */
 
-ev (plot2d ([S[1](u), S[2](u), S[3](u)], [u, x[1], x[4]]), solution, listofvars (map (rhs, solution))[1] = 0);
+curvature: sum (integrate (diff (S[i](u), u, 2)^2, u, x[i], x[i + 1]), i, 1, n);
+
+curvature_as_function_of_free_parameter: expand (subst (solution, curvature));
+
+eq_curvature_minimum: diff (curvature_as_function_of_free_parameter, free_parameter) = 0;
+
+minimum_curvature_free_parameter: linsolve (eq_curvature_minimum, free_parameter);
+
+/* Now plot the solution assuming the free parameter minimizes curvature.
+ */
+
+legends: cons ('legend, map (lambda ([mu1, x1, x2], printf (false, "mean = ~a over [~a, ~a]", mu1, x1, x2)), mu, rest (x, -1), rest (x)));
+my_title: "Minimum-curvature cubic spline constrained to mean values";
+
+ev (plot2d ([S[1](u), S[2](u), S[3](u)], [u, x[1], x[4]], [title, my_title], legends), subst (minimum_curvature_free_parameter, solution));
+
