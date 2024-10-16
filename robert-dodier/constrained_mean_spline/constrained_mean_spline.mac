@@ -66,9 +66,17 @@ minimum_curvature_free_parameter: linsolve (eq_curvature_minimum, free_parameter
  */
 
 legends: cons ('legend, map (lambda ([mu1, x1, x2], printf (false, "mean = ~a over [~a, ~a]", mu1, x1, x2)), mu, rest (x, -1), rest (x)));
-my_title: "Minimum-curvature cubic spline constrained to mean values";
+my_title: "Minimum-curvature cubic spline segments constrained to mean values";
 
 minimum_curvature_solution: subst (minimum_curvature_free_parameter, solution);
-mininum_curvature_splines: subst (minimum_curvature_solution, makelist (S[i](u), i, 1, n));
+mininum_curvature_spline_segments: subst (minimum_curvature_solution, makelist (S[i](u), i, 1, n));
 
-plot2d (mininum_curvature_splines, [u, x[1], x[n + 1]], [title, my_title], legends);
+plot2d (mininum_curvature_spline_segments, [u, x[1], x[n + 1]], [title, my_title], legends, [window, 1]);
+
+spline_lambda_body: subst (minimum_curvature_solution, apply ("if", apply (append, makelist ([u >= x[i] and u < x[i + 1], S[i](u)], i, 1, n))));
+minimum_curvature_spline_lambda: apply (lambda, [[u], spline_lambda_body]);
+
+steps_lambda_body: apply ("if", apply (append, makelist ([u >= x[i] and u < x[i + 1], mu[i]], i, 1, n)));
+steps_lambda: apply (lambda, [[u], steps_lambda_body]);
+
+plot2d ([minimum_curvature_spline_lambda, steps_lambda], [u, x[1], x[n + 1]], [title, "Minimum-curvature cubic spline constrained to mean values"], [legend, "Spline", "Mean values"], [window, 2]);
