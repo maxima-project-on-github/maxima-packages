@@ -12,6 +12,12 @@ x: [0, 31, 31 + 30, 31 + 30 + 31];
 mu: [100, 150, 400];
 n: length (mu);
 
+/* approximate data as shown in: https://stats.stackexchange.com/questions/263962/solid-line-from-a-local-average-series */
+
+x: [0, 1/2, 1, 3/2, 2, 5/2, 3];
+mu: [1, 9/10, 6/5, 9/5, 2, 7/5];
+n: length (mu);
+
 /* mean value on each interval equals a specified value */
 
 Lmu: ev (makelist ((integrate (S[i](u), u, x[i], x[i + 1]))/(x[i + 1] - x[i]) = mu[i], i, 1, n), expand);
