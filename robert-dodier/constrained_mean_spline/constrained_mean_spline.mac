@@ -20,19 +20,19 @@ n: length (mu);
 
 /* mean value on each interval equals a specified value */
 
-Lmu: ev (makelist ((integrate (S[i](u), u, x[i], x[i + 1]))/(x[i + 1] - x[i]) = mu[i], i, 1, n), expand);
+eqs_mu: ev (makelist ((integrate (S[i](u), u, x[i], x[i + 1]))/(x[i + 1] - x[i]) = mu[i], i, 1, n), expand);
 
 /* values at endpoints of intervals are equal */
 
-L0: makelist (S[i](x[i + 1]) = S[i + 1](x[i + 1]), i, 1, n - 1);
+eqs_0: makelist (S[i](x[i + 1]) = S[i + 1](x[i + 1]), i, 1, n - 1);
 
 /* first derivatives at endpoints of intervals are equal */
 
-L1: makelist (at (diff (S[i](u), u, 1), u = x[i + 1]) = at (diff (S[i + 1](u), u, 1), u = x[i + 1]), i, 1, n - 1);
+eqs_1: makelist (at (diff (S[i](u), u, 1), u = x[i + 1]) = at (diff (S[i + 1](u), u, 1), u = x[i + 1]), i, 1, n - 1);
 
 /* second derivatives at endpoints of intervals are equal */
 
-L2: makelist (at (diff (S[i](u), u, 2), u = x[i + 1]) = at (diff (S[i + 1](u), u, 2), u = x[i + 1]), i, 1, n - 1);
+eqs_2: makelist (at (diff (S[i](u), u, 2), u = x[i + 1]) = at (diff (S[i + 1](u), u, 2), u = x[i + 1]), i, 1, n - 1);
 
 /* At this point we have n + 3*(n - 1) = 4*n - 3 equations.
  * It's conventional to have second derivatives at the end equal to some value, such as zero.
@@ -47,20 +47,20 @@ eq_d2_0_right: at (diff (S[n](u), u, 2), u = x[n + 1]) = 0;
  * Augmented coefficient matrix isn't needed for linsolve, but it is interesting to examine.
  */
 
-LL: append (Lmu, L0, L1, L2, [eq_d2_0_left, eq_d2_0_right]);
+eqs: append (eqs_mu, eqs_0, eqs_1, eqs_2, [eq_d2_0_left, eq_d2_0_right]);
 
-listofvars (LL);
+listofvars (eqs);
 
-augcoefmatrix (LL, listofvars (LL));
+augcoefmatrix (eqs, listofvars (eqs));
 
-solution: linsolve (LL, listofvars (LL));
+solution: linsolve (eqs, listofvars (eqs));
 
 free_parameter: first (listofvars (map (rhs, solution)));
 
 /* Let's say that the curvature must be minimal, curvature being defined as the integral of the square of the second derivative.
  */
 
-curvature: sum (integrate (diff (S[i](u), u, 2)^2, u, x[i], x[i + 1]), i, 1, n);
+curvature: expand (sum (integrate (diff (S[i](u), u, 2)^2, u, x[i], x[i + 1]), i, 1, n));
 
 curvature_as_function_of_free_parameter: expand (subst (solution, curvature));
 
