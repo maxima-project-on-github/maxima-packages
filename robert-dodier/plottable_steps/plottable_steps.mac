@@ -27,16 +27,20 @@ plottable_steps1 (xy) :=
 
 plottable_steps2 (x, y) := 
 
-    block ([xx, yy, n, nx: length (x), ny: length (y)],
+    block ([xx, yy, nx: length (x), ny: length (y)],
 
-           if ny # nx
-               then error ("plottable_steps: arguments not the same length.")
-               else n: nx,
+           if ny # nx and ny # (nx - 1)
+               then error ("plottable_steps: arguments not compatible lengths."),
 
-           xx: append ([x[1]], apply (append, makelist ([x[i], x[i]], i, 2, n))),
-           yy: append ([y[1]], apply (append, makelist ([y[i - 1], y[i]], i, 2, n))),
+           if ny = nx
+               then block ([n: nx],
 
-           by_twos (xx, yy));
+                           xx: append ([x[1]], apply (append, makelist ([x[i], x[i]], i, 2, n))),
+                           yy: append ([y[1]], apply (append, makelist ([y[i - 1], y[i]], i, 2, n))),
+
+                           by_twos (xx, yy))
+
+               else rest (plottable_steps2 (x, endcons (false, y)), -1));
 
 by_twos (a, b) :=
     if length (b) # length (a)

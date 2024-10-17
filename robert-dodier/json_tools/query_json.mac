@@ -8,6 +8,20 @@
  * given bar: [blob("xx" = 123), blob("xx" = 456), blob("xx" = 789)]
  * then bar // "xx" yields [123, 456, 789]
  *
+ * "//~" selects all tags except one.
+ * Continuing the example above:
+ *
+ *      foo //~ "aa" yields blob("bb" = blob("cc" = [11, 22, 33]))
+ *      foo //~ "bb" yields blob("aa" = 123)
+ *      foo //~ "aa" //~ "bb" yields blob()
+ *      foo //~ ["aa", "bb"] yields blob()
+ *      foo //~ "zz" yields blob("aa" = 123, "bb" = blob("cc" = [11, 22, 33]))
+ *
+ * "//~" distributes over lists on either side of the operator:
+ *
+ *      [foo, bar, baz] //~ "aa" yields the same as [foo //~ "aa", bar //~ "aa", baz //~ "aa"]
+ *      [foo, bar, baz] //~ ["aa", "bb"] yields the same as [foo //~ "aa" //~ "bb", bar //~ "aa" //~ "bb", baz //~ "aa" //~ "bb"]
+ *
  * copyright 2020 by Robert Dodier
  * I release this work under terms of the GNU GPL.
  */
@@ -54,6 +68,17 @@ tellsimp (ll // mm, map (lambda ([x], x // mm), ll));
 
 matchdeclare (aa, all);
 tellsimp (false // aa, false);
+
+/* "//~" operator to omit tags */
+
+infix ("//~", 205, 205);
+
+tellsimp (bb //~ tt, apply (op (bb), sublist (args (bb), lambda ([e], lhs (e) # tt))));
+
+tellsimp (bb //~ ll, apply (op (bb), sublist (args (bb), lambda ([e], not member (lhs (e), ll)))));
+
+tellsimp (ll //~ tt, map (lambda ([x], x //~ tt), ll));
+tellsimp (ll //~ mm, map (lambda ([x], x //~ mm), ll));
 
 simp: true $
 

@@ -1,0 +1,88 @@
+/* constrained_mean_spline.mac -- construct a cubic spline to equal a specified mean value on each interval
+ *
+ * copyright 2024 by Robert Dodier
+ * I release this work under terms of the GNU General Public License, version 2.
+ */
+
+S[i](u) := a[i] + b[i]*u + c[i]*u^2 + d[i]*u^3;
+
+/* data as stated in: https://stackoverflow.com/questions/79086802/monthly-data-to-daily-cubic-spline-interp */
+
+x: [0, 31, 31 + 30, 31 + 30 + 31];
+mu: [100, 150, 400];
+n: length (mu);
+
+/* approximate data as shown in: https://stats.stackexchange.com/questions/263962/solid-line-from-a-local-average-series */
+
+x: [0, 1/2, 1, 3/2, 2, 5/2, 3];
+mu: [1, 9/10, 6/5, 9/5, 2, 7/5];
+n: length (mu);
+
+/* mean value on each interval equals a specified value */
+
+eqs_mu: ev (makelist ((integrate (S[i](u), u, x[i], x[i + 1]))/(x[i + 1] - x[i]) = mu[i], i, 1, n), expand);
+
+/* values at endpoints of intervals are equal */
+
+eqs_0: makelist (S[i](x[i + 1]) = S[i + 1](x[i + 1]), i, 1, n - 1);
+
+/* first derivatives at endpoints of intervals are equal */
+
+eqs_1: makelist (at (diff (S[i](u), u, 1), u = x[i + 1]) = at (diff (S[i + 1](u), u, 1), u = x[i + 1]), i, 1, n - 1);
+
+/* second derivatives at endpoints of intervals are equal */
+
+eqs_2: makelist (at (diff (S[i](u), u, 2), u = x[i + 1]) = at (diff (S[i + 1](u), u, 2), u = x[i + 1]), i, 1, n - 1);
+
+/* At this point we have n + 3*(n - 1) = 4*n - 3 equations.
+ * It's conventional to have second derivatives at the end equal to some value, such as zero.
+ * That gives two more equations.
+ */
+
+eq_d2_0_left: at (diff (S[1](u), u, 2), u = x[1]) = 0;
+eq_d2_0_right: at (diff (S[n](u), u, 2), u = x[n + 1]) = 0;
+
+/* We're still short an equation.
+ * Go ahead and solve the equations we have on hand; linsolve will introduce a free parameter that all the coeffcients depend on.
+ * Augmented coefficient matrix isn't needed for linsolve, but it is interesting to examine.
+ */
+
+eqs: append (eqs_mu, eqs_0, eqs_1, eqs_2, [eq_d2_0_left, eq_d2_0_right]);
+
+listofvars (eqs);
+
+augcoefmatrix (eqs, listofvars (eqs));
+
+solution: linsolve (eqs, listofvars (eqs));
+
+free_parameter: first (listofvars (map (rhs, solution)));
+
+/* Let's say that the curvature must be minimal, curvature being defined as the integral of the square of the second derivative.
+ */
+
+curvature: expand (sum (integrate (diff (S[i](u), u, 2)^2, u, x[i], x[i + 1]), i, 1, n));
+
+curvature_as_function_of_free_parameter: expand (subst (solution, curvature));
+
+eq_curvature_minimum: diff (curvature_as_function_of_free_parameter, free_parameter) = 0;
+
+minimum_curvature_free_parameter: linsolve (eq_curvature_minimum, free_parameter);
+
+/* Now plot the solution assuming the free parameter minimizes curvature.
+ */
+
+legends: cons ('legend, map (lambda ([mu1, x1, x2], printf (false, "mean = ~a over [~a, ~a]", mu1, x1, x2)), mu, rest (x, -1), rest (x)));
+my_title: "Minimum-curvature cubic spline segments constrained to mean values";
+
+minimum_curvature_solution: subst (minimum_curvature_free_parameter, solution);
+mininum_curvature_spline_segments: subst (minimum_curvature_solution, makelist (S[i](u), i, 1, n));
+
+plot2d (mininum_curvature_spline_segments, [u, x[1], x[n + 1]], [title, my_title], legends, [svg_file, "./spline-segments.svg"]);
+
+spline_lambda_body: subst (minimum_curvature_solution, apply ("if", apply (append, makelist ([u >= x[i] and u < x[i + 1], S[i](u)], i, 1, n))));
+minimum_curvature_spline_lambda: apply (lambda, [[u], spline_lambda_body]);
+
+steps_lambda_body: apply ("if", apply (append, makelist ([u >= x[i] and u < x[i + 1], mu[i]], i, 1, n)));
+steps_lambda: apply (lambda, [[u], steps_lambda_body]);
+
+plot2d ([minimum_curvature_spline_lambda, steps_lambda], [u, x[1], x[n + 1]], [title, "Minimum-curvature cubic spline constrained to mean values"], [legend, "Spline", "Mean values"], [svg_file, "./spline-and-mean-values.svg"]);
