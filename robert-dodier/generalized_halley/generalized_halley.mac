@@ -32,7 +32,11 @@ generalized_halley_update (alpha, F_x_k, J_x_k, H_x_k, x_k) :=
 
 generalized_halley_step (alpha, F_x_k, J_x_k, H_x_k, x_k) :=
 
-    block ([Jinv_x_k: invert (J_x_k), I: ident (length (x_k)), L_x_k],
+    block ([scalarmatrixp: false, Jinv_x_k, I, L_x_k],
+
+           Jinv_x_k: invert (J_x_k),
+
+           I: ident (length (x_k)),
 
            L_x_k: generalized_halley_L (Jinv_x_k, H_x_k, F_x_k),
 
