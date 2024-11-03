@@ -19,11 +19,7 @@ construct_generalized_halley_update (F, vars, alpha) :=
     block ([J: jacobian (F, vars), H: hessian (F, vars)],
 
            buildq ([F, J, H, vars, alpha],
-                   lambda ([x_k],
-                           block ([F_x_k: substall (x_k, vars, F),
-                                   J_x_k: substall (x_k, vars, J),
-                                   H_x_k: substall (x_k, vars, H)],
-                                  generalized_halley_update (alpha, F_x_k, J_x_k, H_x_k, x_k)))));
+                   lambda ([x_k], block (vars, vars: x_k, generalized_halley_update (alpha, F, J, H, x_k)))));
 
 
 substall (xx, yy, e) := subst (map (lambda ([x, y], y = x), xx, yy), e);
