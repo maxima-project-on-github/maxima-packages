@@ -14,12 +14,12 @@
  * Assume F is a list of expressions, vars is a list of mapatoms, alpha is a number, and x_k is a list.
  */
 
-construct_generalized_halley_update (F, vars) :=
+construct_generalized_halley_update (F, vars, alpha) :=
 
     block ([J: jacobian (F, vars), H: hessian (F, vars)],
 
-           buildq ([F, J, H, vars],
-                   lambda ([alpha, x_k],
+           buildq ([F, J, H, vars, alpha],
+                   lambda ([x_k],
                            block ([F_x_k: substall (x_k, vars, F),
                                    J_x_k: substall (x_k, vars, J),
                                    H_x_k: substall (x_k, vars, H)],
