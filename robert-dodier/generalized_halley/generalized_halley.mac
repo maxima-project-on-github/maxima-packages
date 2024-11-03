@@ -1,0 +1,74 @@
+/* generalized_halley.mac -- implement generalized Halley's method for solving nonlinear equations
+ * copyright 2024 by Robert Dodier
+ * I release this work under terms of the GNU General Public License, version 2
+ *
+ * Inspired by:
+ * Geir Gundersen and Trond Steihaug.
+ * "On large scale unconstrained optimization problems and higher order methods."
+ * Optimization Methods & Software, vol. 25, issue 3 (June 2010), pp 337--358.
+ * https://doi.org/10.1080/10556780903239071
+ * Retrieved from: https://optimization-online.org/wp-content/uploads/2007/03/1610.pdf
+ */
+
+/* Eq. 3 from Gundersen and Steihaug.
+ * Assume F is a list of expressions, vars is a list of mapatoms, alpha is a number, and x_k is a list.
+ */
+
+construct_generalized_halley_update (F, vars) :=
+
+    block ([J: jacobian (F, vars), H: hessian (F, vars)],
+
+           buildq ([F, J, H, vars],
+                   lambda ([alpha, x_k],
+                           block ([F_x_k: substall (x_k, vars, F),
+                                   J_x_k: substall (x_k, vars, J),
+                                   H_x_k: substall (x_k, vars, H)],
+                                  generalized_halley_update (alpha, F_x_k, J_x_k, H_x_k, x_k)))));
+
+
+substall (xx, yy, e) := subst (map (lambda ([x, y], y = x), xx, yy), e);
+
+
+generalized_halley_update (alpha, F_x_k, J_x_k, H_x_k, x_k) :=
+
+    x_k - generalized_halley_step (alpha, F_x_k, J_x_k, H_x_k, x_k);
+
+
+generalized_halley_step (alpha, F_x_k, J_x_k, H_x_k, x_k) :=
+
+    block ([Jinv_x_k: invert (J_x_k), I: ident (length (x_k)), L_x_k],
+
+           L_x_k: generalized_halley_L (Jinv_x_k, H_x_k, F_x_k),
+
+           (I + (1/2)*(L_x_k . invert (I - alpha*L_x_k))) . Jinv_x_k . F_x_k,
+           
+           flatten_step_to_list (%%));
+
+
+/* Eq. 4 in Gundersen & Steihaug.
+ */
+
+generalized_halley_L (Jinv_x_k, H_x_k, F_x_k) :=
+
+    block ([L_x_k: Jinv_x_k . H_x_k . Jinv_x_k . F_x_k],
+
+           /* H is a 3-dimensional matrix,
+            * so product needs to be flattened into an ordinary 2-d matrix.
+            */
+
+           flatten_L_to_simple_matrix (L_x_k));
+
+
+/* This operation will probably take different forms depending on how H is constructed,
+ * so this isn't a generic operation, but rather specific to this problem.
+ * Assume for the moment that H is an n x n matrix containing n-length lists.
+ */
+
+flatten_L_to_simple_matrix (L_x_k) := apply (matrix, makelist (L_x_k[k, 1], k, 1, length (L_x_k)));
+
+
+/* e is a 1-column matrix; return a list of its elements
+ * to make it comparable to x_k.
+ */
+
+flatten_step_to_list (e) := makelist (e[k, 1], k, 1, length (e));
