@@ -1,0 +1,101 @@
+" ... Demonstration of generalized Halley iteration ..." $
+
+load ("generalized_halley.mac") $
+
+" ... Approximating sqrt(2) with Halley iterator ..." $
+
+sqrt2_iterator_halley: construct_generalized_halley_update ([x^2 - 2], [x], 1/2);
+
+" ... Comparing Newton, Chebyshev, Halley, and super-Halley iterators for sqrt(2) ..." $
+
+sqrt2_iterator_newton: lambda ([x], [(x[1] + 2/x[1])/2]);
+
+sqrt2_iterator_chebyshev: construct_generalized_halley_update ([x^2 - 2], [x], 0);
+
+sqrt2_iterator_super_halley: construct_generalized_halley_update ([x^2 - 2], [x], 1);
+
+sqrt2_newton: sqrt2_chebyshev: sqrt2_halley: sqrt2_super_halley: [1.0];
+
+[sqrt2_newton: sqrt2_iterator_newton (sqrt2_newton),
+ sqrt2_chebyshev: sqrt2_iterator_chebyshev (sqrt2_chebyshev),
+ sqrt2_halley: sqrt2_iterator_halley (sqrt2_halley),
+ sqrt2_super_halley: sqrt2_iterator_super_halley (sqrt2_super_halley)];
+
+[sqrt2_newton - sqrt(2.0), sqrt2_chebyshev - sqrt(2.0), sqrt2_halley - sqrt(2.0), sqrt2_super_halley - sqrt(2.0)];
+
+[sqrt2_newton: sqrt2_iterator_newton (sqrt2_newton),
+ sqrt2_chebyshev: sqrt2_iterator_chebyshev (sqrt2_chebyshev),
+ sqrt2_halley: sqrt2_iterator_halley (sqrt2_halley),
+ sqrt2_super_halley: sqrt2_iterator_super_halley (sqrt2_super_halley)];
+
+[sqrt2_newton - sqrt(2.0), sqrt2_chebyshev - sqrt(2.0), sqrt2_halley - sqrt(2.0), sqrt2_super_halley - sqrt(2.0)];
+
+[sqrt2_newton: sqrt2_iterator_newton (sqrt2_newton),
+ sqrt2_chebyshev: sqrt2_iterator_chebyshev (sqrt2_chebyshev),
+ sqrt2_halley: sqrt2_iterator_halley (sqrt2_halley),
+ sqrt2_super_halley: sqrt2_iterator_super_halley (sqrt2_super_halley)];
+
+[sqrt2_newton - sqrt(2.0), sqrt2_chebyshev - sqrt(2.0), sqrt2_halley - sqrt(2.0), sqrt2_super_halley - sqrt(2.0)];
+
+[sqrt2_newton: sqrt2_iterator_newton (sqrt2_newton),
+ sqrt2_chebyshev: sqrt2_iterator_chebyshev (sqrt2_chebyshev),
+ sqrt2_halley: sqrt2_iterator_halley (sqrt2_halley),
+ sqrt2_super_halley: sqrt2_iterator_super_halley (sqrt2_super_halley)];
+
+[sqrt2_newton - sqrt(2.0), sqrt2_chebyshev - sqrt(2.0), sqrt2_halley - sqrt(2.0), sqrt2_super_halley - sqrt(2.0)];
+
+" ... System of 2 nonlinear equations ..." $
+
+F: [2*3^u-v/u-5, u+2^v-4];
+DF: jacobian (F, [u, v]);
+
+e2_iterator_newton: lambda ([x], block ([u, v], [u, v]: x, x - invert (''DF) . ''F, [%%[1, 1], %%[2, 1]]));
+
+e2_iterator_chebyshev: construct_generalized_halley_update (F, [u, v], 0);
+
+e2_iterator_halley: construct_generalized_halley_update (F, [u, v], 1/2);
+
+e2_iterator_super_halley: construct_generalized_halley_update (F, [u, v], 1);
+
+e2_newton: e2_chebyshev: e2_halley: e2_super_halley: [2.0, 2.0];
+
+e2_best: [1.06661838959540677, 1.55256476684178645];
+norm (l) := sqrt (lsum (l1^2, l1, l));
+
+[e2_newton: e2_iterator_newton (e2_newton),
+ e2_chebyshev: e2_iterator_chebyshev (e2_chebyshev),
+ e2_halley: e2_iterator_halley (e2_halley),
+ e2_super_halley: e2_iterator_super_halley (e2_super_halley)], numer;
+
+map (lambda ([x], subst ([u = x[1], v = x[2]], F)), [e2_newton, e2_chebyshev, e2_halley, e2_super_halley]);
+
+[norm (e2_newton - e2_best), norm (e2_chebyshev - e2_best), norm (e2_halley - e2_best), norm (e2_super_halley - e2_best)];
+
+[e2_newton: e2_iterator_newton (e2_newton),
+ e2_chebyshev: e2_iterator_chebyshev (e2_chebyshev),
+ e2_halley: e2_iterator_halley (e2_halley),
+ e2_super_halley: e2_iterator_super_halley (e2_super_halley)], numer;
+
+map (lambda ([x], subst ([u = x[1], v = x[2]], F)), [e2_newton, e2_chebyshev, e2_halley, e2_super_halley]);
+
+[norm (e2_newton - e2_best), norm (e2_chebyshev - e2_best), norm (e2_halley - e2_best), norm (e2_super_halley - e2_best)];
+
+[e2_newton: e2_iterator_newton (e2_newton),
+ e2_chebyshev: e2_iterator_chebyshev (e2_chebyshev),
+ e2_halley: e2_iterator_halley (e2_halley),
+ e2_super_halley: e2_iterator_super_halley (e2_super_halley)], numer;
+
+map (lambda ([x], subst ([u = x[1], v = x[2]], F)), [e2_newton, e2_chebyshev, e2_halley, e2_super_halley]);
+
+[norm (e2_newton - e2_best), norm (e2_chebyshev - e2_best), norm (e2_halley - e2_best), norm (e2_super_halley - e2_best)];
+
+[e2_newton: e2_iterator_newton (e2_newton),
+ e2_chebyshev: e2_iterator_chebyshev (e2_chebyshev),
+ e2_halley: e2_iterator_halley (e2_halley),
+ e2_super_halley: e2_iterator_super_halley (e2_super_halley)], numer;
+
+map (lambda ([x], subst ([u = x[1], v = x[2]], F)), [e2_newton, e2_chebyshev, e2_halley, e2_super_halley]);
+
+[norm (e2_newton - e2_best), norm (e2_chebyshev - e2_best), norm (e2_halley - e2_best), norm (e2_super_halley - e2_best)];
+
+" ... System of 3 nonlinear equations ..." $
