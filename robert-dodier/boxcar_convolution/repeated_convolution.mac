@@ -1,0 +1,48 @@
+/* recovered from https://maxima-discuss.narkive.com/t2FPfWJK/repeated-convolution-of-a-continous-uniform-distribution#post5
+ * see also https://github.com/Observatorio-de-Matematica/Maxima-References/tree/main/mailing_list_2000-2016
+ */
+
+/* Copyright 2009-2024 by Robert Dodier.
+ * I release this work under terms of the GNU General Public License, version 2.
+ */
+
+matchdeclare (aa,freeof(y), bb, freeof(y), nn, freeof(y), cc, freeof(y));
+defmatch (trunc_mono, cc*y^nn*U(y - aa)*U(bb - y), y);
+
+hack (expr) := block ([m : length (expr), ss : 0],
+    for k thru m do
+        block ([term : part (expr, k), l],
+               l : trunc_mono (term, x),
+               new_term : cc*(bb^(nn + 1) - aa^(nn + 1))*U(bb - aa)/(nn + 1),
+               /* print (k, l, new_term), */
+               ss : ss + new_term),
+    return(ss));
+
+f1(x) := U(x) - U(x-1);
+
+expr: expand (f1(x)*f1(y - x));
+
+f2(y) := ''(hack (expr));
+
+expr: expand (f2(x)*f2(y - x));
+
+f4(y) := ''(hack (expr));
+
+expr: expand (f4(x)*f4(y - x));
+
+f8(y) := ''(hack (expr));
+
+expr: expand (f8(x)*f8(y - x)) $
+
+f16(y) := ''(hack (expr)) $
+
+linel : 80;
+
+grind (ratsimp (f2 (x)));
+grind (ratsimp (f4 (x)));
+grind (ratsimp (f8 (x)));
+grind (ratsimp (f16 (x)));
+
+U(x) := if x >= 0 then 1 else 0;
+
+plot2d ([f2, f4, f8, f16], [x, 0, 16], [plot_format, gnuplot], [png_file, "./repeated_convolution_plot.png"]);
