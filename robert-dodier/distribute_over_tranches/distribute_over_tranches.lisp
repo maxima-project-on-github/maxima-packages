@@ -4,15 +4,15 @@
     (dotimes (i (length l)) (push (nth i l) (nth (mod i n) ll)))
     (mapcar 'reverse ll)))
 
-(defun seq-1-length (n)
+(defun seq-length (n)
   (let (ii)
-    (dotimes (i n) (push (1+ i) ii))
+    (dotimes (i n) (push i ii))
     (reverse ii)))
 
 (defmfun $distribute_over_tranches (expr expr-loop-var m n)
 
   (let*
-    ((ii (seq-1-length m))
+    ((ii (seq-length m))
      (ii-tranches (divide-list-into-tranches ii n))
      child-pids
      read-fds
@@ -29,7 +29,7 @@
             (progn
               (sb-posix:close (first fd-pair))
               (let*
-                ((f (lambda (j) (meval (maxima-substitute j expr-loop-var expr))))
+                ((f (lambda (j) (meval (maxima-substitute (1+ j) expr-loop-var expr))))
                  (g (lambda (j) (mfuncall '$string (funcall f j))))
                  (g-f-j (mapcar g indices-to-process))
                  (write-s (lambda (s) (sb-posix:write (second fd-pair) (sb-sys:vector-sap s) (* 4 (length s)))))
@@ -88,5 +88,5 @@
     (let ((all-values-array (make-array m)))
       (dotimes (i n)
         (dotimes (j (length (nth i ii-tranches)))
-          (setf (aref all-values-array (1- (nth j (nth i ii-tranches)))) (nth j (nth i child-values)))))
+          (setf (aref all-values-array (nth j (nth i ii-tranches))) (nth j (nth i child-values)))))
       (cons '(mlist simp) (coerce all-values-array 'list)))))
