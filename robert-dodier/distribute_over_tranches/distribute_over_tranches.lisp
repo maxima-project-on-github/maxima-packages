@@ -14,10 +14,10 @@
   (let*
     ((ii (seq-length m))
      (ii-tranches (divide-list-into-tranches ii n))
-     child-pids
-     read-fds
-     child-values-strings
-     child-values)
+     (child-pids (make-array n))
+     (read-fds (make-array n))
+     (child-values-strings (make-array n))
+     (child-values (make-array n)))
 
     (dotimes (i n)
       (let
@@ -39,54 +39,48 @@
               (sb-posix:exit 0))
             (progn
               (format t "process ~d given indices [~{~a~^, ~}] to process~%" child-pid indices-to-process)
-              (push child-pid child-pids)
+              (setf (aref child-pids i) child-pid)
               (sb-posix:close (second fd-pair))
               (format t "save fd ~d to read output of process ~d~%" (first fd-pair) child-pid)
-              (push (first fd-pair) read-fds))))))
-
-    (setq child-pids (reverse child-pids))
-    (setq read-fds (reverse read-fds))
+              (setf (aref read-fds i) (first fd-pair)))))))
 
     (dotimes (i n)
-      (format t "read from fd ~d for process ~d~%" (nth i read-fds) (nth i child-pids))
+      (format t "read from fd ~d for process ~d~%" (aref read-fds i) (aref child-pids i))
       (let*
         ((buf (make-array 1024 :element-type 'extended-char :initial-element #\α))
          (n-bytes-total 0)
          (bufs-list nil)
-         (n-bytes (sb-posix:read (nth i read-fds) (sb-sys:vector-sap buf) 1024)))
+         (n-bytes (sb-posix:read (aref read-fds i) (sb-sys:vector-sap buf) 1024)))
         (loop while (> n-bytes 0) do
-                (format t "obtained ~d bytes from process ~d: ~s~%" n-bytes (nth i child-pids) buf)
+                (format t "obtained ~d bytes from process ~d: ~s~%" n-bytes (aref child-pids i) buf)
                 (setq n-bytes-total (+ n-bytes-total n-bytes))
                 (push (make-array (/ n-bytes 4) :element-type 'extended-char :displaced-to buf)  bufs-list)
                 #+nil (push (make-array n-bytes :element-type 'extended-char :displaced-to buf)  bufs-list)
                 #+nil (push buf bufs-list)
                 (setq buf (make-array 1024 :element-type 'extended-char :initial-element #\α))
-                (setq n-bytes (sb-posix:read (nth i read-fds) (sb-sys:vector-sap buf) (* 1024 4))))
+                (setq n-bytes (sb-posix:read (aref read-fds i) (sb-sys:vector-sap buf) (* 1024 4))))
         (setq bufs-list (reverse bufs-list))
-        (format t "obtained ~d total bytes (~d characters) from process ~d~%" n-bytes-total (/ n-bytes-total 4) (nth i child-pids))
-        (format t "bufs list from process ~d: ~a~%" (nth i child-pids) bufs-list)
-        (format t "LENGTH as applied to items on bufs list for process ~d: ~a~%" (nth i child-pids) (mapcar 'length bufs-list))
+        (format t "obtained ~d total bytes (~d characters) from process ~d~%" n-bytes-total (/ n-bytes-total 4) (aref child-pids i))
+        (format t "bufs list from process ~d: ~a~%" (aref child-pids i) bufs-list)
+        (format t "LENGTH as applied to items on bufs list for process ~d: ~a~%" (aref child-pids i) (mapcar 'length bufs-list))
         (let ((concatenated-bufs (apply 'concatenate (cons 'string bufs-list))))
-          (format t "concatenated (LENGTH = ~d) from process ~d: ~s~%" (length concatenated-bufs) (nth i child-pids) concatenated-bufs)
-          (push concatenated-bufs child-values-strings)))
-      (sb-posix:close (nth i read-fds)))
-
-    (setq child-values-strings (reverse child-values-strings))
+          (format t "concatenated (LENGTH = ~d) from process ~d: ~s~%" (length concatenated-bufs) (aref child-pids i) concatenated-bufs)
+          (setf (aref child-values-strings i) concatenated-bufs)))
+      (sb-posix:close (aref read-fds i)))
 
     (dotimes (i n)
-      (sb-posix:waitpid (nth i child-pids) 0))
+      (sb-posix:waitpid (aref child-pids i) 0))
     
     (dotimes (i n)
-      (let ((string-input (make-string-input-stream (nth i child-values-strings))) child-values-1)
+      (let
+        ((string-input (make-string-input-stream (aref child-values-strings i)))
+         (child-values-1 (make-array (length (nth i ii-tranches)))))
         (dotimes (j (length (nth i ii-tranches)))
-          (push (third (mread-raw string-input)) child-values-1))
-        (setq child-values-1 (reverse child-values-1))
-        (push child-values-1 child-values)))
-
-    (setq child-values (reverse child-values))
+          (setf (aref child-values-1 j) (third (mread-raw string-input))))
+        (setf (aref child-values i) child-values-1)))
 
     (let ((all-values-array (make-array m)))
       (dotimes (i n)
         (dotimes (j (length (nth i ii-tranches)))
-          (setf (aref all-values-array (nth j (nth i ii-tranches))) (nth j (nth i child-values)))))
+          (setf (aref all-values-array (nth j (nth i ii-tranches))) (aref (aref child-values i) j))))
       (cons '(mlist simp) (coerce all-values-array 'list)))))
