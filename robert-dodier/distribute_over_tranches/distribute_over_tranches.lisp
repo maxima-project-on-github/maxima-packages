@@ -1,19 +1,13 @@
-(defun divide-list-into-tranches (l n)
-  (let (ll)
-    (dotimes (i n) (push nil ll))
-    (dotimes (i (length l)) (push (nth i l) (nth (mod i n) ll)))
-    (mapcar 'reverse ll)))
-
-(defun seq-length (n)
-  (let (ii)
-    (dotimes (i n) (push i ii))
-    (reverse ii)))
+(defun divide-into-tranches (m n)
+  (let ((ll (make-array n :initial-element nil)))
+    (dotimes (i m) (push i (aref ll (mod i n))))
+    (dotimes (i n) (setf (aref ll i) (reverse (aref ll i))))
+    ll))
 
 (defmfun $distribute_over_tranches (expr expr-loop-var m n)
 
   (let*
-    ((ii (seq-length m))
-     (ii-tranches (divide-list-into-tranches ii n))
+    ((ii-tranches (divide-into-tranches m n))
      (child-pids (make-array n))
      (read-fds (make-array n))
      (child-values-strings (make-array n))
@@ -21,7 +15,7 @@
 
     (dotimes (i n)
       (let
-        ((indices-to-process (nth i ii-tranches))
+        ((indices-to-process (aref ii-tranches i))
          (fd-pair (multiple-value-list (sb-posix:pipe))))
         (format t "for tranche ~d, fd pair = ~a~%" i fd-pair)
         (let ((child-pid (sb-posix:fork)))
@@ -74,13 +68,13 @@
     (dotimes (i n)
       (let
         ((string-input (make-string-input-stream (aref child-values-strings i)))
-         (child-values-1 (make-array (length (nth i ii-tranches)))))
-        (dotimes (j (length (nth i ii-tranches)))
+         (child-values-1 (make-array (length (aref ii-tranches i)))))
+        (dotimes (j (length (aref ii-tranches i)))
           (setf (aref child-values-1 j) (third (mread-raw string-input))))
         (setf (aref child-values i) child-values-1)))
 
     (let ((all-values-array (make-array m)))
       (dotimes (i n)
-        (dotimes (j (length (nth i ii-tranches)))
-          (setf (aref all-values-array (nth j (nth i ii-tranches))) (aref (aref child-values i) j))))
+        (dotimes (j (length (aref ii-tranches i)))
+          (setf (aref all-values-array (nth j (aref ii-tranches i))) (aref (aref child-values i) j))))
       (cons '(mlist simp) (coerce all-values-array 'list)))))
