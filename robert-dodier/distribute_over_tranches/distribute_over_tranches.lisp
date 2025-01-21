@@ -67,4 +67,4 @@
       (dotimes (i n)
         (dotimes (j (length (aref ii-tranches i)))
           (setf (aref all-values-array (nth j (aref ii-tranches i))) (aref (aref child-values i) j))))
-      (cons '(mlist simp) (coerce all-values-array 'list)))))
+      (cons '(mlist) (coerce all-values-array 'list)))))
