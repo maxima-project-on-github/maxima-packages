@@ -17,7 +17,7 @@
       (let
         ((indices-to-process (aref ii-tranches i))
          (fd-pair (multiple-value-list (sb-posix:pipe))))
-        (format t "for tranche ~d, fd pair = ~a~%" i fd-pair)
+
         (let ((child-pid (sb-posix:fork)))
           (if (eql child-pid 0)
             (progn
@@ -32,33 +32,23 @@
               (sb-posix:close (second fd-pair))
               (sb-posix:exit 0))
             (progn
-              (format t "process ~d given indices [~{~a~^, ~}] to process~%" child-pid indices-to-process)
               (setf (aref child-pids i) child-pid)
               (sb-posix:close (second fd-pair))
-              (format t "save fd ~d to read output of process ~d~%" (first fd-pair) child-pid)
               (setf (aref read-fds i) (first fd-pair)))))))
 
     (dotimes (i n)
-      (format t "read from fd ~d for process ~d~%" (aref read-fds i) (aref child-pids i))
       (let*
         ((buf (make-array 1024 :element-type 'extended-char :initial-element #\α))
          (n-bytes-total 0)
          (bufs-list nil)
          (n-bytes (sb-posix:read (aref read-fds i) (sb-sys:vector-sap buf) 1024)))
         (loop while (> n-bytes 0) do
-                (format t "obtained ~d bytes from process ~d: ~s~%" n-bytes (aref child-pids i) buf)
                 (setq n-bytes-total (+ n-bytes-total n-bytes))
                 (push (make-array (/ n-bytes 4) :element-type 'extended-char :displaced-to buf)  bufs-list)
-                #+nil (push (make-array n-bytes :element-type 'extended-char :displaced-to buf)  bufs-list)
-                #+nil (push buf bufs-list)
                 (setq buf (make-array 1024 :element-type 'extended-char :initial-element #\α))
                 (setq n-bytes (sb-posix:read (aref read-fds i) (sb-sys:vector-sap buf) (* 1024 4))))
         (setq bufs-list (reverse bufs-list))
-        (format t "obtained ~d total bytes (~d characters) from process ~d~%" n-bytes-total (/ n-bytes-total 4) (aref child-pids i))
-        (format t "bufs list from process ~d: ~a~%" (aref child-pids i) bufs-list)
-        (format t "LENGTH as applied to items on bufs list for process ~d: ~a~%" (aref child-pids i) (mapcar 'length bufs-list))
         (let ((concatenated-bufs (apply 'concatenate (cons 'string bufs-list))))
-          (format t "concatenated (LENGTH = ~d) from process ~d: ~s~%" (length concatenated-bufs) (aref child-pids i) concatenated-bufs)
           (setf (aref child-values-strings i) concatenated-bufs)))
       (sb-posix:close (aref read-fds i)))
 
