@@ -1,3 +1,36 @@
+;; distribute_over_tranches -- distribute calls to MEVAL over processes
+;;
+;; Copyright 2025 by Robert Dodier.
+;; I release this work under terms of the GNU General Public License, version 2.
+;;
+;; Given the task of evaluating an expression EXPR for values
+;; of a symbol EXPR-LOOP-VAR = 1, 2, 3, ..., M.
+;; Launch N processes to handle the work and divide the M values
+;; into N exhaustive and mutually exclusive subsets.
+;; The worker processes write their results back to the manager,
+;; which assembles the results into the order 1, 2, 3, ..., M.
+;;
+;; distribute_over_tranches evaluates all of its arguments,
+;; so EXPR may need to be quoted to delay evaluation.
+;;
+;; This implementation makes use of POSIX functions (fork, exit,
+;; and waitpid for process management, and pipe, read, write, and
+;; close for interprocess communication), as exposed by the
+;; SB-POSIX symbol package in SBCL. As such this code can only work,
+;; as it stands, in SBCL; another Lisp implementation which has POSIX
+;; functions would require minor modifications (presumably only to
+;; change the name of the symbol package).
+;; Non-POSIX Lisps cannot work.
+;;
+;; Example:
+;;
+;; (%i1) load ("distribute_over_tranches.lisp");
+;; (%i2) x: [1234, 2345, 3456, 4567, 5678, 6789, 7890];
+;; (%i2) distribute_over_tranches ('(ifactors (x[i])), i, 7, 4);
+;; (%i3) is (% = map (ifactors, x));
+;;
+;; See rtest_distribute_over_tranches.mac for other examples.
+
 (defun divide-into-tranches (m n)
   (let ((ll (make-array n :initial-element nil)))
     (dotimes (i m) (push i (aref ll (mod i n))))
