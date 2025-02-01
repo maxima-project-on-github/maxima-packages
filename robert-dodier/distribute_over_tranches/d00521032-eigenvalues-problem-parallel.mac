@@ -1,0 +1,60 @@
+/*
+
+德馬堤 (d00521032@ntu.edu.tw) via lists.sourceforge.net 
+	
+Thu, Jan 30, 10:46 AM (2 days ago)
+	
+to maxima-discuss@lists.sourceforge.net
+A serial for-loop can be rewritten into a parallel for-loop.
+Ideally a speedup of approximately the number of cores of a computer is 
+reached (provided heavy workloads, good ventilation of the computer, 
+and loop cycles must be independent from each other (i.e. no communication 
+between parallel tasks)).
+
+Example for Windows (adaption for Linux/BSD should be trivial):
+
+Original serial for-loop:
+
+ */
+
+/*
+load(lapack);
+power1:1.5$
+X:round(makelist(i^power1,i,1,ceiling(500^(1/power1))))$  /* a number of x-values */
+Y:round(makelist(i^power1,i,1,ceiling(600^(1/power1))))$  /* a number of y-values */
+results:zeromatrix(length(X),length(Y))$              /* a matrix to store the results */
+t0 : elapsed_real_time ()$
+for k1:1 thru length(X) do               /* a serial outer loop */
+    (dx:X[k1],
+     for k2:1 thru length(Y) do         /* a serial inner loop */
+     (dy:Y[k2],
+      results[k1,k2]:lmax(abs(dgeev(subst([Δx=dx,Δy=dy],Matrix))[1]))))$   /* some task */
+t1 : elapsed_real_time ()$
+time: t1 - t0;
+ */
+
+/* Parallelized with distribute_over_tranches: */
+
+set_random_state (make_random_state (1234));
+Matrix: genmatrix (lambda ([i, j], random (2) * random (i + j) * Δx * Δy), 10, 10);
+
+load(lapack);
+power1:1.5$
+X:round(makelist(i^power1,i,1,ceiling(500^(1/power1))))$  /* a number of x-values */
+Y:round(makelist(i^power1,i,1,ceiling(600^(1/power1))))$  /* a number of y-values */
+results:zeromatrix(length(X),length(Y))$              /* a matrix to store the results */
+t0 : elapsed_real_time ()$
+
+load ("distribute_over_tranches.lisp");
+
+XY: cartesian_product_list (X, Y);
+
+results: distribute_over_tranches ('(block ([dx: XY[i][1], dy: XY[i][2]], lmax(abs(dgeev(subst([Δx=dx,Δy=dy],Matrix))[1])))), i, length (XY), 4) $
+
+t1 : elapsed_real_time ()$
+time: t1 - t0;
+
+fpprintprec: 8;
+print ("length(X) =", length (X), ", length(Y) =", length (Y));
+print ("op(results) =", op (results), ", length(results) =", length (results));
+ldisplay (results);
