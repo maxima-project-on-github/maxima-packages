@@ -55,8 +55,9 @@
           (if (eql child-pid 0)
             (progn
               (sb-posix:close (first fd-pair))
+              (format t "~d'th child, given indices [~{~d~^, ~}] to process.~%" i indices-to-process)
               (let*
-                ((f (lambda (j) (meval (maxima-substitute (1+ j) expr-loop-var expr))))
+                ((f (lambda (j) (format t "~d'th child: process index ~d~%" i j) (meval (maxima-substitute (1+ j) expr-loop-var expr))))
                  (g (lambda (j) (mfuncall '$string (funcall f j))))
                  (g-f-j (mapcar g indices-to-process))
                  (write-s (lambda (s) (sb-posix:write (second fd-pair) (sb-sys:vector-sap s) (* 4 (length s)))))
@@ -67,6 +68,7 @@
             (progn
               (setf (aref child-pids i) child-pid)
               (sb-posix:close (second fd-pair))
+              (format t "parent: ~d'th child PID = ~d~%" i child-pid)
               (setf (aref read-fds i) (first fd-pair)))))))
 
     (dotimes (i n)

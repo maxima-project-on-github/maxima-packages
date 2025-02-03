@@ -1,0 +1,36 @@
+load(lapack);
+
+load ("For_loop_variables.lisp");
+
+load ("distribute_over_tranches.lisp");
+
+DXDT: cartesian_product_list (DX, DT);
+
+t0 : elapsed_real_time ()$
+
+results_flat: distribute_over_tranches ('(block ([dx: DXDT[i][1], dt: DXDT[i][2]], lmax (abs (dgeev (subst ([Δx = dx, Δt = dt], Iteration_matrix))[1])))), i, length (DXDT), 4) $
+
+t1 : elapsed_real_time ()$
+time: t1 - t0;
+
+fpprintprec: 8;
+print ("length(DX) =", length (DX), ", length(DT) =", length (DT));
+print ("length(results_flat) =", length (results_flat));
+ldisplay (results_flat);
+
+/* assemble results matrix from results list */
+
+results_matrix: zeromatrix (length (DX), length (DT)) $
+ij: cartesian_product_list (makelist (i, i, 1, length (DX)), makelist (i, i, 1, length (DT)));
+
+for k thru length (ij)
+    do block ([i, j],
+              [i, j]: ij[k],
+              results_matrix[i, j]: results_flat[k]);
+
+ldisplay (results_matrix);
+
+d: decode_time (absolute_real_time (), 0);
+timestamp: printf (false, "~d-~02,'0d-~02,'0dT-~02,'0d-~02,'0d-~02,'0dZ", d[1], d[2], d[3], d[4], d[5], d[6]);
+session_name: printf (false, "d00521032-with-For_loop_variables-session-~a.lisp", timestamp);
+save (session_name, DXDT, ij, t0, t1, results_flat, results_matrix);
