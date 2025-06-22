@@ -17,20 +17,18 @@ defrule (equality_from_BinaryExpr_with_equalsequals, BinaryExpr ("Op" = "==", "X
 defrule (expr_from_BinaryExpr, BinaryExpr ("Op" = ss, "X" = aa, "Y" = bb), funmake (ss, [aa, bb]));
 defrule (expr_from_UnaryExpr, UnaryExpr ("Op" = ss, "X" = aa), funmake (ss, [aa]));
 
-/* 'return' means something different in Maxima as opposed to Go,
- * although in some cases they have the same effect;
- * ignore the difference for now. !!
- * What's really needed is something like Common Lisp RETURN-FROM in Maxima. !!
- *
+/* return(...) in Go is a nonlocal return, so implement ReturnStmt as throw(...) in Maxima.
+ * The corresponding catch(...) appears in the implementation of FuncDecl.
+ * 
  * Also, Go functions have multiple return values, with the first being the primary return value,
  * as in Common Lisp. Returning a list in Maxima isn't quite the same.
  * For now, return a single value as a non-list, otherwise return a list. !!
  * Not sure how to handle multiple return values in general. !!
  */
 
-defrule (return_from_ReturnStmt,
+defrule (throw_from_ReturnStmt,
          ReturnStmt ("Results" = ll),
-         if length (ll) = 1 then buildq ([x: first (ll)], return (x)) else buildq ([ll], return (ll)));
+         if length (ll) = 1 then buildq ([x: first (ll)], throw (x)) else buildq ([ll], throw (ll)));
 
 /* assignment should take into account the stuff above about multiple return values ... !! */
 defrule (simple_assignment_from_AssignStmt, AssignStmt ("Lhs" = ll, "Rhs" = mm, "Tok" = "="),
@@ -59,7 +57,7 @@ construct_function_definition (function_name, body, arguments, results) :=
             * ignore that for now.
             */
            buildq ([function_name, args_symbols, body],
-                   function_name (splice (args_symbols)) := body));
+                   function_name (splice (args_symbols)) := catch (body)));
 
 extract_arguments_symbols (arguments) :=
     (map (lambda ([e], assoc ("Names", e)), arguments),
@@ -70,7 +68,7 @@ apply_all_rules (b) :=
            e1: scanmap (expr_from_blob, b),
            e2: apply1 (e1, symbol_from_Ident, integer_from_BasicLit, character_from_BasicLit, list_from_List, list_from_FieldList, expr_from_ParenExpr),
            e3: apply1 (e2, funcall_from_CallExpr, equality_from_BinaryExpr_with_equalsequals, expr_from_BinaryExpr, expr_from_UnaryExpr),
-           e4: apply1 (e3, return_from_ReturnStmt, block_from_BlockStmt, simple_assignment_from_AssignStmt, if_then_from_IfStmt),
+           e4: apply1 (e3, throw_from_ReturnStmt, block_from_BlockStmt, simple_assignment_from_AssignStmt, if_then_from_IfStmt),
            e5: apply1 (e4, function_from_FuncDecl),
            [e1, e2, e3, e4, e5]);
 
@@ -85,4 +83,4 @@ grind (last (results2));
 ''(last (results2));
 
 FromSexa ("+", hh, mm, ss);
-FromSexa ("-", hh, mm, ss); /* at present result is incorrect due to incorrect handling of ReturnStmt !! */
+FromSexa ("-", hh, mm, ss);
