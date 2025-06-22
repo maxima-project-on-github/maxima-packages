@@ -1,0 +1,88 @@
+push("/home/dodier/github/github-forks/maxima-packages/**/*.mac",file_search_maxima);
+push("/home/dodier/github/github-forks/maxima-packages/**/*.lisp",file_search_lisp);
+load(json_tools);
+
+expr_from_blob(b):=if not atom(b) and op(b) = 'blob then funmake(parse_string(b // "NodeType"),other_fields(b)) else b;
+other_fields(b):=block([L:[]],for e in args(b) do if lhs(e) # "NodeType" then push(e,L),reverse(L));
+
+matchdeclare (ss, stringp, [ll, mm], listp, ff, symbolp, [aa, bb, cc], all);
+defrule (symbol_from_Ident, Ident("Name" = ss), parse_string(ss));
+defrule (integer_from_BasicLit, BasicLit("Kind" = "INT", "Value" = ss), parse_string(ss));
+defrule (character_from_BasicLit, BasicLit("Kind" = "CHAR", "Value" = ss), charat (ss, 2));
+defrule (list_from_List, "List" = ll, ll);
+defrule (list_from_FieldList, FieldList (ll), ll);
+
+defrule (funcall_from_CallExpr, CallExpr("Args" = ll, "Fun" = ff), funmake(ff, ll));
+defrule (equality_from_BinaryExpr_with_equalsequals, BinaryExpr ("Op" = "==", "X" = aa, "Y" = bb), funmake ('equal, [aa, bb]));
+defrule (expr_from_BinaryExpr, BinaryExpr ("Op" = ss, "X" = aa, "Y" = bb), funmake (ss, [aa, bb]));
+defrule (expr_from_UnaryExpr, UnaryExpr ("Op" = ss, "X" = aa), funmake (ss, [aa]));
+
+/* 'return' means something different in Maxima as opposed to Go,
+ * although in some cases they have the same effect;
+ * ignore the difference for now. !!
+ * What's really needed is something like Common Lisp RETURN-FROM in Maxima. !!
+ *
+ * Also, Go functions have multiple return values, with the first being the primary return value,
+ * as in Common Lisp. Returning a list in Maxima isn't quite the same.
+ * For now, return a single value as a non-list, otherwise return a list. !!
+ * Not sure how to handle multiple return values in general. !!
+ */
+
+defrule (return_from_ReturnStmt,
+         ReturnStmt ("Results" = ll),
+         if length (ll) = 1 then buildq ([x: first (ll)], return (x)) else buildq ([ll], return (ll)));
+
+/* assignment should take into account the stuff above about multiple return values ... !! */
+defrule (simple_assignment_from_AssignStmt, AssignStmt ("Lhs" = ll, "Rhs" = mm, "Tok" = "="),
+         buildq ([ll, mm], ll : mm));
+
+/* this next one needs local variable detection !! */
+defrule (block_from_BlockStmt, BlockStmt (ll), buildq ([ll], block (splice (ll))));
+
+defrule (expr_from_ParenExpr, ParenExpr ("X" = aa), aa);
+
+defrule (if_then_from_IfStmt,
+         IfStmt ("Body" = aa, "Cond" = bb, "Else" = null, "Init" = null),
+         buildq ([aa, bb], if bb then aa));
+
+/* match FuncDecl with "Recv" = null and "TypeParams" = null.
+ * not sure what to do with those if nonnull.
+ */
+
+defrule (function_from_FuncDecl,
+         FuncDecl ("Body" = aa, "Name" = ff, "Recv" = null, "Type" = FuncType ("Params" = ll, "Results" = cc, "TypeParams" = null)),
+         construct_function_definition (ff, aa, ll, cc));
+
+construct_function_definition (function_name, body, arguments, results) :=
+    block ([args_symbols: extract_arguments_symbols (arguments)],
+           /* results might contain names of variables to be returned;
+            * ignore that for now.
+            */
+           buildq ([function_name, args_symbols, body],
+                   function_name (splice (args_symbols)) := body));
+
+extract_arguments_symbols (arguments) :=
+    (map (lambda ([e], assoc ("Names", e)), arguments),
+     apply (append, %%));
+
+apply_all_rules (b) :=
+    block ([e1, e2, e3, e4, e5],
+           e1: scanmap (expr_from_blob, b),
+           e2: apply1 (e1, symbol_from_Ident, integer_from_BasicLit, character_from_BasicLit, list_from_List, list_from_FieldList, expr_from_ParenExpr),
+           e3: apply1 (e2, funcall_from_CallExpr, equality_from_BinaryExpr_with_equalsequals, expr_from_BinaryExpr, expr_from_UnaryExpr),
+           e4: apply1 (e3, return_from_ReturnStmt, block_from_BlockStmt, simple_assignment_from_AssignStmt, if_then_from_IfStmt),
+           e5: apply1 (e4, function_from_FuncDecl),
+           [e1, e2, e3, e4, e5]);
+
+blob1:read_json("FromSexa.json");
+results1: apply_all_rules (blob1);
+grind (last (results1));
+''(last (results1));
+
+blob2: read_json ("FromSexaSec.json");
+results2: apply_all_rules (blob2);
+grind (last (results2));
+''(last (results2));
+
+FromSexa ("+", hh, mm, ss);
+FromSexa ("-", hh, mm, ss); /* at present result is incorrect due to incorrect handling of ReturnStmt !! */
