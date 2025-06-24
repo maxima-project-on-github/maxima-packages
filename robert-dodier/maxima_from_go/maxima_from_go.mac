@@ -7,12 +7,16 @@ other_fields(b):=block([L:[]],for e in args(b) do if lhs(e) # "NodeType" then pu
 
 matchdeclare (ss, stringp, [ll, mm], listp, ff, symbolp, [aa, bb, cc], all);
 defrule (symbol_from_Ident, Ident("Name" = ss), parse_string(ss));
+defrule (string_from_BasicLit, BasicLit("Kind" = "STRING", "Value" = ss), parse_string(ss));
 defrule (integer_from_BasicLit, BasicLit("Kind" = "INT", "Value" = ss), parse_string(ss));
+defrule (float_from_BasicLit, BasicLit("Kind" = "FLOAT", "Value" = ss), parse_string (ss));
 defrule (character_from_BasicLit, BasicLit("Kind" = "CHAR", "Value" = ss), charat (ss, 2));
 defrule (list_from_List, "List" = ll, ll);
 defrule (list_from_FieldList, FieldList (ll), ll);
 
-defrule (funcall_from_CallExpr, CallExpr("Args" = ll, "Fun" = ff), funmake(ff, ll));
+/* would prefer to have funmake here instead of apply, but funmake barfs on aa being a general expression; that's a bug in funmake !! */
+defrule (funcall_no_args_from_CallExpr, CallExpr("Args" = null, "Fun" = aa), apply (aa, []));
+defrule (funcall_from_CallExpr, CallExpr("Args" = ll, "Fun" = aa), apply (aa, ll));
 defrule (equality_from_BinaryExpr_with_equalsequals, BinaryExpr ("Op" = "==", "X" = aa, "Y" = bb), funmake ('equal, [aa, bb]));
 defrule (expr_from_BinaryExpr, BinaryExpr ("Op" = ss, "X" = aa, "Y" = bb), funmake (ss, [aa, bb]));
 defrule (expr_from_UnaryExpr, UnaryExpr ("Op" = ss, "X" = aa), funmake (ss, [aa]));
@@ -34,14 +38,25 @@ defrule (throw_from_ReturnStmt,
 defrule (simple_assignment_from_AssignStmt, AssignStmt ("Lhs" = ll, "Rhs" = mm, "Tok" = "="),
          buildq ([ll, mm], ll : mm));
 
+/* this implies another rule for blocks to pull variables out of var(...) and move them into local variables list !! */
+defrule (local_var_assignment_from_AssignStmt, AssignStmt ("Lhs" = ll, "Rhs" = mm, "Tok" = ":="),
+         buildq ([ll, mm], var (ll) : mm));
+
 /* this next one needs local variable detection !! */
 defrule (block_from_BlockStmt, BlockStmt (ll), buildq ([ll], block (splice (ll))));
 
 defrule (expr_from_ParenExpr, ParenExpr ("X" = aa), aa);
 
+/* not sure how to handle method calls here -- handle at run time?? substitute f(x) for x@f when f is known to be a method?? */
+defrule (at_sign_from_SelectorExpr, SelectorExpr ("Sel" = aa, "X" = bb), buildq ([aa, bb], "@"(bb, aa)));
+
 defrule (if_then_from_IfStmt,
          IfStmt ("Body" = aa, "Cond" = bb, "Else" = null, "Init" = null),
          buildq ([aa, bb], if bb then aa));
+
+defrule (if_then_else_from_IfStmt,
+         IfStmt ("Body" = aa, "Cond" = bb, "Else" = cc, "Init" = null),
+         buildq ([aa, bb, cc], if bb then aa else cc));
 
 /* match FuncDecl with "Recv" = null and "TypeParams" = null.
  * not sure what to do with those if nonnull.
@@ -64,13 +79,14 @@ extract_arguments_symbols (arguments) :=
      apply (append, %%));
 
 apply_all_rules (b) :=
-    block ([e1, e2, e3, e4, e5],
+    block ([e1, e2, e3, e4, e5, e6],
            e1: scanmap (expr_from_blob, b),
-           e2: apply1 (e1, symbol_from_Ident, integer_from_BasicLit, character_from_BasicLit, list_from_List, list_from_FieldList, expr_from_ParenExpr),
-           e3: apply1 (e2, funcall_from_CallExpr, equality_from_BinaryExpr_with_equalsequals, expr_from_BinaryExpr, expr_from_UnaryExpr),
+           e2: apply1 (e1, symbol_from_Ident, string_from_BasicLit, integer_from_BasicLit, float_from_BasicLit, character_from_BasicLit, list_from_List, list_from_FieldList, expr_from_ParenExpr),
+           e3: apply1 (e2, funcall_no_args_from_CallExpr, funcall_from_CallExpr, equality_from_BinaryExpr_with_equalsequals, expr_from_BinaryExpr, expr_from_UnaryExpr),
            e4: apply1 (e3, throw_from_ReturnStmt, block_from_BlockStmt, simple_assignment_from_AssignStmt, if_then_from_IfStmt),
-           e5: apply1 (e4, function_from_FuncDecl),
-           [e1, e2, e3, e4, e5]);
+           e5: apply1 (e4, if_then_else_from_IfStmt, local_var_assignment_from_AssignStmt, at_sign_from_SelectorExpr),
+           e6: apply1 (e5, function_from_FuncDecl),
+           [e1, e2, e3, e4, e5, e6]);
 
 blob1:read_json("FromSexa.json");
 results1: apply_all_rules (blob1);
@@ -84,3 +100,19 @@ grind (last (results2));
 
 FromSexa ("+", hh, mm, ss);
 FromSexa ("-", hh, mm, ss);
+
+kill (FromSexa, FromSexaSec);
+
+unit_blobs: read_json ("unit1.json");
+unit_decls: unit_blobs // "Decls" $
+
+for b in unit_decls
+    do block ([results: apply_all_rules (b)],
+              print (last (results)));
+
+solar_blobs: read_json ("solar1.json");
+solar_decls: solar_blobs // "Decls" $
+
+for b in solar_decls
+    do block ([results: apply_all_rules (b)],
+              print (last (results)));
