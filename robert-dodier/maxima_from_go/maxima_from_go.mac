@@ -11,6 +11,7 @@ defrule (string_from_BasicLit, BasicLit("Kind" = "STRING", "Value" = ss), parse_
 defrule (integer_from_BasicLit, BasicLit("Kind" = "INT", "Value" = ss), parse_string(ss));
 defrule (float_from_BasicLit, BasicLit("Kind" = "FLOAT", "Value" = ss), parse_string (ss));
 defrule (character_from_BasicLit, BasicLit("Kind" = "CHAR", "Value" = ss), charat (ss, 2));
+defrule (list_from_null_List, "List" = null, []);
 defrule (list_from_List, "List" = ll, ll);
 defrule (list_from_FieldList, FieldList (ll), ll);
 
@@ -58,11 +59,11 @@ defrule (if_then_else_from_IfStmt,
          IfStmt ("Body" = aa, "Cond" = bb, "Else" = cc, "Init" = null),
          buildq ([aa, bb, cc], if bb then aa else cc));
 
-/* match FuncDecl with "Recv" = null and "TypeParams" = null.
- * not sure what to do with those if nonnull.
+/* match FuncDecl with "Recv" = null; that's an ordinary function.
+ * Additionally match "TypeParams" = null; not sure yet what to do otherwise.
  */
 
-defrule (function_from_FuncDecl,
+defrule (function_from_FuncDecl_function,
          FuncDecl ("Body" = aa, "Name" = ff, "Recv" = null, "Type" = FuncType ("Params" = ll, "Results" = cc, "TypeParams" = null)),
          construct_function_definition (ff, aa, ll, cc));
 
@@ -78,14 +79,41 @@ extract_arguments_symbols (arguments) :=
     (map (lambda ([e], assoc ("Names", e)), arguments),
      apply (append, %%));
 
+/* match FuncDecl with "Recv" # null; that's a method.
+ * Additionally match "TypeParams" = null; not sure yet what to do otherwise.
+ */
+
+defrule (function_from_FuncDecl_method,
+         FuncDecl ("Body" = aa, "Name" = ff, "Recv" = bb, "Type" = FuncType ("Params" = ll, "Results" = cc, "TypeParams" = null)),
+         construct_method_definition (ff, aa, bb, ll, cc));
+
+construct_method_definition (function_name, body, receiver, arguments, results) :=
+    block ([args_symbols: extract_arguments_symbols (arguments),
+            recv_symbol: extract_receiver_symbol (receiver)],
+           /* results might contain names of variables to be returned;
+            * ignore that for now.
+            */
+           buildq ([function_name, recv_symbol, args_symbols, body],
+                   function_name (recv_symbol) :=
+                       buildq ([recv_value: recv_symbol],
+                               lambda (args_symbols, block ([recv_symbol: recv_value], catch (body))))));
+
+extract_receiver_symbol (receiver) :=
+    /* receiver is apparently always a list of exactly one element,
+     * because, from what I can tell, Go does not allow two or more receivers.
+     * Given that, I don't know why the receiver is supplied as a list.
+     * Code here assumes a list of one element, containing a list of one element.
+     */
+    first (assoc ("Names", first (receiver)));
+
 apply_all_rules (b) :=
     block ([e1, e2, e3, e4, e5, e6],
            e1: scanmap (expr_from_blob, b),
-           e2: apply1 (e1, symbol_from_Ident, string_from_BasicLit, integer_from_BasicLit, float_from_BasicLit, character_from_BasicLit, list_from_List, list_from_FieldList, expr_from_ParenExpr),
+           e2: apply1 (e1, symbol_from_Ident, string_from_BasicLit, integer_from_BasicLit, float_from_BasicLit, character_from_BasicLit, list_from_null_List, list_from_List, list_from_FieldList, expr_from_ParenExpr),
            e3: apply1 (e2, funcall_no_args_from_CallExpr, funcall_from_CallExpr, equality_from_BinaryExpr_with_equalsequals, expr_from_BinaryExpr, expr_from_UnaryExpr),
            e4: apply1 (e3, throw_from_ReturnStmt, block_from_BlockStmt, simple_assignment_from_AssignStmt, if_then_from_IfStmt),
            e5: apply1 (e4, if_then_else_from_IfStmt, local_var_assignment_from_AssignStmt, at_sign_from_SelectorExpr),
-           e6: apply1 (e5, function_from_FuncDecl),
+           e6: apply1 (e5, function_from_FuncDecl_function, function_from_FuncDecl_method),
            [e1, e2, e3, e4, e5, e6]);
 
 blob1:read_json("FromSexa.json");
@@ -108,6 +136,7 @@ unit_decls: unit_blobs // "Decls" $
 
 for b in unit_decls
     do block ([results: apply_all_rules (b)],
+              print (""),
               print (last (results)));
 
 solar_blobs: read_json ("solar1.json");
@@ -115,4 +144,5 @@ solar_decls: solar_blobs // "Decls" $
 
 for b in solar_decls
     do block ([results: apply_all_rules (b)],
+              print (""),
               print (last (results)));
