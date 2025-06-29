@@ -87,14 +87,16 @@ defrule (function_from_FuncDecl_method,
          FuncDecl ("Body" = aa, "Name" = ff, "Recv" = bb, "Type" = FuncType ("Params" = ll, "Results" = cc, "TypeParams" = null)),
          construct_method_definition (ff, aa, bb, ll, cc));
 
-construct_method_definition (function_name, body, receiver, arguments, results) :=
+construct_method_definition (method_name, body, receiver, arguments, results) :=
     block ([args_symbols: extract_arguments_symbols (arguments),
-            recv_symbol: extract_receiver_symbol (receiver)],
+            recv_symbol: extract_receiver_symbol (receiver),
+            recv_type: extract_receiver_type (receiver)],
+           push (method_name [recv_type], methods_list),
            /* results might contain names of variables to be returned;
             * ignore that for now.
             */
-           buildq ([function_name, recv_symbol, args_symbols, body],
-                   function_name (recv_symbol) :=
+           buildq ([method_name, recv_symbol, recv_type, args_symbols, body],
+                   method_name [recv_type] (recv_symbol) :=
                        buildq ([recv_value: recv_symbol],
                                lambda (args_symbols, block ([recv_symbol: recv_value], catch (body))))));
 
@@ -106,15 +108,39 @@ extract_receiver_symbol (receiver) :=
      */
     first (assoc ("Names", first (receiver)));
 
+extract_receiver_type (receiver) :=
+    /* "Type" is a single element, while "Names" is a list ... not sure what's going on there.
+     */
+    assoc ("Type", first (receiver));
+
+matchdeclare (mm, lambda ([e], symbolp (e) and member (e, methods_list_names_only)));
+
+/* we seem to be running into noun/verb (%@/$@) confusion here ... not sure what's right */
+
+/*
+foo: (aa@mm)();
+defrule (rewrite_method_calls_no_args, ''foo, mm[go_type_of (aa)](aa));
+foo: (aa@mm)(bb);
+defrule (rewrite_method_calls_one_arg, ''foo, mm[go_type_of (aa)](aa)(bb));
+ */
+
+defrule (rewrite_method_calls_no_args, (aa@mm)(), mm[go_type_of (aa)](aa));
+defrule (rewrite_method_calls_one_arg, (aa@mm)(bb), mm[go_type_of (aa)](aa)(bb));
+
 apply_all_rules (b) :=
-    block ([e1, e2, e3, e4, e5, e6],
+    block ([e1, e2, e3, e4, e5, e6, e7],
            e1: scanmap (expr_from_blob, b),
            e2: apply1 (e1, symbol_from_Ident, string_from_BasicLit, integer_from_BasicLit, float_from_BasicLit, character_from_BasicLit, list_from_null_List, list_from_List, list_from_FieldList, expr_from_ParenExpr),
            e3: apply1 (e2, funcall_no_args_from_CallExpr, funcall_from_CallExpr, equality_from_BinaryExpr_with_equalsequals, expr_from_BinaryExpr, expr_from_UnaryExpr),
            e4: apply1 (e3, throw_from_ReturnStmt, block_from_BlockStmt, simple_assignment_from_AssignStmt, if_then_from_IfStmt),
            e5: apply1 (e4, if_then_else_from_IfStmt, local_var_assignment_from_AssignStmt, at_sign_from_SelectorExpr),
            e6: apply1 (e5, function_from_FuncDecl_function, function_from_FuncDecl_method),
-           [e1, e2, e3, e4, e5, e6]);
+           methods_list_names_only: setify (map (op, methods_list)),
+           e7: apply1 (e6, rewrite_method_calls_no_args, rewrite_method_calls_one_arg),
+           [e1, e2, e3, e4, e5, e6, e7]);
+
+/* ideally maintain one list per module or package, not sure which */
+methods_list: [];
 
 blob1:read_json("FromSexa.json");
 results1: apply_all_rules (blob1);
@@ -133,16 +159,25 @@ kill (FromSexa, FromSexaSec);
 
 unit_blobs: read_json ("unit1.json");
 unit_decls: unit_blobs // "Decls" $
+unit_results: map (apply_all_rules, unit_decls) $
 
-for b in unit_decls
-    do block ([results: apply_all_rules (b)],
-              print (""),
-              print (last (results)));
+print ("results from apply_all_rules on unit_decls:") $
+
+for results in unit_results
+    do (print (""),
+        print (last (results)),
+        print (""));
+
+print ("found", length (methods_list), "methods in unit1.json:", reverse (methods_list));
 
 solar_blobs: read_json ("solar1.json");
 solar_decls: solar_blobs // "Decls" $
+solar_results: map (apply_all_rules, solar_decls);
 
-for b in solar_decls
-    do block ([results: apply_all_rules (b)],
-              print (""),
-              print (last (results)));
+print ("results from apply_all_rules on solar_decls:") $
+
+for results in solar_results
+    do (print (""),
+        print (last (results)),
+        print (""));
+
