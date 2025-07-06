@@ -43,7 +43,10 @@ defrule (throw_from_ReturnStmt_null,
 defrule (assignment_from_AssignStmt, AssignStmt ("Lhs" = ll, "Rhs" = mm, "Tok" = "="),
          if length (ll) = 1 and length (mm) = 1
              then buildq ([vv: ll[1], ee: mm[1]], vv : ee)
-             else buildq ([ll, mm], ll : mm));
+             else if length (mm) = 1
+                      /* assume [a, b]: [foo] must mean [a, b]: foo -- not sure if that's always true !! */
+                      then buildq ([ll, ee: mm[1]], ll : ee)
+                      else buildq ([ll, mm], ll : mm));
 
 defrule (assignment_with_addition_from_AssignStmt, AssignStmt ("Lhs" = ll, "Rhs" = mm, "Tok" = "+="),
          if length (ll) = 1 and length (mm) = 1
@@ -55,11 +58,9 @@ defrule (assignment_with_subtraction_from_AssignStmt, AssignStmt ("Lhs" = ll, "R
              then buildq ([vv: ll[1], ee: mm[1]], vv : vv - ee)
              else buildq ([ll, mm], ll : ll - mm));
 
-/* this implies another rule for blocks to pull variables out of var(...) and move them into local variables list !! */
 defrule (local_var_assignment_from_AssignStmt, AssignStmt ("Lhs" = ll, "Rhs" = mm, "Tok" = ":="),
          buildq ([ll, mm], var (ll) : mm));
 
-/* this next one needs local variable detection !! */
 defrule (block_from_BlockStmt, BlockStmt (ll), buildq ([ll], block (splice (ll))));
 
 defrule (expr_from_ParenExpr, ParenExpr ("X" = aa), aa);
@@ -183,7 +184,10 @@ lift_local_vars_into_block1 (e) :=
                                 then (push (vv, vars),
                                       if length (vv) = 1 and length (xx) = 1
                                           then buildq ([vv1: vv[1], xx1: xx[1]], vv1 : xx1)
-                                          else buildq ([vv, xx], vv: xx),
+                                          else if length (xx) = 1
+                                                   /* assume [a, b]: [foo] must mean [a, b]: foo -- not sure if that's always true !! */
+                                                   then buildq ([vv, xx1: xx[1]], vv : xx1)
+                                                   else buildq ([vv, xx], vv: xx),
                                       push (%%, exprs))
                                 else push (e1, exprs)),
                     buildq ([vars: reverse (apply (append, vars)), exprs: reverse (exprs)],
