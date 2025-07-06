@@ -1,0 +1,26 @@
+/* reimplementation of base package stuff
+ * for the moment, just write it by hand instead of trying to translate
+ */
+
+defstruct (base_struct (Horner, J2000Century));
+
+base: new (base_struct);
+
+/* Horner from meeus/v3/base/math.go */
+
+/* direct translation of Go function
+ *
+base@Horner: lambda ([v, [l]], block ([e: last (l)], for c in rest (reverse (l)) do e: e*v + c, e));
+ */
+
+/* simplify by rolling highest coefficient into loop */
+
+base@Horner: lambda([v, [l]], block([e : 0], for c in reverse(l) do e : e*v + c, e));
+
+/* J2000Century and associated stuff from meeus/v3/base/julian.go */
+
+base@J2000Century: lambda ([jde], (jde - J2000) / JulianCentury);
+
+J2000: 2451545.0;
+
+JulianCentury: 36525;

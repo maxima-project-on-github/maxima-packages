@@ -1,3 +1,6 @@
+load ("math_go.mac");
+load ("base_go.mac");
+
 push("/home/dodier/github/github-forks/maxima-packages/**/*.mac",file_search_maxima);
 push("/home/dodier/github/github-forks/maxima-packages/**/*.lisp",file_search_lisp);
 load(json_tools);
@@ -139,18 +142,10 @@ extract_receiver_type (receiver) :=
     assoc ("Type", first (receiver));
 
 matchdeclare (mm, lambda ([e], symbolp (e) and member (e, methods_list_names_only)));
+matchdeclare (zz, lambda ([e], block ([v: ?meval (e)], atom (v) or not member (op (v), map (op, structures)))));
 
-/* we seem to be running into noun/verb (%@/$@) confusion here ... not sure what's right */
-
-/*
-foo: (aa@mm)();
-defrule (rewrite_method_calls_no_args, ''foo, mm[go_type_of (aa)](aa));
-foo: (aa@mm)(bb);
-defrule (rewrite_method_calls_one_arg, ''foo, mm[go_type_of (aa)](aa)(bb));
- */
-
-defrule (rewrite_method_calls_no_args, (aa@mm)(), mm[go_type_of (aa)](aa));
-defrule (rewrite_method_calls_one_arg, (aa@mm)(bb), mm[go_type_of (aa)](aa)(bb));
+defrule (rewrite_method_calls_no_args, (zz@mm)(), mm[go_type_of (zz)](zz));
+defrule (rewrite_method_calls_one_arg, (zz@mm)(bb), mm[go_type_of (zz)](zz)(bb));
 
 '(catch (block (throw (aa))));
 defrule (collapse_catch_block_throw1, ''%, aa);

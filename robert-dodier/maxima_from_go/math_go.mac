@@ -1,0 +1,25 @@
+/* math_go.mac -- reimplementation of functions from the Go package 'math'
+ *
+ * Don't try to cover everything here; this is just enough for unit.go and solar.go.
+ * Maybe cover the rest later.
+ */
+
+defstruct (math_struct (Pi, Mod, Sincos, Asin, Acos, Atan2));
+
+math: new (math_struct);
+
+math@Pi: %pi;
+
+/* https://pkg.go.dev/math#Mod says:
+ * "Mod returns the floating-point remainder of x/y. The magnitude of the result is less than y and its sign agrees with that of x."
+ */
+
+math@Mod: lambda ([x, y], if x < 0 then mod (x, y) - y else mod (x, y));
+
+math@Sincos: lambda ([x], [sin (x), cos (x)]);
+
+math@Asin: asin;
+
+math@Acos: acos;
+
+math@Atan2: atan2;
