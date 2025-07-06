@@ -36,8 +36,20 @@ defrule (throw_from_ReturnStmt,
          if length (ll) = 1 then buildq ([x: first (ll)], throw (x)) else buildq ([ll], throw (ll)));
 
 /* assignment should take into account the stuff above about multiple return values ... !! */
-defrule (simple_assignment_from_AssignStmt, AssignStmt ("Lhs" = ll, "Rhs" = mm, "Tok" = "="),
-         buildq ([ll, mm], ll : mm));
+defrule (assignment_from_AssignStmt, AssignStmt ("Lhs" = ll, "Rhs" = mm, "Tok" = "="),
+         if length (ll) = 1 and length (mm) = 1
+             then buildq ([vv: ll[1], ee: mm[1]], vv : ee)
+             else buildq ([ll, mm], ll : mm));
+
+defrule (assignment_with_addition_from_AssignStmt, AssignStmt ("Lhs" = ll, "Rhs" = mm, "Tok" = "+="),
+         if length (ll) = 1 and length (mm) = 1
+             then buildq ([vv: ll[1], ee: mm[1]], vv : vv + ee)
+             else buildq ([ll, mm], ll : ll + mm));
+
+defrule (assignment_with_subtraction_from_AssignStmt, AssignStmt ("Lhs" = ll, "Rhs" = mm, "Tok" = "-="),
+         if length (ll) = 1 and length (mm) = 1
+             then buildq ([vv: ll[1], ee: mm[1]], vv : vv - ee)
+             else buildq ([ll, mm], ll : ll - mm));
 
 /* this implies another rule for blocks to pull variables out of var(...) and move them into local variables list !! */
 defrule (local_var_assignment_from_AssignStmt, AssignStmt ("Lhs" = ll, "Rhs" = mm, "Tok" = ":="),
@@ -132,7 +144,7 @@ apply_all_rules (b) :=
            e1: scanmap (expr_from_blob, b),
            e2: apply1 (e1, symbol_from_Ident, string_from_BasicLit, integer_from_BasicLit, float_from_BasicLit, character_from_BasicLit, list_from_null_List, list_from_List, list_from_FieldList, expr_from_ParenExpr),
            e3: apply1 (e2, funcall_no_args_from_CallExpr, funcall_from_CallExpr, equality_from_BinaryExpr_with_equalsequals, expr_from_BinaryExpr, expr_from_UnaryExpr),
-           e4: apply1 (e3, throw_from_ReturnStmt, block_from_BlockStmt, simple_assignment_from_AssignStmt, if_then_from_IfStmt),
+           e4: apply1 (e3, throw_from_ReturnStmt, block_from_BlockStmt, assignment_from_AssignStmt, assignment_with_addition_from_AssignStmt, assignment_with_subtraction_from_AssignStmt, if_then_from_IfStmt),
            e5: apply1 (e4, if_then_else_from_IfStmt, local_var_assignment_from_AssignStmt, at_sign_from_SelectorExpr),
            e6: apply1 (e5, function_from_FuncDecl_function, function_from_FuncDecl_method),
            methods_list_names_only: setify (map (op, methods_list)),
