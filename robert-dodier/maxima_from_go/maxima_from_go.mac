@@ -152,16 +152,39 @@ defrule (rewrite_method_calls_no_args, (aa@mm)(), mm[go_type_of (aa)](aa));
 defrule (rewrite_method_calls_one_arg, (aa@mm)(bb), mm[go_type_of (aa)](aa)(bb));
 
 apply_all_rules (b) :=
-    block ([e1, e2, e3, e4, e5, e6, e7],
+    block ([e1, e2, e3, e4, e4a, e4b, e5, e6, e7],
            e1: scanmap (expr_from_blob, b),
            e2: apply1 (e1, symbol_from_Ident, string_from_BasicLit, integer_from_BasicLit, float_from_BasicLit, character_from_BasicLit, list_from_null_List, list_from_List, list_from_FieldList, expr_from_ParenExpr),
            e3: apply1 (e2, funcall_no_args_from_CallExpr, funcall_from_CallExpr, equality_from_BinaryExpr_with_equalsequals, expr_from_BinaryExpr, expr_from_UnaryExpr),
-           e4: apply1 (e3, throw_from_ReturnStmt_null, throw_from_ReturnStmt, block_from_BlockStmt, assignment_from_AssignStmt, assignment_with_addition_from_AssignStmt, assignment_with_subtraction_from_AssignStmt, if_then_from_IfStmt),
-           e5: apply1 (e4, if_then_else_from_IfStmt, local_var_assignment_from_AssignStmt, at_sign_from_SelectorExpr),
+           e4: apply1 (e3, throw_from_ReturnStmt_null, throw_from_ReturnStmt, block_from_BlockStmt, local_var_assignment_from_AssignStmt),
+           e4a: lift_local_vars_into_block (e4),
+           e4b: apply1 (e4a, assignment_from_AssignStmt, assignment_with_addition_from_AssignStmt, assignment_with_subtraction_from_AssignStmt, if_then_from_IfStmt),
+           e5: apply1 (e4b, if_then_else_from_IfStmt, at_sign_from_SelectorExpr),
            e6: apply1 (e5, function_from_FuncDecl_function, function_from_FuncDecl_method),
            methods_list_names_only: setify (map (op, methods_list)),
            e7: apply1 (e6, rewrite_method_calls_no_args, rewrite_method_calls_one_arg),
-           [e1, e2, e3, e4, e5, e6, e7]);
+           [e1, e2, e3, e4, e4a, e4b, e5, e6, e7]);
+
+lift_local_vars_into_block (e) :=
+    scanmap (lift_local_vars_into_block1, e);
+
+lift_local_vars_into_block1 (e) :=
+    if not atom(e) and op(e) = block
+        then block ([vars: [], exprs: []],
+                    for e1 in e
+                        do (if match_local_var_assignment (e1) # false
+                                then (push (vv, vars),
+                                      if length (vv) = 1 and length (xx) = 1
+                                          then buildq ([vv1: vv[1], xx1: xx[1]], vv1 : xx1)
+                                          else buildq ([vv, xx], vv: xx),
+                                      push (%%, exprs))
+                                else push (e1, exprs)),
+                    buildq ([vars: reverse (apply (append, vars)), exprs: reverse (exprs)],
+                            block (vars, splice (exprs))))
+        else e;
+
+matchdeclare (vv, lambda ([e], listp (e) and every (symbolp, e)), xx, all);
+defmatch (match_local_var_assignment, var (vv) : xx);
 
 /* ideally maintain one list per module or package, not sure which */
 methods_list: [];
