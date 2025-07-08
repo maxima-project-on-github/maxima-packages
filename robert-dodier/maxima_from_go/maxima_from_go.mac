@@ -94,7 +94,7 @@ construct_function_definition (function_name, body, arguments, results) :=
                then buildq ([function_name, args_symbols, body],
                             function_name (splice (args_symbols)) := catch (body))
                else buildq ([function_name, args_symbols, body, results_names],
-                            function_name (splice (args_symbols)) := block (results_names, catch (body), results_names)));
+                            function_name (splice (args_symbols)) := block (results_names, catch (body), if %% # null then %% else results_names)));
 
 extract_arguments_symbols (arguments) :=
     (map (lambda ([e], assoc ("Names", e)), arguments),
@@ -126,7 +126,7 @@ construct_method_definition (method_name, body, receiver, arguments, results) :=
                else buildq ([method_name, recv_symbol, recv_type, args_symbols, body, results_names],
                             method_name [recv_type] (recv_symbol) :=
                                 buildq ([recv_value: recv_symbol],
-                                        lambda (args_symbols, block (results_names, block ([recv_symbol: recv_value], catch (body)), results_names)))));
+                                        lambda (args_symbols, block (results_names, block ([recv_symbol: recv_value], catch (body)), if %% # null then %% else results_names)))));
 
 extract_receiver_symbol (receiver) :=
     /* receiver is apparently always a list of exactly one element,
@@ -153,7 +153,7 @@ defrule (collapse_catch_block_throw1, ''%, aa);
 defrule (collapse_catch_block_throw2, ''%, aa);
 
 apply_all_rules (b) :=
-    block ([e1, e2, e3, e4, e4a, e4b, e5, e6, e7, e8, e9],
+    block ([e1, e2, e3, e4, e4a, e4b, e5, e6, e7, e8],
            e1: scanmap (expr_from_blob, b),
            e2: apply1 (e1, symbol_from_Ident, string_from_BasicLit, integer_from_BasicLit, float_from_BasicLit, character_from_BasicLit, list_from_null_List, list_from_List, list_from_FieldList, expr_from_ParenExpr),
            e3: apply1 (e2, funcall_no_args_from_CallExpr, funcall_from_CallExpr, equality_from_BinaryExpr_with_equalsequals, expr_from_BinaryExpr, expr_from_UnaryExpr),
@@ -164,9 +164,8 @@ apply_all_rules (b) :=
            e6: apply1 (e5, function_from_FuncDecl_function, function_from_FuncDecl_method),
            methods_list_names_only: setify (map (op, methods_list)),
            e7: apply1 (e6, rewrite_method_calls_no_args, rewrite_method_calls_one_arg),
-           e8: elide_trailing_throw_null (e7),
-           e9: apply1 (e8, collapse_catch_block_throw1, collapse_catch_block_throw2),
-           [e1, e2, e3, e4, e4a, e4b, e5, e6, e7, e8, e9]);
+           e8: apply1 (e7, collapse_catch_block_throw1, collapse_catch_block_throw2),
+           [e1, e2, e3, e4, e4a, e4b, e5, e6, e7, e8]);
 
 lift_local_vars_into_block (e) :=
     scanmap (lift_local_vars_into_block1, e);
@@ -191,16 +190,6 @@ lift_local_vars_into_block1 (e) :=
 
 matchdeclare (vv, lambda ([e], listp (e) and every (symbolp, e)), xx, all);
 defmatch (match_local_var_assignment, var (vv) : xx);
-
-elide_trailing_throw_null (e) :=
-    scanmap (elide_trailing_throw_null1, e);
-
-elide_trailing_throw_null1 (e) :=
-    if not atom (e) and op (e) = block
-        then if last (e) = '(throw (null))
-                 then rest (e, -1)
-                 else e
-        else e;
 
 /* ideally maintain one list per module or package, not sure which */
 methods_list: [];
