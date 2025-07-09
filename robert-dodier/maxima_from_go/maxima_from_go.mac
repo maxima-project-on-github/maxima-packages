@@ -147,10 +147,10 @@ matchdeclare (zz, lambda ([e], block ([v: ?meval (e)], atom (v) or not member (o
 defrule (rewrite_method_calls_no_args, (zz@mm)(), mm[go_type_of (zz)](zz));
 defrule (rewrite_method_calls_one_arg, (zz@mm)(bb), mm[go_type_of (zz)](zz)(bb));
 
-'(catch (block (throw (aa))));
-defrule (collapse_catch_block_throw1, ''%, aa);
-'(catch (block ([], throw (aa))));
-defrule (collapse_catch_block_throw2, ''%, aa);
+foo: '(catch (block (throw (aa))));
+defrule (collapse_catch_block_throw1, ''foo, aa);
+foo: '(catch (block ([], throw (aa))));
+defrule (collapse_catch_block_throw2, ''foo, aa);
 
 apply_all_rules (b) :=
     block ([e1, e2, e3, e4, e4a, e4b, e5, e6, e7, e8],
