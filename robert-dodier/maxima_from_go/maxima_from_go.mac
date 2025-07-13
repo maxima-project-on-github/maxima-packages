@@ -101,8 +101,10 @@ extract_arguments_symbols (arguments) :=
      apply (append, %%));
 
 extract_results_names (results) :=
-    block ([names: map (lambda ([e], assoc ("Names", e)), results)],
-           apply (append, subst (null = [], names)));
+    if results = null
+        then []
+        else block ([names: map (lambda ([e], assoc ("Names", e)), results)],
+                    apply (append, subst (null = [], names)));
 
 /* match FuncDecl with "Recv" # null; that's a method.
  * Additionally match "TypeParams" = null; not sure yet what to do otherwise.
@@ -120,13 +122,14 @@ construct_method_definition (method_name, body, receiver, arguments, results) :=
            push (method_name [recv_type], methods_list),
            if results_names = []
                then buildq ([method_name, recv_symbol, recv_type, args_symbols, body],
-                            method_name [recv_type] (recv_symbol) :=
-                                buildq ([recv_value: recv_symbol],
-                                        lambda (args_symbols, block ([recv_symbol: recv_value], catch (body)))))
+                            method_name [recv_type]:
+                            lambda ([recv_symbol], buildq ([recv_value: recv_symbol],
+                                                           lambda (args_symbols, block ([recv_symbol: recv_value], catch (body))))))
                else buildq ([method_name, recv_symbol, recv_type, args_symbols, body, results_names],
-                            method_name [recv_type] (recv_symbol) :=
-                                buildq ([recv_value: recv_symbol],
-                                        lambda (args_symbols, block (results_names, block ([recv_symbol: recv_value], catch (body)), if %% # null then %% else results_names)))));
+                            method_name [recv_type]:
+                            lambda ([recv_symbol], buildq ([recv_value: recv_symbol],
+                                                           lambda (args_symbols,
+                                                                   block (results_names, block ([recv_symbol: recv_value], catch (body)), if %% # null then %% else results_names))))));
 
 extract_receiver_symbol (receiver) :=
     /* receiver is apparently always a list of exactly one element,
@@ -144,7 +147,7 @@ extract_receiver_type (receiver) :=
 matchdeclare (mm, lambda ([e], symbolp (e) and member (e, methods_list_names_only)));
 matchdeclare (zz, lambda ([e], block ([v: ?meval (e)], atom (v) or not member (op (v), map (op, structures)))));
 
-defrule (rewrite_method_calls_no_args, (zz@mm)(), mm[go_type_of (zz)](zz));
+defrule (rewrite_method_calls_no_args, (zz@mm)(), mm[go_type_of (zz)](zz)());
 defrule (rewrite_method_calls_one_arg, (zz@mm)(bb), mm[go_type_of (zz)](zz)(bb));
 
 foo: '(catch (block (throw (aa))));

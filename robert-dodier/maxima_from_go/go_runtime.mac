@@ -1,0 +1,70 @@
+load ("math_go.mac");
+load ("base_go.mac");
+
+/* need to extract these from type definitions in Go AST;
+ * this explicit list is a stopgap measure.
+ */
+
+go_classes_list: '[Angle, HourAngle, RA, Time];
+
+go_type_of (e) :=
+    if atom (e)
+        then (if floatnump (e) then 'float64
+              elseif integerp (e) then 'int
+              elseif stringp (e) then 'string
+              else 'go_type_of (e))
+        else (if member (op (e), go_classes_list) then op (e)
+              else 'go_type_of (e));
+
+matchdeclare (aa, all);
+
+/* In the interest of making the results symbolic instead of numerical,
+ * simplify float64(Foo(aa)) to just aa instead of float(aa).
+ */
+
+tellsimpafter (float64 (Angle (aa)), aa);
+tellsimpafter (float64 (HourAngle (aa)), aa);
+tellsimpafter (float64 (RA (aa)), aa);
+tellsimpafter (float64 (Time (aa)), aa);
+
+/* I wonder if this needs to be expanded to other types of arguments ?? */
+matchdeclare (nn, numberp);
+tellsimpafter (float64 (nn), nn);
+
+tellsimpafter (HourAngle (Angle (aa)), HourAngle (aa));
+tellsimpafter (Angle (HourAngle (aa)), Angle (aa));
+
+matchdeclare (xx, lambda ([e], not atom (e) and op (e) = 'Angle));
+matchdeclare (zz, lambda ([e], e = 0));
+
+tellsimpafter (xx + zz, Angle (map (lambda ([e], first (e)), xx)));
+tellsimpafter (xx * nn, if op (xx) = "*" then Angle (nn * map (lambda ([e], first (e)), xx)) else Angle (nn * first (xx)));
+tellsimpafter (xx^nn, Angle (first (xx)^nn));
+
+/* ideally this stuff about the unit package would be automatically generated ... */
+
+defstruct (unit_struct (FromSexa, FromSexaSec, PMod, AngleFromDeg, AngleFromMin, AngleFromSec, NewAngle, HourAngleFromHour, HourAngleFromMin, HourAngleFromSec, NewHourAngle, NewRA, RAFromDeg, RAFromHour, RAFromMin, RAFromRad, RAFromSec, NewTime, TimeFromDay, TimeFromHour, TimeFromMin, TimeFromRad));
+unit: new (unit_struct);
+
+unit@FromSexa: ?mget (FromSexa, ?mexpr);
+unit@FromSexaSec: ?mget (FromSexaSec, ?mexpr);
+unit@PMod: ?mget (PMod, ?mexpr);
+unit@AngleFromDeg: ?mget (AngleFromDeg, ?mexpr);
+unit@AngleFromMin: ?mget (AngleFromMin, ?mexpr);
+unit@AngleFromSec: ?mget (AngleFromSec, ?mexpr);
+unit@NewAngle: ?mget (NewAngle, ?mexpr);
+unit@HourAngleFromHour: ?mget (HourAngleFromHour, ?mexpr);
+unit@HourAngleFromMin: ?mget (HourAngleFromMin, ?mexpr);
+unit@HourAngleFromSec: ?mget (HourAngleFromSec, ?mexpr);
+unit@NewHourAngle: ?mget (NewHourAngle, ?mexpr);
+unit@NewRA: ?mget (NewRA, ?mexpr);
+unit@RAFromDeg: ?mget (RAFromDeg, ?mexpr);
+unit@RAFromHour: ?mget (RAFromHour, ?mexpr);
+unit@RAFromMin: ?mget (RAFromMin, ?mexpr);
+unit@RAFromRad: ?mget (RAFromRad, ?mexpr);
+unit@RAFromSec: ?mget (RAFromSec, ?mexpr);
+unit@NewTime: ?mget (NewTime, ?mexpr);
+unit@TimeFromDay: ?mget (TimeFromDay, ?mexpr);
+unit@TimeFromHour: ?mget (TimeFromHour, ?mexpr);
+unit@TimeFromMin: ?mget (TimeFromMin, ?mexpr);
+unit@TimeFromRad: ?mget (TimeFromRad, ?mexpr);

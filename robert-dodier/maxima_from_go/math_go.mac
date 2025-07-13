@@ -4,10 +4,11 @@
  * Maybe cover the rest later.
  */
 
-defstruct (math_struct (Pi, Mod, Sincos, Asin, Acos, Atan2));
+defstruct (math_struct (Pi, Mod, Sin, Cos, Tan, Sincos, Asin, Acos, Atan2));
 
 math: new (math_struct);
 
+/* math.Pi is a numerical value in Go, but for symbolic manipulation assume it's a symbol. */
 math@Pi: %pi;
 
 /* https://pkg.go.dev/math#Mod says:
@@ -15,6 +16,12 @@ math@Pi: %pi;
  */
 
 math@Mod: lambda ([x, y], if x < 0 then mod (x, y) - y else mod (x, y));
+
+math@Sin: sin;
+
+math@Cos: cos;
+
+math@Tan: tan;
 
 math@Sincos: lambda ([x], [sin (x), cos (x)]);
 
