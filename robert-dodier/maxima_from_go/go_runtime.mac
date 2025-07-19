@@ -1,6 +1,8 @@
 load ("math_go.mac");
 load ("base_go.mac");
 
+len: length;
+
 /* need to extract these from type definitions in Go AST;
  * this explicit list is a stopgap measure.
  */

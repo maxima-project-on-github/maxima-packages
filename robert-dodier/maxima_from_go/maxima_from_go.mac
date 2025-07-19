@@ -17,6 +17,17 @@ defrule (character_from_BasicLit, BasicLit("Kind" = "CHAR", "Value" = ss), chara
 defrule (list_from_null_List, "List" = null, []);
 defrule (list_from_List, "List" = ll, ll);
 defrule (list_from_FieldList, FieldList (ll), ll);
+defrule (list_from_CompositeLit_Type_null, CompositeLit ("Elts" = ll, "Incomplete" = false, "Type" = null), ll);
+defrule (list_from_CompositeLit_Type_ArrayType_StructType, CompositeLit ("Elts" = ll, "Incomplete" = false, "Type" = ArrayType ("Elt" = StructType ("Fields" = mm, "Incomplete" = false), "Len" = null)), construct_list_of_structs (ll, mm));
+
+construct_list_of_structs (elements_lists, fields_lists) :=
+    block ([fields_names: apply (append, map (lambda ([e], assoc ("Names", e)), fields_lists)),
+            struct_name: gensym ("struct"),
+            struct_expr],
+           struct_expr: funmake (struct_name, fields_names),
+           print ("/* defined new structure for StructType */", funmake (defstruct, [struct_expr])),
+           apply (defstruct, [struct_expr]),
+           map (lambda ([l], funmake (struct_name, l)), elements_lists));
 
 /* would prefer to have funmake here instead of apply, but funmake barfs on aa being a general expression; that's a bug in funmake !! */
 defrule (funcall_no_args_from_CallExpr, CallExpr("Args" = null, "Fun" = aa), apply (aa, []));
@@ -63,6 +74,11 @@ defrule (assignment_with_subtraction_from_AssignStmt, AssignStmt ("Lhs" = ll, "R
 
 defrule (local_var_assignment_from_AssignStmt, AssignStmt ("Lhs" = ll, "Rhs" = mm, "Tok" = ":="),
          buildq ([ll, mm], var (ll) : mm));
+
+matchdeclare (xx, symbolp);
+
+defrule (assignment_from_ValueSpec, GenDecl ("Specs" = [ValueSpec ("Names" = [xx], "Type" = null, "Values" = [ll])], "Tok" = "var"),
+         buildq ([xx, ll], xx : ll));
 
 defrule (block_from_BlockStmt, BlockStmt (ll), buildq ([ll], block (splice (ll))));
 
@@ -155,20 +171,29 @@ defrule (collapse_catch_block_throw1, ''foo, aa);
 foo: '(catch (block ([], throw (aa))));
 defrule (collapse_catch_block_throw2, ''foo, aa);
 
+defrule (subscript_from_IndexExpr, IndexExpr ("Index" = aa, "X" = bb), arraymake (bb, [1 + aa]));
+
+/*
+defrule (for_loop_from_ForStmt,
+         ForStmt ("Body" = aa, "Cond" = bb, "Init" = var(ll):mm, "Post" = IncDecStmt ("Tok" = ss, "X" = vv)),
+         (block ([vv], ll:mm, while bb do (aa, if ss = "++" then vv:vv + 1 elseif ss = "--" then vv:vv - 1))));
+ */
+
 apply_all_rules (b) :=
-    block ([e1, e2, e3, e4, e4a, e4b, e5, e6, e7, e8],
+    block ([e1, e2, e3, e4, e4a, e4b, e5, e6, e7, e8, e9],
            e1: scanmap (expr_from_blob, b),
-           e2: apply1 (e1, symbol_from_Ident, string_from_BasicLit, integer_from_BasicLit, float_from_BasicLit, character_from_BasicLit, list_from_null_List, list_from_List, list_from_FieldList, expr_from_ParenExpr),
+           e2: apply1 (e1, symbol_from_Ident, string_from_BasicLit, integer_from_BasicLit, float_from_BasicLit, character_from_BasicLit, list_from_null_List, list_from_List, list_from_FieldList, list_from_CompositeLit_Type_null, list_from_CompositeLit_Type_ArrayType_StructType, expr_from_ParenExpr),
            e3: apply1 (e2, funcall_no_args_from_CallExpr, funcall_from_CallExpr, equality_from_BinaryExpr_with_equalsequals, expr_from_BinaryExpr, expr_from_UnaryExpr),
            e4: apply1 (e3, throw_from_ReturnStmt_null, throw_from_ReturnStmt, block_from_BlockStmt, local_var_assignment_from_AssignStmt),
            e4a: lift_local_vars_into_block (e4),
-           e4b: apply1 (e4a, assignment_from_AssignStmt, assignment_with_addition_from_AssignStmt, assignment_with_subtraction_from_AssignStmt, if_then_from_IfStmt),
+           e4b: apply1 (e4a, assignment_from_AssignStmt, assignment_with_addition_from_AssignStmt, assignment_with_subtraction_from_AssignStmt, if_then_from_IfStmt, assignment_from_ValueSpec),
            e5: apply1 (e4b, if_then_else_from_IfStmt, at_sign_from_SelectorExpr),
            e6: apply1 (e5, function_from_FuncDecl_function, function_from_FuncDecl_method),
            methods_list_names_only: setify (map (op, methods_list)),
            e7: apply1 (e6, rewrite_method_calls_no_args, rewrite_method_calls_one_arg),
            e8: apply1 (e7, collapse_catch_block_throw1, collapse_catch_block_throw2),
-           [e1, e2, e3, e4, e4a, e4b, e5, e6, e7, e8]);
+           e9: apply1 (e8, subscript_from_IndexExpr),
+           [e1, e2, e3, e4, e4a, e4b, e5, e6, e7, e8, e9]);
 
 lift_local_vars_into_block (e) :=
     scanmap (lift_local_vars_into_block1, e);

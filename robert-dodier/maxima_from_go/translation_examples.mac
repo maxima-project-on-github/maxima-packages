@@ -44,4 +44,16 @@ with_stdout ("solar_go.mac",
             grind (last (results)),
             print ("")));
 
+nutation_blobs: read_json ("nutation1.json");
+nutation_decls: nutation_blobs // "Decls" $
+nutation_results: map (apply_all_rules, nutation_decls);
+
+print ("output results from apply_all_rules on nutation_decls to nutation_go.mac.") $
+
+with_stdout ("nutation_go.mac",
+    for results in nutation_results
+        do (print (""),
+            grind (last (results)),
+            print ("")));
+
 
