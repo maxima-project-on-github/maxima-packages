@@ -173,11 +173,16 @@ defrule (collapse_catch_block_throw2, ''foo, aa);
 
 defrule (subscript_from_IndexExpr, IndexExpr ("Index" = aa, "X" = bb), arraymake (bb, [1 + aa]));
 
-/*
+matchdeclare (vv, symbolp);
+
 defrule (for_loop_from_ForStmt,
-         ForStmt ("Body" = aa, "Cond" = bb, "Init" = var(ll):mm, "Post" = IncDecStmt ("Tok" = ss, "X" = vv)),
-         (block ([vv], ll:mm, while bb do (aa, if ss = "++" then vv:vv + 1 elseif ss = "--" then vv:vv - 1))));
- */
+         ForStmt ("Body" = aa, "Cond" = bb, "Init" = var([vv]):[cc], "Post" = IncDecStmt ("Tok" = ss, "X" = vv)),
+         if ss = "++"
+             then buildq ([aa, bb, cc, vv], for vv:cc while bb do aa)
+         elseif ss = "--"
+             then buildq ([aa, bb, cc, vv], for vv:cc step -1 while bb do aa)
+             /* dunno if this last case is possible; is ss guaranteed to be "++" or "--" ?? */
+             else buildq ([aa, bb, cc, vv], for vv:cc while bb do (aa, IncDec (ss, vv))));
 
 apply_all_rules (b) :=
     block ([e1, e2, e3, e4, e4a, e4b, e5, e6, e7, e8, e9],
@@ -187,7 +192,7 @@ apply_all_rules (b) :=
            e4: apply1 (e3, throw_from_ReturnStmt_null, throw_from_ReturnStmt, block_from_BlockStmt, local_var_assignment_from_AssignStmt),
            e4a: lift_local_vars_into_block (e4),
            e4b: apply1 (e4a, assignment_from_AssignStmt, assignment_with_addition_from_AssignStmt, assignment_with_subtraction_from_AssignStmt, if_then_from_IfStmt, assignment_from_ValueSpec),
-           e5: apply1 (e4b, if_then_else_from_IfStmt, at_sign_from_SelectorExpr),
+           e5: apply1 (e4b, if_then_else_from_IfStmt, at_sign_from_SelectorExpr, for_loop_from_ForStmt),
            e6: apply1 (e5, function_from_FuncDecl_function, function_from_FuncDecl_method),
            methods_list_names_only: setify (map (op, methods_list)),
            e7: apply1 (e6, rewrite_method_calls_no_args, rewrite_method_calls_one_arg),
