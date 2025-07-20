@@ -40,7 +40,7 @@ True2000(T):=block([s,ν],
 TrueEquatorial(jde):=block([α,δ],
                catch(block([_,s,ε,cs,ss,cε,sε],[s,_]:True(base@J2000Century(jde)),ε:nutation@MeanObliquity(jde),
                            [ss,cs]:Sincos[go_type_of(s)](s)(),[sε,cε]:Sincos[go_type_of(ε)](ε)(),α:unit@RAFromRad(math@Atan2(cε*ss,cs)),
-                           δ:Angle[go_type_of(unit)](unit)(math@Asin(ss*sε)),throw(null))),if %% # null then %% else [α,δ])$
+                           δ:unit@Angle(math@Asin(ss*sε)),throw(null))),if %% # null then %% else [α,δ])$
  
  
 ApparentEquatorial(jde):=block([α,δ],
@@ -48,7 +48,7 @@ ApparentEquatorial(jde):=block([α,δ],
                                [sλ,cλ]:Sincos[go_type_of(λ)](λ)(),
                                ε:ε+Mul[go_type_of(unit@AngleFromDeg(0.00256))](unit@AngleFromDeg(0.00256))(
                                    Cos[go_type_of(node(T))](node(T))()),[sε,cε]:Sincos[go_type_of(ε)](ε)(),
-                               α:unit@RAFromRad(math@Atan2(cε*sλ,cλ)),δ:Angle[go_type_of(unit)](unit)(math@Asin(sε*sλ)),throw(null))),
+                               α:unit@RAFromRad(math@Atan2(cε*sλ,cλ)),δ:unit@Angle(math@Asin(sε*sλ)),throw(null))),
                    if %% # null then %% else [α,δ])$
  
  

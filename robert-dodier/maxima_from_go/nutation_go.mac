@@ -34,7 +34,7 @@ MeanObliquityLaskar(jde):=unit@AngleFromSec(
  
 NutationInRA(jde):=catch(
              block([Δε,Δψ,ε0],[Δψ,Δε]:Nutation(jde),ε0:MeanObliquity(jde),
-                   throw(HourAngle[go_type_of(unit)](unit)(Rad[go_type_of(Δψ)](Δψ)()*math@Cos(Rad[go_type_of(ε0+Δε)](ε0+Δε)())))))$
+                   throw(unit@HourAngle(Rad[go_type_of(Δψ)](Δψ)()*math@Cos(Rad[go_type_of(ε0+Δε)](ε0+Δε)())))))$
  
  
 defstruct(struct687(d, m, n, f, ω, s0, s1, c0, c1));

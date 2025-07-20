@@ -1,6 +1,12 @@
 load ("math_go.mac");
 load ("base_go.mac");
 
+/* need to extract these from package definitions in Go AST;
+ * this explicit list is a stopgap measure.
+ */
+
+go_packages_list: '[unit, solar, nutation];
+
 push("/home/dodier/github/github-forks/maxima-packages/**/*.mac",file_search_maxima);
 push("/home/dodier/github/github-forks/maxima-packages/**/*.lisp",file_search_lisp);
 load(json_tools);
@@ -173,7 +179,7 @@ extract_receiver_type (receiver) :=
     assoc ("Type", first (receiver));
 
 matchdeclare (mm, lambda ([e], symbolp (e) and member (e, methods_list_names_only)));
-matchdeclare (zz, lambda ([e], block ([v: ?meval (e)], atom (v) or not member (op (v), map (op, structures)))));
+matchdeclare (zz, lambda ([e], block ([v: ?meval (e)], (atom (v) and not member (v, go_packages_list)) or (not atom (v) and not member (op (v), map (op, structures))))));
 
 defrule (rewrite_method_calls_no_args, (zz@mm)(), mm[go_type_of (zz)](zz)());
 defrule (rewrite_method_calls_one_arg, (zz@mm)(bb), mm[go_type_of (zz)](zz)(bb));

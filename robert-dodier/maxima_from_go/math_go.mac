@@ -8,8 +8,14 @@ defstruct (math_struct (Pi, Mod, Sin, Cos, Tan, Sincos, Asin, Acos, Atan2));
 
 math: new (math_struct);
 
+/* not sure if we want math@Pi to be a symbol or a number.
+ * when it's a symbol, results are much more verbose expressions and calculations are very slow.
+ * for now switch it back to a number.
+ *
 /* math.Pi is a numerical value in Go, but for symbolic manipulation assume it's a symbol. */
 math@Pi: %pi;
+ */
+math@Pi: float (%pi);
 
 /* https://pkg.go.dev/math#Mod says:
  * "Mod returns the floating-point remainder of x/y. The magnitude of the result is less than y and its sign agrees with that of x."

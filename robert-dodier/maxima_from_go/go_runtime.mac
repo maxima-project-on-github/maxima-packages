@@ -3,6 +3,12 @@ load ("base_go.mac");
 
 len: length;
 
+/* need to extract these from package definitions in Go AST;
+ * this explicit list is a stopgap measure.
+ */
+
+go_packages_list: '[unit, solar, nutation];
+
 /* need to extract these from type definitions in Go AST;
  * this explicit list is a stopgap measure.
  */
@@ -16,6 +22,7 @@ go_type_of (e) :=
               elseif stringp (e) then 'string
               else 'go_type_of (e))
         else (if member (op (e), go_classes_list) then op (e)
+              elseif member (op (e), map (op, structures)) then op (e)
               else 'go_type_of (e));
 
 matchdeclare (aa, all);
@@ -43,10 +50,17 @@ tellsimpafter (xx + zz, Angle (map (lambda ([e], first (e)), xx)));
 tellsimpafter (xx * nn, if op (xx) = "*" then Angle (nn * map (lambda ([e], first (e)), xx)) else Angle (nn * first (xx)));
 tellsimpafter (xx^nn, Angle (first (xx)^nn));
 
-/* ideally this stuff about the unit package would be automatically generated ... */
+/* ideally this stuff about the unit package would be automatically generated ... !! */
 
-defstruct (unit_struct (FromSexa, FromSexaSec, PMod, AngleFromDeg, AngleFromMin, AngleFromSec, NewAngle, HourAngleFromHour, HourAngleFromMin, HourAngleFromSec, NewHourAngle, NewRA, RAFromDeg, RAFromHour, RAFromMin, RAFromRad, RAFromSec, NewTime, TimeFromDay, TimeFromHour, TimeFromMin, TimeFromRad));
+load ("unit_go.mac");
+
+defstruct (unit_struct (Angle, HourAngle, RA, Time, FromSexa, FromSexaSec, PMod, AngleFromDeg, AngleFromMin, AngleFromSec, NewAngle, HourAngleFromHour, HourAngleFromMin, HourAngleFromSec, NewHourAngle, NewRA, RAFromDeg, RAFromHour, RAFromMin, RAFromRad, RAFromSec, NewTime, TimeFromDay, TimeFromHour, TimeFromMin, TimeFromRad));
 unit: new (unit_struct);
+
+unit@Angle: lambda ([x], Angle (x));
+unit@HourAngle: lambda ([x], HourAngle (x));
+unit@RA: lambda ([x], RA (x));
+unit@Time: lambda ([x], Time (x));
 
 unit@FromSexa: ?mget (FromSexa, ?mexpr);
 unit@FromSexaSec: ?mget (FromSexaSec, ?mexpr);
@@ -70,3 +84,17 @@ unit@TimeFromDay: ?mget (TimeFromDay, ?mexpr);
 unit@TimeFromHour: ?mget (TimeFromHour, ?mexpr);
 unit@TimeFromMin: ?mget (TimeFromMin, ?mexpr);
 unit@TimeFromRad: ?mget (TimeFromRad, ?mexpr);
+
+/* same with this stuff about the nutation package !! */
+
+load ("nutation_go.mac");
+
+defstruct (nutation_struct (Nutation, ApproxNutation, MeanObliquity, MeanObliquityLaskar, NutationInRA));
+nutation: new (nutation_struct);
+
+nutation@Nutation: ?mget (Nutation, ?mexpr);
+nutation@ApproxNutation: ?mget (ApproxNutation, ?mexpr);
+nutation@MeanObliquity: ?mget (MeanObliquity, ?mexpr);
+nutation@MeanObliquityLaskar: ?mget (MeanObliquityLaskar, ?mexpr);
+nutation@NutationInRA: ?mget (NutationInRA, ?mexpr);
+
