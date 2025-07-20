@@ -2,7 +2,7 @@
  * for the moment, just write it by hand instead of trying to translate
  */
 
-defstruct (base_struct (Horner, J2000Century));
+defstruct (base_struct (Horner, J2000Century, J2000, JulianCentury));
 
 base: new (base_struct);
 
@@ -19,8 +19,8 @@ base@Horner: lambda([v, [l]], block([e : 0], for c in reverse(l) do e : e*v + c,
 
 /* J2000Century and associated stuff from meeus/v3/base/julian.go */
 
-base@J2000Century: lambda ([jde], (jde - J2000) / JulianCentury);
+J2000Century: base@J2000Century: lambda ([jde], (jde - J2000) / JulianCentury);
 
-J2000: 2451545.0;
+J2000: base@J2000: 2451545.0;
 
-JulianCentury: 36525;
+JulianCentury: base@JulianCentury: 36525;
