@@ -7,16 +7,17 @@ General(φ,D,a,z):=block([lines,center,u,ψ],
                                              l:CompositeLit("Elts" = [KeyValueExpr("Key" = Hour,"Value" = i)],"Incomplete" = false,
                                                             "Type" = Line),H:(float64(i-12)*math@Pi)/12,aH:math@Abs(H),
                                              [sH,cH]:math@Sincos(H),
-                                             RangeStmt("Body" = block([tδ,H0,Q,Nx,Ny],tδ:math@Tan((d*math@Pi)/180),H0:math@Acos(-(tδ*tφ)),
-                                                                      if aH > H0 then block([],throw(continue)),
-                                                                      Q:P*tδ+cH*(cD*sz*sφ+cz*cφ)+sD*sH*sz,
-                                                                      if Q < 0 then block([],throw(continue)),Nx:cD*sH-sD*(cH*sφ-cφ*tδ),
-                                                                      Ny:-((sz*sφ+cD*cz*cφ)*tδ)-cH*(cφ*sz-cD*cz*sφ)+cz*sD*sH,
-                                                                      l@Points
-                                                                       :append(l@Points,
-                                                                               CompositeLit("Elts" = [(Nx*a)/Q,(Ny*a)/Q],
-                                                                                            "Incomplete" = false,"Type" = Point))),
-                                                       "Key" = _,"Tok" = ":=","Value" = d,"X" = m),
+                                             for _ from 0 thru length(m)-1 do
+                                                 continuing(block([d:m[_+1]],
+                                                                  block([tδ,H0,Q,Nx,Ny],tδ:math@Tan((d*math@Pi)/180),
+                                                                        H0:math@Acos(-(tδ*tφ)),if aH > H0 then block([],throw(continue)),
+                                                                        Q:P*tδ+cH*(cD*sz*sφ+cz*cφ)+sD*sH*sz,
+                                                                        if Q < 0 then block([],throw(continue)),Nx:cD*sH-sD*(cH*sφ-cφ*tδ),
+                                                                        Ny:-((sz*sφ+cD*cz*cφ)*tδ)-cH*(cφ*sz-cD*cz*sφ)+cz*sD*sH,
+                                                                        l@Points
+                                                                         :append(l@Points,
+                                                                                 CompositeLit("Elts" = [(Nx*a)/Q,(Ny*a)/Q],
+                                                                                              "Incomplete" = false,"Type" = Point))))),
                                              if len(l@Points) > 0 then block([],lines:append(lines,l)))),center@X:(a*cφ*sD)/P,
                         center@Y:-((a*(sz*sφ+cD*cz*cφ))/P),aP:math@Abs(P),u:a/aP,ψ:unit@Angle(math@Asin(aP)),throw('return(null)))),
         if %% # null then %% else [lines,center,u,ψ])$
@@ -31,23 +32,25 @@ Equatorial(φ,a):=block([n,s],
                                                 sl:CompositeLit("Elts" = [KeyValueExpr("Key" = Hour,"Value" = i)],"Incomplete" = false,
                                                                 "Type" = Line),H:(float64(i-12)*math@Pi)/12,aH:math@Abs(H),
                                                 [sH,cH]:math@Sincos(H),
-                                                RangeStmt("Body" = block([tδ,H0,x,yy],tδ:math@Tan((d*math@Pi)/180),H0:math@Acos(-(tδ*tφ)),
-                                                                         if aH > H0 then block([],throw(continue)),x:-((a*sH)/tδ),
-                                                                         yy:(a*cH)/tδ,
-                                                                         if tδ < 0
-                                                                             then block([],
-                                                                                        sl@Points
-                                                                                         :append(sl@Points,
-                                                                                                 CompositeLit("Elts" = [x,yy],
-                                                                                                              "Incomplete" = false,
-                                                                                                              "Type" = Point)))
-                                                                             else block([],
-                                                                                        nl@Points
-                                                                                         :append(nl@Points,
-                                                                                                 CompositeLit("Elts" = [x,-yy],
-                                                                                                              "Incomplete" = false,
-                                                                                                              "Type" = Point)))),"Key" = _,
-                                                          "Tok" = ":=","Value" = d,"X" = m),
+                                                for _ from 0 thru length(m)-1 do
+                                                    continuing(block([d:m[_+1]],
+                                                                     block([tδ,H0,x,yy],tδ:math@Tan((d*math@Pi)/180),
+                                                                           H0:math@Acos(-(tδ*tφ)),
+                                                                           if aH > H0 then block([],throw(continue)),x:-((a*sH)/tδ),
+                                                                           yy:(a*cH)/tδ,
+                                                                           if tδ < 0
+                                                                               then block([],
+                                                                                          sl@Points
+                                                                                           :append(sl@Points,
+                                                                                                   CompositeLit("Elts" = [x,yy],
+                                                                                                                "Incomplete" = false,
+                                                                                                                "Type" = Point)))
+                                                                               else block([],
+                                                                                          nl@Points
+                                                                                           :append(nl@Points,
+                                                                                                   CompositeLit("Elts" = [x,-yy],
+                                                                                                                "Incomplete" = false,
+                                                                                                                "Type" = Point)))))),
                                                 if len(nl@Points) > 0 then block([],n:append(n,nl)),
                                                 if len(sl@Points) > 0 then block([],s:append(s,sl)))),throw('return(null)))),
            if %% # null then %% else [n,s])$
@@ -60,39 +63,44 @@ Horizontal(φ,a):=block([lines,center,u],
                                                 l:CompositeLit("Elts" = [KeyValueExpr("Key" = Hour,"Value" = i)],"Incomplete" = false,
                                                                "Type" = Line),H:(float64(i-12)*math@Pi)/12,aH:math@Abs(H),
                                                 [sH,cH]:math@Sincos(H),
-                                                RangeStmt("Body" = block([tδ,H0,Q,x,y],tδ:math@Tan((d*math@Pi)/180),H0:math@Acos(-(tδ*tφ)),
-                                                                         if aH > H0 then block([],throw(continue)),Q:sφ*tδ+cH*cφ,
-                                                                         x:(a*sH)/Q,y:(a*(cH*sφ-cφ*tδ))/Q,
-                                                                         l@Points
-                                                                          :append(l@Points,
-                                                                                  CompositeLit("Elts" = [x,y],"Incomplete" = false,
-                                                                                               "Type" = Point))),"Key" = _,"Tok" = ":=",
-                                                          "Value" = d,"X" = m),if len(l@Points) > 0 then block([],lines:append(lines,l)))),
-                           center@Y:-(a/tφ),u:a/math@Abs(sφ),throw('return(null)))),if %% # null then %% else [lines,center,u])$
- 
- 
-HorizontalByDeclination(φ,a):=block([lines,center,u],
-                        returning(block([cφ,sφ,tφ],[sφ,cφ]:Sincos[go_type_of(φ)](φ)(),tφ:sφ/cφ,
-                                        RangeStmt("Body" = block([l],
-                                                                 l:CompositeLit(
-                                                                   "Elts"
-                                                                     = [KeyValueExpr("Key" = Declination,"Value" = unit@Angle(d)),
-                                                                        KeyValueExpr("Key" = Description,"Value" = descriptions[j+1])],
-                                                                   "Incomplete" = false,"Type" = LineWithDeclination),
-                                                                 for i from 0 unless i >= 24 do
-                                                                     continuing(
-                                                                     block([H,aH,cH,sH,tδ,H0,Q,x,y],H:(float64(i-12)*math@Pi)/12,
-                                                                           aH:math@Abs(H),[sH,cH]:math@Sincos(H),
-                                                                           tδ:math@Tan((d*math@Pi)/180),H0:math@Acos(-(tδ*tφ)),
+                                                for _ from 0 thru length(m)-1 do
+                                                    continuing(block([d:m[_+1]],
+                                                                     block([tδ,H0,Q,x,y],tδ:math@Tan((d*math@Pi)/180),
+                                                                           H0:math@Acos(-(tδ*tφ)),
                                                                            if aH > H0 then block([],throw(continue)),Q:sφ*tδ+cH*cφ,
                                                                            x:(a*sH)/Q,y:(a*(cH*sφ-cφ*tδ))/Q,
                                                                            l@Points
                                                                             :append(l@Points,
-                                                                                    CompositeLit("Elts" = [i,x,y],"Incomplete" = false,
-                                                                                                 "Type" = PointWithHour)))),
-                                                                 if len(l@Points) > 0 then block([],lines:append(lines,l))),"Key" = j,
-                                                  "Tok" = ":=","Value" = d,"X" = m),center@Y:-(a/tφ),u:a/math@Abs(sφ),
-                                        throw('return(null)))),if %% # null then %% else [lines,center,u])$
+                                                                                    CompositeLit("Elts" = [x,y],"Incomplete" = false,
+                                                                                                 "Type" = Point))))),
+                                                if len(l@Points) > 0 then block([],lines:append(lines,l)))),center@Y:-(a/tφ),
+                           u:a/math@Abs(sφ),throw('return(null)))),if %% # null then %% else [lines,center,u])$
+ 
+ 
+HorizontalByDeclination(φ,a):=block([lines,center,u],
+                        returning(block([cφ,sφ,tφ],[sφ,cφ]:Sincos[go_type_of(φ)](φ)(),tφ:sφ/cφ,
+                                        for j from 0 thru length(m)-1 do
+                                            continuing(block([d:m[j+1]],
+                                                             block([l],
+                                                                   l:CompositeLit(
+                                                                     "Elts"
+                                                                       = [KeyValueExpr("Key" = Declination,"Value" = unit@Angle(d)),
+                                                                          KeyValueExpr("Key" = Description,"Value" = descriptions[j+1])],
+                                                                     "Incomplete" = false,"Type" = LineWithDeclination),
+                                                                   for i from 0 unless i >= 24 do
+                                                                       continuing(
+                                                                       block([H,aH,cH,sH,tδ,H0,Q,x,y],H:(float64(i-12)*math@Pi)/12,
+                                                                             aH:math@Abs(H),[sH,cH]:math@Sincos(H),
+                                                                             tδ:math@Tan((d*math@Pi)/180),H0:math@Acos(-(tδ*tφ)),
+                                                                             if aH > H0 then block([],throw(continue)),Q:sφ*tδ+cH*cφ,
+                                                                             x:(a*sH)/Q,y:(a*(cH*sφ-cφ*tδ))/Q,
+                                                                             l@Points
+                                                                              :append(l@Points,
+                                                                                      CompositeLit("Elts" = [i,x,y],"Incomplete" = false,
+                                                                                                   "Type" = PointWithHour)))),
+                                                                   if len(l@Points) > 0 then block([],lines:append(lines,l))))),
+                                        center@Y:-(a/tφ),u:a/math@Abs(sφ),throw('return(null)))),
+                        if %% # null then %% else [lines,center,u])$
  
  
 Vertical(φ,D,a):=block([lines,center,u],
@@ -102,16 +110,17 @@ Vertical(φ,D,a):=block([lines,center,u],
                                               l:CompositeLit("Elts" = [KeyValueExpr("Key" = Hour,"Value" = i)],"Incomplete" = false,
                                                              "Type" = Line),H:(float64(i-12)*math@Pi)/12,aH:math@Abs(H),
                                               [sH,cH]:math@Sincos(H),
-                                              RangeStmt("Body" = block([tδ,H0,Q,x,y],tδ:math@Tan((d*math@Pi)/180),H0:math@Acos(-(tδ*tφ)),
-                                                                       if aH > H0 then block([],throw(continue)),
-                                                                       Q:-(cD*cφ*tδ)+cD*cH*sφ+sD*sH,
-                                                                       if Q < 0 then block([],throw(continue)),
-                                                                       x:(a*(cφ*sD*tδ-cH*sD*sφ+cD*sH))/Q,y:-((a*(sφ*tδ+cH*cφ))/Q),
-                                                                       l@Points
-                                                                        :append(l@Points,
-                                                                                CompositeLit("Elts" = [x,y],"Incomplete" = false,
-                                                                                             "Type" = Point))),"Key" = _,"Tok" = ":=",
-                                                        "Value" = d,"X" = m),if len(l@Points) > 0 then block([],lines:append(lines,l)))),
-                         center@X:-((a*sD)/cD),center@Y:(a*tφ)/cD,u:a/math@Abs(cD*cφ),throw('return(null)))),
-         if %% # null then %% else [lines,center,u])$
+                                              for _ from 0 thru length(m)-1 do
+                                                  continuing(block([d:m[_+1]],
+                                                                   block([tδ,H0,Q,x,y],tδ:math@Tan((d*math@Pi)/180),H0:math@Acos(-(tδ*tφ)),
+                                                                         if aH > H0 then block([],throw(continue)),
+                                                                         Q:-(cD*cφ*tδ)+cD*cH*sφ+sD*sH,
+                                                                         if Q < 0 then block([],throw(continue)),
+                                                                         x:(a*(cφ*sD*tδ-cH*sD*sφ+cD*sH))/Q,y:-((a*(sφ*tδ+cH*cφ))/Q),
+                                                                         l@Points
+                                                                          :append(l@Points,
+                                                                                  CompositeLit("Elts" = [x,y],"Incomplete" = false,
+                                                                                               "Type" = Point))))),
+                                              if len(l@Points) > 0 then block([],lines:append(lines,l)))),center@X:-((a*sD)/cD),
+                         center@Y:(a*tφ)/cD,u:a/math@Abs(cD*cφ),throw('return(null)))),if %% # null then %% else [lines,center,u])$
  
