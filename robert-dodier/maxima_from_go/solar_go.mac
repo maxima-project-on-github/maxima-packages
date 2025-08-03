@@ -7,11 +7,11 @@ GenDecl("Specs" = [ImportSpec("Name" = null,"Path" = "math"),ImportSpec("Name" =
  
  
 True(T):=block([s,ν],
-     catch(block([L0,M,C],L0:unit@AngleFromDeg(base@Horner(T,280.46646,36000.76983,3.032e-4)),M:MeanAnomaly(T),
-                 C:unit@AngleFromDeg(Sin[go_type_of(M)](M)()*base@Horner(T,1.914602,-0.004817,-1.4e-5)
-                                      +Sin[go_type_of(Mul[go_type_of(M)](M)(2))](Mul[go_type_of(M)](M)(2))()*(0.019993-1.01e-4*T)
-                                      +2.89e-4*Sin[go_type_of(Mul[go_type_of(M)](M)(3))](Mul[go_type_of(M)](M)(3))()),
-                 throw([Mod1[go_type_of(L0+C)](L0+C)(),Mod1[go_type_of(M+C)](M+C)()]))),if %% # null then %% else [s,ν])$
+     returning(block([L0,M,C],L0:unit@AngleFromDeg(base@Horner(T,280.46646,36000.76983,3.032e-4)),M:MeanAnomaly(T),
+                     C:unit@AngleFromDeg(Sin[go_type_of(M)](M)()*base@Horner(T,1.914602,-0.004817,-1.4e-5)
+                                          +Sin[go_type_of(Mul[go_type_of(M)](M)(2))](Mul[go_type_of(M)](M)(2))()*(0.019993-1.01e-4*T)
+                                          +2.89e-4*Sin[go_type_of(Mul[go_type_of(M)](M)(3))](Mul[go_type_of(M)](M)(3))()),
+                     throw('return([Mod1[go_type_of(L0+C)](L0+C)(),Mod1[go_type_of(M+C)](M+C)()])))),if %% # null then %% else [s,ν])$
  
  
 MeanAnomaly(T):=unit@AngleFromDeg(base@Horner(T,357.52911,35999.05029,-1.537e-4))$
@@ -20,55 +20,57 @@ MeanAnomaly(T):=unit@AngleFromDeg(base@Horner(T,357.52911,35999.05029,-1.537e-4)
 Eccentricity(T):=base@Horner(T,0.016708634,-4.2037e-5,-1.267e-7)$
  
  
-Radius(T):=catch(block([ν,_,e],[_,ν]:True(T),e:Eccentricity(T),throw((1.000001018*(1-e^2))/(Cos[go_type_of(ν)](ν)()*e+1))))$
+Radius(T):=returning(block([ν,_,e],[_,ν]:True(T),e:Eccentricity(T),throw('return((1.000001018*(1-e^2))/(Cos[go_type_of(ν)](ν)()*e+1)))))$
  
  
-ApparentLongitude(T):=catch(
+ApparentLongitude(T):=returning(
                   block([Ω,_,s],Ω:node(T),[s,_]:True(T),
-                        throw(s-Mul[go_type_of(unit@AngleFromDeg(0.00478))](unit@AngleFromDeg(0.00478))(Sin[go_type_of(Ω)](Ω)())
-                               -unit@AngleFromDeg(0.00569))))$
+                        throw('return(s-Mul[go_type_of(unit@AngleFromDeg(0.00478))](unit@AngleFromDeg(0.00478))(Sin[go_type_of(Ω)](Ω)())
+                                       -unit@AngleFromDeg(0.00569)))))$
  
  
 node(T):=unit@AngleFromDeg(125.04-1934.136*T)$
  
  
 True2000(T):=block([s,ν],
-         catch(block([],[s,ν]:True(T),s:s-Mul[go_type_of(unit@AngleFromDeg(0.01397))](unit@AngleFromDeg(0.01397))(100*T),throw(null))),
-         if %% # null then %% else [s,ν])$
+         returning(block([],[s,ν]:True(T),s:s-Mul[go_type_of(unit@AngleFromDeg(0.01397))](unit@AngleFromDeg(0.01397))(100*T),
+                         throw('return(null)))),if %% # null then %% else [s,ν])$
  
  
 TrueEquatorial(jde):=block([α,δ],
-               catch(block([_,s,ε,cs,ss,cε,sε],[s,_]:True(base@J2000Century(jde)),ε:nutation@MeanObliquity(jde),
-                           [ss,cs]:Sincos[go_type_of(s)](s)(),[sε,cε]:Sincos[go_type_of(ε)](ε)(),α:unit@RAFromRad(math@Atan2(cε*ss,cs)),
-                           δ:unit@Angle(math@Asin(ss*sε)),throw(null))),if %% # null then %% else [α,δ])$
+               returning(block([_,s,ε,cs,ss,cε,sε],[s,_]:True(base@J2000Century(jde)),ε:nutation@MeanObliquity(jde),
+                               [ss,cs]:Sincos[go_type_of(s)](s)(),[sε,cε]:Sincos[go_type_of(ε)](ε)(),
+                               α:unit@RAFromRad(math@Atan2(cε*ss,cs)),δ:unit@Angle(math@Asin(ss*sε)),throw('return(null)))),
+               if %% # null then %% else [α,δ])$
  
  
 ApparentEquatorial(jde):=block([α,δ],
-                   catch(block([T,λ,ε,cλ,sλ,cε,sε],T:base@J2000Century(jde),λ:ApparentLongitude(T),ε:nutation@MeanObliquity(jde),
-                               [sλ,cλ]:Sincos[go_type_of(λ)](λ)(),
-                               ε:ε+Mul[go_type_of(unit@AngleFromDeg(0.00256))](unit@AngleFromDeg(0.00256))(
-                                   Cos[go_type_of(node(T))](node(T))()),[sε,cε]:Sincos[go_type_of(ε)](ε)(),
-                               α:unit@RAFromRad(math@Atan2(cε*sλ,cλ)),δ:unit@Angle(math@Asin(sε*sλ)),throw(null))),
+                   returning(block([T,λ,ε,cλ,sλ,cε,sε],T:base@J2000Century(jde),λ:ApparentLongitude(T),ε:nutation@MeanObliquity(jde),
+                                   [sλ,cλ]:Sincos[go_type_of(λ)](λ)(),
+                                   ε:ε+Mul[go_type_of(unit@AngleFromDeg(0.00256))](unit@AngleFromDeg(0.00256))(
+                                       Cos[go_type_of(node(T))](node(T))()),[sε,cε]:Sincos[go_type_of(ε)](ε)(),
+                                   α:unit@RAFromRad(math@Atan2(cε*sλ,cλ)),δ:unit@Angle(math@Asin(sε*sλ)),throw('return(null)))),
                    if %% # null then %% else [α,δ])$
  
  
 TrueVSOP87(e,jde):=block([s,β,R],
-           catch(block([r,b,l,λp,cλp,sλp,Δβ],[l,b,r]:e@Position(jde),s:math@Pi+l,
-                       λp:base@Horner(base@J2000Century(jde),Rad[go_type_of(s)](s)(),-(0.007761111111111112*math@Pi),
-                                      -(1.7222222222222222e-6*math@Pi)),[sλp,cλp]:math@Sincos(λp),
-                       Δβ:Mul[go_type_of(unit@AngleFromSec(0.03916))](unit@AngleFromSec(0.03916))(cλp-sλp),s:s-unit@AngleFromSec(0.09033),
-                       throw([Mod1[go_type_of(s)](s)(),Δβ-b,r]))),if %% # null then %% else [s,β,R])$
+           returning(block([r,b,l,λp,cλp,sλp,Δβ],[l,b,r]:e@Position(jde),s:math@Pi+l,
+                           λp:base@Horner(base@J2000Century(jde),Rad[go_type_of(s)](s)(),-(0.007761111111111112*math@Pi),
+                                          -(1.7222222222222222e-6*math@Pi)),[sλp,cλp]:math@Sincos(λp),
+                           Δβ:Mul[go_type_of(unit@AngleFromSec(0.03916))](unit@AngleFromSec(0.03916))(cλp-sλp),
+                           s:s-unit@AngleFromSec(0.09033),throw('return([Mod1[go_type_of(s)](s)(),Δβ-b,r])))),
+           if %% # null then %% else [s,β,R])$
  
  
 ApparentVSOP87(e,jde):=block([λ,β,R],
-               catch(block([R,β,s,_,Δψ,a],[s,β,R]:TrueVSOP87(e,jde),[Δψ,_]:nutation@Nutation(jde),a:aberration(R),throw([Δψ+s+a,β,R]))),
-               if %% # null then %% else [λ,β,R])$
+               returning(block([R,β,s,_,Δψ,a],[s,β,R]:TrueVSOP87(e,jde),[Δψ,_]:nutation@Nutation(jde),a:aberration(R),
+                               throw('return([Δψ+s+a,β,R])))),if %% # null then %% else [λ,β,R])$
  
  
 ApparentEquatorialVSOP87(e,jde):=block([α,δ,R],
-                         catch(block([R,β,s,Δε,Δψ,a,λ,ε,cε,sε],[s,β,R]:TrueVSOP87(e,jde),[Δψ,Δε]:nutation@Nutation(jde),a:aberration(R),
-                                     λ:Δψ+s+a,ε:Δε+nutation@MeanObliquity(jde),[sε,cε]:Sincos[go_type_of(ε)](ε)(),
-                                     [α,δ]:coord@EclToEq(λ,β,sε,cε),throw(null))),if %% # null then %% else [α,δ,R])$
+                         returning(block([R,β,s,Δε,Δψ,a,λ,ε,cε,sε],[s,β,R]:TrueVSOP87(e,jde),[Δψ,Δε]:nutation@Nutation(jde),
+                                         a:aberration(R),λ:Δψ+s+a,ε:Δε+nutation@MeanObliquity(jde),[sε,cε]:Sincos[go_type_of(ε)](ε)(),
+                                         [α,δ]:coord@EclToEq(λ,β,sε,cε),throw('return(null)))),if %% # null then %% else [α,δ,R])$
  
  
 aberration(R):=Div[go_type_of(unit@AngleFromSec(-20.4898))](unit@AngleFromSec(-20.4898))(R)$

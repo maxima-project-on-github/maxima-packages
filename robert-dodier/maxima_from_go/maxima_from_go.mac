@@ -53,11 +53,11 @@ defrule (expr_from_UnaryExpr, UnaryExpr ("Op" = ss, "X" = aa), funmake (ss, [aa]
 
 defrule (throw_from_ReturnStmt,
          ReturnStmt ("Results" = ll),
-         if length (ll) = 1 then buildq ([x: first (ll)], throw (x)) else buildq ([ll], throw (ll)));
+         if length (ll) = 1 then buildq ([x: first (ll)], throw ('return (x))) else buildq ([ll], throw ('return (ll))));
 
 defrule (throw_from_ReturnStmt_null,
          ReturnStmt ("Results" = null),
-         buildq ([], throw (null)));
+         buildq ([], throw ('return (null))));
 
 /* assignment should take into account the stuff above about multiple return values ... !! */
 defrule (assignment_from_AssignStmt, AssignStmt ("Lhs" = ll, "Rhs" = mm, "Tok" = "="),
@@ -126,9 +126,9 @@ construct_function_definition (function_name, body, arguments, results) :=
             results_names: extract_results_names (results)],
            if results_names = []
                then buildq ([function_name, args_symbols, body],
-                            function_name (splice (args_symbols)) := catch (body))
+                            function_name (splice (args_symbols)) := returning (body))
                else buildq ([function_name, args_symbols, body, results_names],
-                            function_name (splice (args_symbols)) := block (results_names, catch (body), if %% # null then %% else results_names)));
+                            function_name (splice (args_symbols)) := block (results_names, returning (body), if %% # null then %% else results_names)));
 
 extract_arguments_symbols (arguments) :=
     (map (lambda ([e], assoc ("Names", e)), arguments),
@@ -158,12 +158,12 @@ construct_method_definition (method_name, body, receiver, arguments, results) :=
                then buildq ([method_name, recv_symbol, recv_type, args_symbols, body],
                             method_name [recv_type]:
                             lambda ([recv_symbol], buildq ([recv_value: recv_symbol],
-                                                           lambda (args_symbols, block ([recv_symbol: recv_value], catch (body))))))
+                                                           lambda (args_symbols, block ([recv_symbol: recv_value], returning (body))))))
                else buildq ([method_name, recv_symbol, recv_type, args_symbols, body, results_names],
                             method_name [recv_type]:
                             lambda ([recv_symbol], buildq ([recv_value: recv_symbol],
                                                            lambda (args_symbols,
-                                                                   block (results_names, block ([recv_symbol: recv_value], catch (body)), if %% # null then %% else results_names))))));
+                                                                   block (results_names, block ([recv_symbol: recv_value], returning (body)), if %% # null then %% else results_names))))));
 
 extract_receiver_symbol (receiver) :=
     /* receiver is apparently always a list of exactly one element,
@@ -184,10 +184,10 @@ matchdeclare (zz, lambda ([e], block ([v: ?meval (e)], (atom (v) and not member 
 defrule (rewrite_method_calls_no_args, (zz@mm)(), mm[go_type_of (zz)](zz)());
 defrule (rewrite_method_calls_one_arg, (zz@mm)(bb), mm[go_type_of (zz)](zz)(bb));
 
-foo: '(catch (block (throw (aa))));
-defrule (collapse_catch_block_throw1, ''foo, aa);
-foo: '(catch (block ([], throw (aa))));
-defrule (collapse_catch_block_throw2, ''foo, aa);
+foo: '(returning (block (throw ('return (aa)))));
+defrule (collapse_returning_block_throw1, ''foo, aa);
+foo: '(returning (block ([], throw ('return (aa)))));
+defrule (collapse_returning_block_throw2, ''foo, aa);
 
 defrule (subscript_from_IndexExpr, IndexExpr ("Index" = aa, "X" = bb), arraymake (bb, [1 + aa]));
 
@@ -216,7 +216,7 @@ apply_all_rules (b) :=
            e6: apply1 (e5, function_from_FuncDecl_function, function_from_FuncDecl_method),
            methods_list_names_only: setify (map (op, methods_list)),
            e7: apply1 (e6, rewrite_method_calls_no_args, rewrite_method_calls_one_arg),
-           e8: apply1 (e7, collapse_catch_block_throw1, collapse_catch_block_throw2),
+           e8: apply1 (e7, collapse_returning_block_throw1, collapse_returning_block_throw2),
            e9: apply1 (e8, subscript_from_IndexExpr, throw_from_BranchStmt),
            [e1, e2, e3, e4, e4a, e4b, e5, e6, e7, e8, e9]);
 
@@ -243,4 +243,12 @@ lift_local_vars_into_block1 (e) :=
 
 matchdeclare (vv, lambda ([e], listp (e) and every (symbolp, e)), xx, all);
 defmatch (match_local_var_assignment, var (vv) : xx);
+
+/* assuming here that throw(continue) and throw(return(...)) are the only possibilities */
+
+continuing ([e]) ::=
+    buildq ([e], (catch (splice (e)), if atom (%%) or op (%%) # nounify ('return) then %% else throw (%%)));
+
+returning ([e]) ::=
+    buildq ([e], (catch (splice (e)), if not atom (%%) and op (%%) = nounify ('return) then first (%%) else throw (%%)));
 
