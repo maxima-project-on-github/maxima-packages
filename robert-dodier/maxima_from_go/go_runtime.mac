@@ -3,6 +3,20 @@ load ("base_go.mac");
 
 len: length;
 
+/* hmm, doesn't quite work
+catching (a, [e]) ::=
+    buildq ([a, e], (catch (splice (e)), if %% = a then a else throw (%%)));
+ */
+
+/* assuming here that throw(continue) and throw(return(...)) are the only possibilities */
+
+continuing ([e]) ::=
+    buildq ([e], (catch (splice (e)), if atom (%%) or op (%%) # nounify ('return) then %% else throw (%%)));
+
+returning ([e]) ::=
+    buildq ([e], (catch (splice (e)), if not atom (%%) and op (%%) = nounify ('return) then first (%%) else throw (%%)));
+
+
 /* need to extract these from package definitions in Go AST;
  * this explicit list is a stopgap measure.
  */

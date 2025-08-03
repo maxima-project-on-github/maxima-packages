@@ -1,0 +1,39 @@
+ 
+GenDecl("Specs" = [ImportSpec("Name" = null,"Path" = "math"),ImportSpec("Name" = null,"Path" = "github.com/soniakeys/unit")],
+        "Tok" = "import")$
+ 
+ 
+GenDecl("Specs" = [TypeSpec("Name" = Point,"Type" = StructType("Fields" = [Field("Names" = [X,Y],"Type" = float64)],"Incomplete" = false),
+                            "TypeParams" = null)],"Tok" = "type")$
+ 
+ 
+GenDecl("Specs" = [TypeSpec("Name" = Line,
+                            "Type" = StructType("Fields" = [Field("Names" = [Hour],"Type" = int),
+                                                            Field("Names" = [Points],"Type" = ArrayType("Elt" = Point,"Len" = null))],
+                                                "Incomplete" = false),"TypeParams" = null)],"Tok" = "type")$
+ 
+ 
+GenDecl("Specs" = [TypeSpec("Name" = PointWithHour,
+                            "Type" = StructType("Fields" = [Field("Names" = [H],"Type" = int),Field("Names" = [X,Y],"Type" = float64)],
+                                                "Incomplete" = false),"TypeParams" = null)],"Tok" = "type")$
+ 
+ 
+GenDecl("Specs" = [TypeSpec("Name" = LineWithDeclination,
+                            "Type" = StructType("Fields" = [Field("Names" = [Declination],"Type" = unit@Angle),
+                                                            Field("Names" = [Description],"Type" = string),
+                                                            Field("Names" = [Points],
+                                                                  "Type" = ArrayType("Elt" = PointWithHour,"Len" = null))],
+                                                "Incomplete" = false),"TypeParams" = null)],"Tok" = "type")$
+ 
+ 
+GenDecl("Specs" = [ValueSpec("Names" = [m],"Type" = null,
+                             "Values" = [CompositeLit("Elts" = [-23.44,-20.15,-11.47,0,11.47,20.15,23.44],"Incomplete" = false,
+                                                      "Type" = ArrayType("Elt" = float64,"Len" = null))])],"Tok" = "var")$
+ 
+ 
+GenDecl("Specs" = [ValueSpec("Names" = [descriptions],"Type" = null,
+                             "Values" = [CompositeLit("Elts" = ["winter solstice","winter solstice + 1 month","equinox - 1 month",
+                                                                "equinox","equinox + 1 month","summer solstice - 1 month",
+                                                                "summer solstice"],"Incomplete" = false,
+                                                      "Type" = ArrayType("Elt" = string,"Len" = null))])],"Tok" = "var")$
+ 

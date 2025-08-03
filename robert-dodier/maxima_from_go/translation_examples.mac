@@ -56,4 +56,50 @@ with_stdout ("nutation_go.mac",
             grind (last (results)),
             print ("")));
 
+sundial_blobs: read_json ("sundial1.json") $
+sundial_decls: sundial_blobs // "Decls" $
+sundial_decls_gendecls: sublist (sundial_decls, lambda ([b], (b // "NodeType") = "GenDecl")) $
+sundial_decls_funcdecls: sublist (sundial_decls, lambda ([b], (b // "NodeType") = "FuncDecl")) $
+sundial_decls_other: sublist (sundial_decls, lambda ([b], (b // "NodeType") # "GenDecl" and (b // "NodeType") # "FuncDecl")) $
 
+print ("length sundial_decls_gendecls -->", length (sundial_decls_gendecls));
+print ("length sundial_decls_funcdecls -->", length (sundial_decls_funcdecls));
+print ("length sundial_decls_other -->", length (sundial_decls_other));
+
+print ("output results from apply_all_rules on sundial_decls_gendecls to sundial_gendecls_go.mac.") $
+
+with_stdout ("sundial_gendecls_go.mac",
+    for b in sundial_decls_gendecls
+        do block ([r: apply_all_rules (b)],
+                  print (""),
+                  grind (last (r)),
+                  print ("")));
+
+print ("output results from apply_all_rules on sundial_decls_other to sundial_other_go.mac.") $
+
+with_stdout ("sundial_other_go.mac",
+    for b in sundial_decls_other
+        do block ([r: apply_all_rules (b)],
+                  print (""),
+                  grind (last (r)),
+                  print ("")));
+
+print ("output results from apply_all_rules on sundial_decls_funcdecls to sundial_funcdecls_go.mac.") $
+
+with_stdout ("sundial_funcdecls_go.mac",
+    for b in sundial_decls_funcdecls
+        do block ([r: apply_all_rules (b)],
+                  print (""),
+                  grind (last (r)),
+                  print ("")));
+
+/*
+debugmode (true);
+
+for i thru length (sundial_decls_funcdecls)
+    do block ([b: sundial_decls_funcdecls[i], r],
+              print ("i -->", i),
+              r: apply_all_rules (b),
+              grind (last (r)),
+              print (""));
+ */

@@ -35,3 +35,11 @@ display (TrueEquatorial (jde));
 "expected: TrueEquatorial (jde) --> 4.912969120591808 -0.40169680227173005" $
 display (ApparentEquatorial (jde));
 "expected: ApparentEquatorial (jde) --> 4.912862965283581 -0.40174861376992765" $
+
+true_equatorial_by_weeks: makelist (TrueEquatorial (jde + k*7), k, 0, 52) $
+
+for k:0 thru 52 do display (true_equatorial_by_weeks[1 + k]);
+
+apparent_equatorial_by_weeks: makelist (ApparentEquatorial (jde + k*7), k, 0, 52) $
+
+for k:0 thru 52 do display (apparent_equatorial_by_weeks[1 + k]);

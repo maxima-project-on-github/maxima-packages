@@ -36,8 +36,8 @@ construct_list_of_structs (elements_lists, fields_lists) :=
            map (lambda ([l], funmake (struct_name, l)), elements_lists));
 
 /* would prefer to have funmake here instead of apply, but funmake barfs on aa being a general expression; that's a bug in funmake !! */
-defrule (funcall_no_args_from_CallExpr, CallExpr("Args" = null, "Fun" = aa), apply (aa, []));
-defrule (funcall_from_CallExpr, CallExpr("Args" = ll, "Fun" = aa), apply (aa, ll));
+defrule (funcall_no_args_from_CallExpr, CallExpr("Args" = null, "Fun" = aa), if mapatom (aa) then funmake (aa, []) else apply (aa, []));
+defrule (funcall_from_CallExpr, CallExpr("Args" = ll, "Fun" = aa), if mapatom (aa) then funmake (aa, ll) else apply (aa, ll));
 defrule (equality_from_BinaryExpr_with_equalsequals, BinaryExpr ("Op" = "==", "X" = aa, "Y" = bb), funmake ('equal, [aa, bb]));
 defrule (expr_from_BinaryExpr, BinaryExpr ("Op" = ss, "X" = aa, "Y" = bb), funmake (ss, [aa, bb]));
 defrule (expr_from_UnaryExpr, UnaryExpr ("Op" = ss, "X" = aa), funmake (ss, [aa]));
@@ -196,11 +196,13 @@ matchdeclare (vv, symbolp);
 defrule (for_loop_from_ForStmt,
          ForStmt ("Body" = aa, "Cond" = bb, "Init" = var([vv]):[cc], "Post" = IncDecStmt ("Tok" = ss, "X" = vv)),
          if ss = "++"
-             then buildq ([aa, bb, cc, vv], for vv:cc while bb do aa)
+             then buildq ([aa, bb, cc, vv], for vv:cc while bb do continuing (aa))
          elseif ss = "--"
-             then buildq ([aa, bb, cc, vv], for vv:cc step -1 while bb do aa)
+             then buildq ([aa, bb, cc, vv], for vv:cc step -1 while bb do continuing (aa))
              /* dunno if this last case is possible; is ss guaranteed to be "++" or "--" ?? */
-             else buildq ([aa, bb, cc, vv], for vv:cc while bb do (aa, IncDec (ss, vv))));
+             else buildq ([aa, bb, cc, vv], for vv:cc while bb do continuing (aa, IncDec (ss, vv))));
+
+defrule (throw_from_BranchStmt, BranchStmt("Label" = null,"Tok" = "continue"), '(throw (continue)));
 
 apply_all_rules (b) :=
     block ([e1, e2, e3, e4, e4a, e4b, e5, e6, e7, e8, e9],
@@ -215,7 +217,7 @@ apply_all_rules (b) :=
            methods_list_names_only: setify (map (op, methods_list)),
            e7: apply1 (e6, rewrite_method_calls_no_args, rewrite_method_calls_one_arg),
            e8: apply1 (e7, collapse_catch_block_throw1, collapse_catch_block_throw2),
-           e9: apply1 (e8, subscript_from_IndexExpr),
+           e9: apply1 (e8, subscript_from_IndexExpr, throw_from_BranchStmt),
            [e1, e2, e3, e4, e4a, e4b, e5, e6, e7, e8, e9]);
 
 lift_local_vars_into_block (e) :=
