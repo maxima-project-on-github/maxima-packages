@@ -3,9 +3,7 @@ General(φ,D,a,z):=block([lines,center,u,ψ],
         returning(block([cφ,sφ,tφ,cD,sD,cz,sz,P,aP],[sφ,cφ]:Sincos[go_type_of(φ)](φ)(),tφ:sφ/cφ,[sD,cD]:Sincos[go_type_of(D)](D)(),
                         [sz,cz]:Sincos[go_type_of(z)](z)(),P:cz*sφ-cD*cφ*sz,
                         for i from 0 unless i >= 24 do
-                            continuing(block([l,H,aH,cH,sH],
-                                             l:CompositeLit("Elts" = [KeyValueExpr("Key" = Hour,"Value" = i)],"Incomplete" = false,
-                                                            "Type" = Line),H:(float64(i-12)*math@Pi)/12,aH:math@Abs(H),
+                            continuing(block([l,H,aH,cH,sH],l:block([x:new(Line)],x@Hour:i,x),H:(float64(i-12)*math@Pi)/12,aH:math@Abs(H),
                                              [sH,cH]:math@Sincos(H),
                                              for _ from 0 thru length(m)-1 do
                                                  continuing(block([d:m[_+1]],
@@ -26,12 +24,8 @@ General(φ,D,a,z):=block([lines,center,u,ψ],
 Equatorial(φ,a):=block([n,s],
            returning(block([tφ],tφ:Tan[go_type_of(φ)](φ)(),
                            for i from 0 unless i >= 24 do
-                               continuing(block([nl,sl,H,aH,cH,sH],
-                                                nl:CompositeLit("Elts" = [KeyValueExpr("Key" = Hour,"Value" = i)],"Incomplete" = false,
-                                                                "Type" = Line),
-                                                sl:CompositeLit("Elts" = [KeyValueExpr("Key" = Hour,"Value" = i)],"Incomplete" = false,
-                                                                "Type" = Line),H:(float64(i-12)*math@Pi)/12,aH:math@Abs(H),
-                                                [sH,cH]:math@Sincos(H),
+                               continuing(block([nl,sl,H,aH,cH,sH],nl:block([x:new(Line)],x@Hour:i,x),sl:block([x:new(Line)],x@Hour:i,x),
+                                                H:(float64(i-12)*math@Pi)/12,aH:math@Abs(H),[sH,cH]:math@Sincos(H),
                                                 for _ from 0 thru length(m)-1 do
                                                     continuing(block([d:m[_+1]],
                                                                      block([tδ,H0,x,yy],tδ:math@Tan((d*math@Pi)/180),
@@ -59,10 +53,8 @@ Equatorial(φ,a):=block([n,s],
 Horizontal(φ,a):=block([lines,center,u],
            returning(block([cφ,sφ,tφ],[sφ,cφ]:Sincos[go_type_of(φ)](φ)(),tφ:sφ/cφ,
                            for i from 0 unless i >= 24 do
-                               continuing(block([l,H,aH,cH,sH],
-                                                l:CompositeLit("Elts" = [KeyValueExpr("Key" = Hour,"Value" = i)],"Incomplete" = false,
-                                                               "Type" = Line),H:(float64(i-12)*math@Pi)/12,aH:math@Abs(H),
-                                                [sH,cH]:math@Sincos(H),
+                               continuing(block([l,H,aH,cH,sH],l:block([x:new(Line)],x@Hour:i,x),H:(float64(i-12)*math@Pi)/12,
+                                                aH:math@Abs(H),[sH,cH]:math@Sincos(H),
                                                 for _ from 0 thru length(m)-1 do
                                                     continuing(block([d:m[_+1]],
                                                                      block([tδ,H0,Q,x,y],tδ:math@Tan((d*math@Pi)/180),
@@ -82,11 +74,8 @@ HorizontalByDeclination(φ,a):=block([lines,center,u],
                                         for j from 0 thru length(m)-1 do
                                             continuing(block([d:m[j+1]],
                                                              block([l],
-                                                                   l:CompositeLit(
-                                                                     "Elts"
-                                                                       = [KeyValueExpr("Key" = Declination,"Value" = unit@Angle(d)),
-                                                                          KeyValueExpr("Key" = Description,"Value" = descriptions[j+1])],
-                                                                     "Incomplete" = false,"Type" = LineWithDeclination),
+                                                                   l:block([x:new(LineWithDeclination)],x@Declination:unit@Angle(d),
+                                                                           x@Description:descriptions[j+1],x),
                                                                    for i from 0 unless i >= 24 do
                                                                        continuing(
                                                                        block([H,aH,cH,sH,tδ,H0,Q,x,y],H:(float64(i-12)*math@Pi)/12,
@@ -106,9 +95,7 @@ HorizontalByDeclination(φ,a):=block([lines,center,u],
 Vertical(φ,D,a):=block([lines,center,u],
          returning(block([cφ,sφ,tφ,cD,sD],[sφ,cφ]:Sincos[go_type_of(φ)](φ)(),tφ:sφ/cφ,[sD,cD]:Sincos[go_type_of(D)](D)(),
                          for i from 0 unless i >= 24 do
-                             continuing(block([l,H,aH,cH,sH],
-                                              l:CompositeLit("Elts" = [KeyValueExpr("Key" = Hour,"Value" = i)],"Incomplete" = false,
-                                                             "Type" = Line),H:(float64(i-12)*math@Pi)/12,aH:math@Abs(H),
+                             continuing(block([l,H,aH,cH,sH],l:block([x:new(Line)],x@Hour:i,x),H:(float64(i-12)*math@Pi)/12,aH:math@Abs(H),
                                               [sH,cH]:math@Sincos(H),
                                               for _ from 0 thru length(m)-1 do
                                                   continuing(block([d:m[_+1]],
