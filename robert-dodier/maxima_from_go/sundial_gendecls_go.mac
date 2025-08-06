@@ -15,14 +15,9 @@ defstruct(xx(H = 0,X = 0,Y = 0))$
 defstruct(xx(Declination = false,Description = "",Points = []))$
  
  
-GenDecl("Specs" = [ValueSpec("Names" = [m],"Type" = null,
-                             "Values" = [CompositeLit("Elts" = [-23.44,-20.15,-11.47,0,11.47,20.15,23.44],"Incomplete" = false,
-                                                      "Type" = ArrayType("Elt" = float64,"Len" = null))])],"Tok" = "var")$
+m:[-23.44,-20.15,-11.47,0,11.47,20.15,23.44]$
  
  
-GenDecl("Specs" = [ValueSpec("Names" = [descriptions],"Type" = null,
-                             "Values" = [CompositeLit("Elts" = ["winter solstice","winter solstice + 1 month","equinox - 1 month",
-                                                                "equinox","equinox + 1 month","summer solstice - 1 month",
-                                                                "summer solstice"],"Incomplete" = false,
-                                                      "Type" = ArrayType("Elt" = string,"Len" = null))])],"Tok" = "var")$
+descriptions:["winter solstice","winter solstice + 1 month","equinox - 1 month","equinox","equinox + 1 month","summer solstice - 1 month",
+              "summer solstice"]$
  
