@@ -44,6 +44,24 @@ defrule (struct_from_CompositeLit_Type_nonnull,
                 buildq ([tt, l: map (lambda ([y, z], buildq ([y, z], x@y : z)), kk, vv)],
                         block ([x: new (tt)], splice (l), x))));
 
+defrule (defstruct_from_TypeSpec_StructType,
+         GenDecl ("Specs" = [TypeSpec ("Name" = tt, "Type" = StructType ("Fields" = ll, "Incomplete" = false), "TypeParams" = null)], "Tok" = "type"),
+         buildq ([tt, vv: variables_and_default_values (ll)], defstruct (xx (splice (vv)))));
+
+variables_and_default_values (l) :=
+    apply (append, map (variables_and_default_values1, l));
+
+variables_and_default_values1 (field) :=
+    block ([names: assoc ("Names", field), type: assoc ("Type", field), value],
+           value: default_value_for (type),
+           map (lambda ([x], x = value), names));
+
+default_value_for (type) :=
+    if type = 'int then 0
+    elseif type = 'float64 then 0 /* 0.0 is also a plausible default here */
+    elseif type = 'string then ""
+    elseif not atom (type) and op (type) = 'ArrayType then [];
+
 /* would prefer to have funmake here instead of apply, but funmake barfs on aa being a general expression; that's a bug in funmake !! */
 defrule (funcall_no_args_from_CallExpr, CallExpr("Args" = null, "Fun" = aa), if mapatom (aa) then funmake (aa, []) else apply (aa, []));
 defrule (funcall_from_CallExpr, CallExpr("Args" = ll, "Fun" = aa), if mapatom (aa) then funmake (aa, ll) else apply (aa, ll));
@@ -225,7 +243,7 @@ apply_all_rules (b) :=
     block ([e1, e2, e3, e4, e4a, e4b, e5, e6, e7, e8, e9],
            e1: scanmap (expr_from_blob, b),
            e2: apply1 (e1, symbol_from_Ident, string_from_BasicLit, integer_from_BasicLit, float_from_BasicLit, character_from_BasicLit, list_from_null_List, list_from_List, list_from_FieldList, list_from_CompositeLit_Type_null, list_from_CompositeLit_Type_ArrayType_StructType, expr_from_ParenExpr, struct_from_CompositeLit_Type_nonnull),
-           e3: apply1 (e2, funcall_no_args_from_CallExpr, funcall_from_CallExpr, equality_from_BinaryExpr_with_equalsequals, expr_from_BinaryExpr, expr_from_UnaryExpr),
+           e3: apply1 (e2, funcall_no_args_from_CallExpr, funcall_from_CallExpr, equality_from_BinaryExpr_with_equalsequals, expr_from_BinaryExpr, expr_from_UnaryExpr, defstruct_from_TypeSpec_StructType),
            e4: apply1 (e3, throw_from_ReturnStmt_null, throw_from_ReturnStmt, block_from_BlockStmt, local_var_assignment_from_AssignStmt),
            e4a: apply1 (e4, assignment_from_AssignStmt, assignment_with_addition_from_AssignStmt, assignment_with_subtraction_from_AssignStmt, if_then_from_IfStmt, assignment_from_ValueSpec_Type_null_Values_nonnull, assignment_from_ValueSpec_Type_nonnull_Values_null),
            e4b: lift_local_vars_into_block (e4a),

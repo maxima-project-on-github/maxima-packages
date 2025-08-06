@@ -3,27 +3,16 @@ GenDecl("Specs" = [ImportSpec("Name" = null,"Path" = "math"),ImportSpec("Name" =
         "Tok" = "import")$
  
  
-GenDecl("Specs" = [TypeSpec("Name" = Point,"Type" = StructType("Fields" = [Field("Names" = [X,Y],"Type" = float64)],"Incomplete" = false),
-                            "TypeParams" = null)],"Tok" = "type")$
+defstruct(xx(X = 0,Y = 0))$
  
  
-GenDecl("Specs" = [TypeSpec("Name" = Line,
-                            "Type" = StructType("Fields" = [Field("Names" = [Hour],"Type" = int),
-                                                            Field("Names" = [Points],"Type" = ArrayType("Elt" = Point,"Len" = null))],
-                                                "Incomplete" = false),"TypeParams" = null)],"Tok" = "type")$
+defstruct(xx(Hour = 0,Points = []))$
  
  
-GenDecl("Specs" = [TypeSpec("Name" = PointWithHour,
-                            "Type" = StructType("Fields" = [Field("Names" = [H],"Type" = int),Field("Names" = [X,Y],"Type" = float64)],
-                                                "Incomplete" = false),"TypeParams" = null)],"Tok" = "type")$
+defstruct(xx(H = 0,X = 0,Y = 0))$
  
  
-GenDecl("Specs" = [TypeSpec("Name" = LineWithDeclination,
-                            "Type" = StructType("Fields" = [Field("Names" = [Declination],"Type" = unit@Angle),
-                                                            Field("Names" = [Description],"Type" = string),
-                                                            Field("Names" = [Points],
-                                                                  "Type" = ArrayType("Elt" = PointWithHour,"Len" = null))],
-                                                "Incomplete" = false),"TypeParams" = null)],"Tok" = "type")$
+defstruct(xx(Declination = false,Description = "",Points = []))$
  
  
 GenDecl("Specs" = [ValueSpec("Names" = [m],"Type" = null,
