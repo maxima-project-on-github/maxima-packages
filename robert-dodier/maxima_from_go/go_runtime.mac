@@ -3,6 +3,15 @@ load ("base_go.mac");
 
 len: length;
 
+/* I guess everything in the builtin package could go here ... !! */
+
+defstruct (builtin_struct (append));
+
+builtin: new (builtin_struct);
+
+/* Go append(l, a, b, c, ...) appends [a, b, c, ...] to l. */
+builtin@append: lambda ([l, [ll]], apply (append, [l, ll]));
+
 /* assuming here that throw(continue) and throw(return(...)) are the only possibilities */
 
 continuing ([e]) ::=

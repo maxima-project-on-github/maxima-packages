@@ -3,16 +3,16 @@ GenDecl("Specs" = [ImportSpec("Name" = null,"Path" = "math"),ImportSpec("Name" =
         "Tok" = "import")$
  
  
-defstruct(xx(X = 0,Y = 0))$
+defstruct(Point(X = 0,Y = 0))$
  
  
-defstruct(xx(Hour = 0,Points = []))$
+defstruct(Line(Hour = 0,Points = []))$
  
  
-defstruct(xx(H = 0,X = 0,Y = 0))$
+defstruct(PointWithHour(H = 0,X = 0,Y = 0))$
  
  
-defstruct(xx(Declination = false,Description = "",Points = []))$
+defstruct(LineWithDeclination(Declination = false,Description = "",Points = []))$
  
  
 m:[-23.44,-20.15,-11.47,0,11.47,20.15,23.44]$

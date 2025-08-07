@@ -59,7 +59,7 @@ defrule (struct_from_CompositeLit_Type_nonnull_simple_elements,
 
 defrule (defstruct_from_TypeSpec_StructType,
          GenDecl ("Specs" = [TypeSpec ("Name" = tt, "Type" = StructType ("Fields" = ll, "Incomplete" = false), "TypeParams" = null)], "Tok" = "type"),
-         buildq ([tt, vv: variables_and_default_values (ll)], defstruct (xx (splice (vv)))));
+         buildq ([tt, vv: variables_and_default_values (ll)], defstruct (tt (splice (vv)))));
 
 variables_and_default_values (l) :=
     apply (append, map (variables_and_default_values1, l));
@@ -253,7 +253,7 @@ defrule (for_loop_from_RangeStmt,
 defrule (throw_from_BranchStmt, BranchStmt("Label" = null,"Tok" = "continue"), '(throw (continue)));
 
 apply_all_rules (b) :=
-    block ([e1, e2, e3, e4, e4a, e4b, e5, e6, e7, e8, e9],
+    block ([e1, e2, e3, e4, e4a, e4b, e5, e6, e7, e8, e9, e10],
            e1: scanmap (expr_from_blob, b),
            e2: apply1 (e1, symbol_from_Ident, string_from_BasicLit, integer_from_BasicLit, float_from_BasicLit, character_from_BasicLit, list_from_null_List, list_from_List, list_from_FieldList, list_from_CompositeLit_Type_null, list_from_CompositeLit_Type_ArrayType_StructType, list_from_CompositeLit_Type_ArrayType_simple, expr_from_ParenExpr, struct_from_CompositeLit_Type_nonnull_key_value_elements, struct_from_CompositeLit_Type_nonnull_simple_elements),
            e3: apply1 (e2, funcall_no_args_from_CallExpr, funcall_from_CallExpr, equality_from_BinaryExpr_with_equalsequals, expr_from_BinaryExpr, expr_from_UnaryExpr, defstruct_from_TypeSpec_StructType),
@@ -266,7 +266,8 @@ apply_all_rules (b) :=
            e7: apply1 (e6, rewrite_method_calls_no_args, rewrite_method_calls_one_arg),
            e8: apply1 (e7, collapse_returning_block_throw1, collapse_returning_block_throw2),
            e9: apply1 (e8, subscript_from_IndexExpr, throw_from_BranchStmt),
-           [e1, e2, e3, e4, e4a, e4b, e5, e6, e7, e8, e9]);
+           e10: substitute_builtins (e9),
+           [e1, e2, e3, e4, e4a, e4b, e5, e6, e7, e8, e9, e10]);
 
 lift_local_vars_into_block (e) :=
     scanmap (lift_local_vars_into_block1, e);
@@ -293,6 +294,11 @@ lift_local_vars_into_block1 (e) :=
 
 matchdeclare (vv, lambda ([e], listp (e) and every (symbolp, e)), xx, all);
 defmatch (match_local_var_assignment, var (vv) : xx);
+
+substitute_builtins (e) :=
+    /* subst, psubst, and opsubst all complain about the following substitution; only sublis has the right behavior !! */
+    /* need to quote '(a@b), otherwise "@" gets nounified ... I wonder if that's a bug !! */
+    sublis ([append = '(builtin@append)], e);
 
 /* assuming here that throw(continue) and throw(return(...)) are the only possibilities */
 
