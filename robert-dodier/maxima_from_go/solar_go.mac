@@ -33,7 +33,7 @@ node(T):=unit@AngleFromDeg(125.04-1934.136*T)$
  
  
 True2000(T):=block([s,ν],
-         returning(block([],[s,ν]:True(T),s:s-Mul[go_type_of(unit@AngleFromDeg(0.01397))](unit@AngleFromDeg(0.01397))(100*T),
+         returning(block([s,ν]:True(T),s:s-Mul[go_type_of(unit@AngleFromDeg(0.01397))](unit@AngleFromDeg(0.01397))(100*T),
                          throw('return(null)))),if %% # null then %% else [s,ν])$
  
  

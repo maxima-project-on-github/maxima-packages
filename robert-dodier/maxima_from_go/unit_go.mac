@@ -5,10 +5,10 @@ GenDecl("Specs" = [ImportSpec("Name" = null,"Path" = "math")],"Tok" = "import")$
 FromSexa(neg,d,m,s):=FromSexaSec(neg,d,m,s)/3600$
  
  
-FromSexaSec(neg,d,m,s):=returning(block([],s:s+float64(60*(m+60*d)),if equal(neg,"-") then block([],throw('return(-s))),throw('return(s))))$
+FromSexaSec(neg,d,m,s):=returning(block(s:s+float64(60*(m+60*d)),if equal(neg,"-") then block(throw('return(-s))),throw('return(s))))$
  
  
-PMod(x,y):=returning(block([r],r:math@Mod(x,y),if r < 0 then block([],r:y+r),throw('return(r))))$
+PMod(x,y):=returning(block([r],r:math@Mod(x,y),if r < 0 then block(r:y+r),throw('return(r))))$
  
  
 GenDecl("Specs" = [TypeSpec("Name" = Angle,"Type" = float64,"TypeParams" = null)],"Tok" = "type")$
@@ -187,7 +187,7 @@ GenDecl("Specs" = [TypeSpec("Name" = Time,"Type" = float64,"TypeParams" = null)]
  
  
 NewTime(neg,h,m,s):=returning(
-        block([],s:s+float64(60*(m+60*h)),if equal(neg,"-") then block([],throw('return(Time(-s)))),throw('return(Time(s)))))$
+        block(s:s+float64(60*(m+60*h)),if equal(neg,"-") then block(throw('return(Time(-s)))),throw('return(Time(s)))))$
  
  
 TimeFromDay(d):=Time(86400*d)$

@@ -8,12 +8,12 @@ General(φ,D,a,z):=block([lines,center,u,ψ],
                                              for _ from 0 thru length(m)-1 do
                                                  continuing(block([d:m[_+1]],
                                                                   block([tδ,H0,Q,Nx,Ny],tδ:math@Tan((d*math@Pi)/180),
-                                                                        H0:math@Acos(-(tδ*tφ)),if aH > H0 then block([],throw(continue)),
+                                                                        H0:math@Acos(-(tδ*tφ)),if aH > H0 then block(throw(continue)),
                                                                         Q:P*tδ+cH*(cD*sz*sφ+cz*cφ)+sD*sH*sz,
-                                                                        if Q < 0 then block([],throw(continue)),Nx:cD*sH-sD*(cH*sφ-cφ*tδ),
+                                                                        if Q < 0 then block(throw(continue)),Nx:cD*sH-sD*(cH*sφ-cφ*tδ),
                                                                         Ny:-((sz*sφ+cD*cz*cφ)*tδ)-cH*(cφ*sz-cD*cz*sφ)+cz*sD*sH,
                                                                         l@Points:append(l@Points,Point((Nx*a)/Q,(Ny*a)/Q))))),
-                                             if len(l@Points) > 0 then block([],lines:append(lines,l)))),center@X:(a*cφ*sD)/P,
+                                             if len(l@Points) > 0 then block(lines:append(lines,l)))),center@X:(a*cφ*sD)/P,
                         center@Y:-((a*(sz*sφ+cD*cz*cφ))/P),aP:math@Abs(P),u:a/aP,ψ:unit@Angle(math@Asin(aP)),throw('return(null)))),
         if %% # null then %% else [lines,center,u,ψ])$
  
@@ -26,13 +26,12 @@ Equatorial(φ,a):=block([n,s],
                                                 for _ from 0 thru length(m)-1 do
                                                     continuing(block([d:m[_+1]],
                                                                      block([tδ,H0,x,yy],tδ:math@Tan((d*math@Pi)/180),
-                                                                           H0:math@Acos(-(tδ*tφ)),
-                                                                           if aH > H0 then block([],throw(continue)),x:-((a*sH)/tδ),
-                                                                           yy:(a*cH)/tδ,
-                                                                           if tδ < 0 then block([],sl@Points:append(sl@Points,Point(x,yy)))
-                                                                               else block([],nl@Points:append(nl@Points,Point(x,-yy)))))),
-                                                if len(nl@Points) > 0 then block([],n:append(n,nl)),
-                                                if len(sl@Points) > 0 then block([],s:append(s,sl)))),throw('return(null)))),
+                                                                           H0:math@Acos(-(tδ*tφ)),if aH > H0 then block(throw(continue)),
+                                                                           x:-((a*sH)/tδ),yy:(a*cH)/tδ,
+                                                                           if tδ < 0 then block(sl@Points:append(sl@Points,Point(x,yy)))
+                                                                               else block(nl@Points:append(nl@Points,Point(x,-yy)))))),
+                                                if len(nl@Points) > 0 then block(n:append(n,nl)),
+                                                if len(sl@Points) > 0 then block(s:append(s,sl)))),throw('return(null)))),
            if %% # null then %% else [n,s])$
  
  
@@ -44,12 +43,11 @@ Horizontal(φ,a):=block([lines,center,u],
                                                 for _ from 0 thru length(m)-1 do
                                                     continuing(block([d:m[_+1]],
                                                                      block([tδ,H0,Q,x,y],tδ:math@Tan((d*math@Pi)/180),
-                                                                           H0:math@Acos(-(tδ*tφ)),
-                                                                           if aH > H0 then block([],throw(continue)),Q:sφ*tδ+cH*cφ,
-                                                                           x:(a*sH)/Q,y:(a*(cH*sφ-cφ*tδ))/Q,
+                                                                           H0:math@Acos(-(tδ*tφ)),if aH > H0 then block(throw(continue)),
+                                                                           Q:sφ*tδ+cH*cφ,x:(a*sH)/Q,y:(a*(cH*sφ-cφ*tδ))/Q,
                                                                            l@Points:append(l@Points,Point(x,y))))),
-                                                if len(l@Points) > 0 then block([],lines:append(lines,l)))),center@Y:-(a/tφ),
-                           u:a/math@Abs(sφ),throw('return(null)))),if %% # null then %% else [lines,center,u])$
+                                                if len(l@Points) > 0 then block(lines:append(lines,l)))),center@Y:-(a/tφ),u:a/math@Abs(sφ),
+                           throw('return(null)))),if %% # null then %% else [lines,center,u])$
  
  
 HorizontalByDeclination(φ,a):=block([lines,center,u],
@@ -64,10 +62,10 @@ HorizontalByDeclination(φ,a):=block([lines,center,u],
                                                                        block([H,aH,cH,sH,tδ,H0,Q,x,y],H:(float64(i-12)*math@Pi)/12,
                                                                              aH:math@Abs(H),[sH,cH]:math@Sincos(H),
                                                                              tδ:math@Tan((d*math@Pi)/180),H0:math@Acos(-(tδ*tφ)),
-                                                                             if aH > H0 then block([],throw(continue)),Q:sφ*tδ+cH*cφ,
+                                                                             if aH > H0 then block(throw(continue)),Q:sφ*tδ+cH*cφ,
                                                                              x:(a*sH)/Q,y:(a*(cH*sφ-cφ*tδ))/Q,
                                                                              l@Points:append(l@Points,PointWithHour(i,x,y)))),
-                                                                   if len(l@Points) > 0 then block([],lines:append(lines,l))))),
+                                                                   if len(l@Points) > 0 then block(lines:append(lines,l))))),
                                         center@Y:-(a/tφ),u:a/math@Abs(sφ),throw('return(null)))),
                         if %% # null then %% else [lines,center,u])$
  
@@ -80,11 +78,10 @@ Vertical(φ,D,a):=block([lines,center,u],
                                               for _ from 0 thru length(m)-1 do
                                                   continuing(block([d:m[_+1]],
                                                                    block([tδ,H0,Q,x,y],tδ:math@Tan((d*math@Pi)/180),H0:math@Acos(-(tδ*tφ)),
-                                                                         if aH > H0 then block([],throw(continue)),
-                                                                         Q:-(cD*cφ*tδ)+cD*cH*sφ+sD*sH,
-                                                                         if Q < 0 then block([],throw(continue)),
+                                                                         if aH > H0 then block(throw(continue)),
+                                                                         Q:-(cD*cφ*tδ)+cD*cH*sφ+sD*sH,if Q < 0 then block(throw(continue)),
                                                                          x:(a*(cφ*sD*tδ-cH*sD*sφ+cD*sH))/Q,y:-((a*(sφ*tδ+cH*cφ))/Q),
                                                                          l@Points:append(l@Points,Point(x,y))))),
-                                              if len(l@Points) > 0 then block([],lines:append(lines,l)))),center@X:-((a*sD)/cD),
+                                              if len(l@Points) > 0 then block(lines:append(lines,l)))),center@X:-((a*sD)/cD),
                          center@Y:(a*tφ)/cD,u:a/math@Abs(cD*cφ),throw('return(null)))),if %% # null then %% else [lines,center,u])$
  

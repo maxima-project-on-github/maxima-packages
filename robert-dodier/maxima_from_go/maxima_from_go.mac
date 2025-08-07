@@ -285,8 +285,10 @@ lift_local_vars_into_block1 (e) :=
                                                    else buildq ([vv, xx], vv: xx),
                                       push (%%, exprs))
                                 else push (e1, exprs)),
-                    buildq ([vars: append (existing_vars, reverse (apply (append, vars))), exprs: reverse (exprs)],
-                            block (vars, splice (exprs))))
+                    if vars = []
+                        then e
+                        else buildq ([vars: append (existing_vars, reverse (apply (append, vars))), exprs: reverse (exprs)],
+                                     block (vars, splice (exprs))))
         else e;
 
 matchdeclare (vv, lambda ([e], listp (e) and every (symbolp, e)), xx, all);
