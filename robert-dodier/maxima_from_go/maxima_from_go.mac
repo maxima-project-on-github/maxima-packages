@@ -43,11 +43,19 @@ defrule (list_from_CompositeLit_Type_ArrayType_simple,
 
 matchdeclare (llkv, lambda ([e], listp (e) and every (lambda ([e1], not atom (e1) and op (e1) = KeyValueExpr), e)));
 
-defrule (struct_from_CompositeLit_Type_nonnull,
+defrule (struct_from_CompositeLit_Type_nonnull_key_value_elements,
          CompositeLit ("Elts" = llkv, "Incomplete" = false, "Type" = tt),
          block ([kk: map (lambda ([e], assoc ("Key", e)), llkv), vv: map (lambda ([e], assoc ("Value", e)), llkv)],
                 buildq ([tt, l: map (lambda ([y, z], buildq ([y, z], x@y : z)), kk, vv)],
                         block ([x: new (tt)], splice (l), x))));
+
+/* This next rule has to be applied after the preceding one
+ * since it captures a nonspecific element type.
+ */
+ 
+defrule (struct_from_CompositeLit_Type_nonnull_simple_elements,
+         CompositeLit ("Elts" = ll, "Incomplete" = false, "Type" = tt),
+         buildq ([tt, ll], tt (splice (ll))));
 
 defrule (defstruct_from_TypeSpec_StructType,
          GenDecl ("Specs" = [TypeSpec ("Name" = tt, "Type" = StructType ("Fields" = ll, "Incomplete" = false), "TypeParams" = null)], "Tok" = "type"),
@@ -247,7 +255,7 @@ defrule (throw_from_BranchStmt, BranchStmt("Label" = null,"Tok" = "continue"), '
 apply_all_rules (b) :=
     block ([e1, e2, e3, e4, e4a, e4b, e5, e6, e7, e8, e9],
            e1: scanmap (expr_from_blob, b),
-           e2: apply1 (e1, symbol_from_Ident, string_from_BasicLit, integer_from_BasicLit, float_from_BasicLit, character_from_BasicLit, list_from_null_List, list_from_List, list_from_FieldList, list_from_CompositeLit_Type_null, list_from_CompositeLit_Type_ArrayType_StructType, list_from_CompositeLit_Type_ArrayType_simple, expr_from_ParenExpr, struct_from_CompositeLit_Type_nonnull),
+           e2: apply1 (e1, symbol_from_Ident, string_from_BasicLit, integer_from_BasicLit, float_from_BasicLit, character_from_BasicLit, list_from_null_List, list_from_List, list_from_FieldList, list_from_CompositeLit_Type_null, list_from_CompositeLit_Type_ArrayType_StructType, list_from_CompositeLit_Type_ArrayType_simple, expr_from_ParenExpr, struct_from_CompositeLit_Type_nonnull_key_value_elements, struct_from_CompositeLit_Type_nonnull_simple_elements),
            e3: apply1 (e2, funcall_no_args_from_CallExpr, funcall_from_CallExpr, equality_from_BinaryExpr_with_equalsequals, expr_from_BinaryExpr, expr_from_UnaryExpr, defstruct_from_TypeSpec_StructType),
            e4: apply1 (e3, throw_from_ReturnStmt_null, throw_from_ReturnStmt, block_from_BlockStmt, local_var_assignment_from_AssignStmt),
            e4a: apply1 (e4, assignment_from_AssignStmt, assignment_with_addition_from_AssignStmt, assignment_with_subtraction_from_AssignStmt, if_then_from_IfStmt, assignment_from_ValueSpec_Type_null_Values_nonnull, assignment_from_ValueSpec_Type_nonnull_Values_null),
