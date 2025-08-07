@@ -4,7 +4,7 @@
  * Maybe cover the rest later.
  */
 
-defstruct (math_struct (Pi, Mod, Sin, Cos, Tan, Sincos, Asin, Acos, Atan2));
+defstruct (math_struct (Pi, Mod, Sin, Cos, Tan, Sincos, Asin, Acos, Atan2, Abs));
 
 math: new (math_struct);
 
@@ -36,3 +36,5 @@ math@Asin: asin;
 math@Acos: acos;
 
 math@Atan2: atan2;
+
+math@Abs: abs;

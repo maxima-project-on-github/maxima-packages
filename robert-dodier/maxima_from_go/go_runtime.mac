@@ -1,6 +1,7 @@
 load ("math_go.mac");
 load ("base_go.mac");
 
+/* probably this should go in the builtin struct for consistency ... */
 len: length;
 
 /* I guess everything in the builtin package could go here ... !! */
