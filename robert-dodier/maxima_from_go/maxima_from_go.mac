@@ -73,7 +73,9 @@ default_value_for (type) :=
     if type = 'int then 0
     elseif type = 'float64 then 0 /* 0.0 is also a plausible default here */
     elseif type = 'string then ""
-    elseif not atom (type) and op (type) = 'ArrayType then [];
+    elseif not atom (type) and op (type) = 'ArrayType then []
+    elseif atom (type) then buildq ([type], new (type))
+    else default (type);
 
 /* would prefer to have funmake here instead of apply, but funmake barfs on aa being a general expression; that's a bug in funmake !! */
 defrule (funcall_no_args_from_CallExpr, CallExpr("Args" = null, "Fun" = aa), if mapatom (aa) then funmake (aa, []) else apply (aa, []));
@@ -163,22 +165,28 @@ defrule (function_from_FuncDecl_function,
 
 construct_function_definition (function_name, body, arguments, results) :=
     block ([args_symbols: extract_arguments_symbols (arguments),
-            results_names: extract_results_names (results)],
-           if results_names = []
+            results_names_and_values: extract_results_names_and_initial_values (results)],
+           if results_names_and_values = []
                then buildq ([function_name, args_symbols, body],
                             function_name (splice (args_symbols)) := returning (body))
-               else buildq ([function_name, args_symbols, body, results_names],
-                            function_name (splice (args_symbols)) := block (results_names, returning (body), if %% # null then %% else results_names)));
+               else buildq ([function_name, args_symbols, body, results_names_and_values, results_names_only: map (first, results_names_and_values)],
+                            function_name (splice (args_symbols)) := block (results_names_and_values, returning (body), if %% # null then %% else results_names_only)));
 
 extract_arguments_symbols (arguments) :=
     (map (lambda ([e], assoc ("Names", e)), arguments),
      apply (append, %%));
 
-extract_results_names (results) :=
+extract_results_names_and_initial_values (results) :=
     if results = null
         then []
-        else block ([names: map (lambda ([e], assoc ("Names", e)), results)],
-                    apply (append, subst (null = [], names)));
+        else block ([names: map (lambda ([e], assoc ("Names", e)), results),
+                     types: map (lambda ([e], assoc ("Type", e)), results),
+                     initial_values, names1],
+                    initial_values: map (default_value_for, types),
+                    names1: subst (null = [], names),
+                    if names = [] then []
+                        else (map (lambda ([a, b], map (lambda ([a1], buildq ([a1, b], a1 : b)), a)), names1, initial_values),
+                              apply (append, %%)));
 
 /* match FuncDecl with "Recv" # null; that's a method.
  * Additionally match "TypeParams" = null; not sure yet what to do otherwise.
@@ -192,18 +200,18 @@ construct_method_definition (method_name, body, receiver, arguments, results) :=
     block ([args_symbols: extract_arguments_symbols (arguments),
             recv_symbol: extract_receiver_symbol (receiver),
             recv_type: extract_receiver_type (receiver),
-            results_names: extract_results_names (results)],
+            results_names_and_values: extract_results_names_and_initial_values (results)],
            push (method_name [recv_type], methods_list),
-           if results_names = []
+           if results_names_and_values = []
                then buildq ([method_name, recv_symbol, recv_type, args_symbols, body],
                             method_name [recv_type]:
                             lambda ([recv_symbol], buildq ([recv_value: recv_symbol],
                                                            lambda (args_symbols, block ([recv_symbol: recv_value], returning (body))))))
-               else buildq ([method_name, recv_symbol, recv_type, args_symbols, body, results_names],
+               else buildq ([method_name, recv_symbol, recv_type, args_symbols, body, results_names_and_values, results_names_only: map (first, results_names_and_values)],
                             method_name [recv_type]:
                             lambda ([recv_symbol], buildq ([recv_value: recv_symbol],
                                                            lambda (args_symbols,
-                                                                   block (results_names, block ([recv_symbol: recv_value], returning (body)), if %% # null then %% else results_names))))));
+                                                                   block (results_names_and_values, block ([recv_symbol: recv_value], returning (body)), if %% # null then %% else results_names_only))))));
 
 extract_receiver_symbol (receiver) :=
     /* receiver is apparently always a list of exactly one element,

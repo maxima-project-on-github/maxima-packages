@@ -6,7 +6,7 @@ GenDecl("Specs" = [ImportSpec("Name" = null,"Path" = "math"),ImportSpec("Name" =
                    ImportSpec("Name" = null,"Path" = "github.com/soniakeys/unit")],"Tok" = "import")$
  
  
-True(T):=block([s,ν],
+True(T):=block([s:default(unit@Angle),ν:default(unit@Angle)],
      returning(block([L0,M,C],L0:unit@AngleFromDeg(base@Horner(T,280.46646,36000.76983,3.032e-4)),M:MeanAnomaly(T),
                      C:unit@AngleFromDeg(Sin[go_type_of(M)](M)()*base@Horner(T,1.914602,-0.004817,-1.4e-5)
                                           +Sin[go_type_of(Mul[go_type_of(M)](M)(2))](Mul[go_type_of(M)](M)(2))()*(0.019993-1.01e-4*T)
@@ -32,19 +32,19 @@ ApparentLongitude(T):=returning(
 node(T):=unit@AngleFromDeg(125.04-1934.136*T)$
  
  
-True2000(T):=block([s,ν],
+True2000(T):=block([s:default(unit@Angle),ν:default(unit@Angle)],
          returning(block([s,ν]:True(T),s:s-Mul[go_type_of(unit@AngleFromDeg(0.01397))](unit@AngleFromDeg(0.01397))(100*T),
                          throw('return(null)))),if %% # null then %% else [s,ν])$
  
  
-TrueEquatorial(jde):=block([α,δ],
+TrueEquatorial(jde):=block([α:default(unit@RA),δ:default(unit@Angle)],
                returning(block([_,s,ε,cs,ss,cε,sε],[s,_]:True(base@J2000Century(jde)),ε:nutation@MeanObliquity(jde),
                                [ss,cs]:Sincos[go_type_of(s)](s)(),[sε,cε]:Sincos[go_type_of(ε)](ε)(),
                                α:unit@RAFromRad(math@Atan2(cε*ss,cs)),δ:unit@Angle(math@Asin(ss*sε)),throw('return(null)))),
                if %% # null then %% else [α,δ])$
  
  
-ApparentEquatorial(jde):=block([α,δ],
+ApparentEquatorial(jde):=block([α:default(unit@RA),δ:default(unit@Angle)],
                    returning(block([T,λ,ε,cλ,sλ,cε,sε],T:base@J2000Century(jde),λ:ApparentLongitude(T),ε:nutation@MeanObliquity(jde),
                                    [sλ,cλ]:Sincos[go_type_of(λ)](λ)(),
                                    ε:ε+Mul[go_type_of(unit@AngleFromDeg(0.00256))](unit@AngleFromDeg(0.00256))(
@@ -53,7 +53,7 @@ ApparentEquatorial(jde):=block([α,δ],
                    if %% # null then %% else [α,δ])$
  
  
-TrueVSOP87(e,jde):=block([s,β,R],
+TrueVSOP87(e,jde):=block([s:default(unit@Angle),β:default(unit@Angle),R:0],
            returning(block([r,b,l,λp,cλp,sλp,Δβ],[l,b,r]:e@Position(jde),s:math@Pi+l,
                            λp:base@Horner(base@J2000Century(jde),Rad[go_type_of(s)](s)(),-(0.007761111111111112*math@Pi),
                                           -(1.7222222222222222e-6*math@Pi)),[sλp,cλp]:math@Sincos(λp),
@@ -62,12 +62,12 @@ TrueVSOP87(e,jde):=block([s,β,R],
            if %% # null then %% else [s,β,R])$
  
  
-ApparentVSOP87(e,jde):=block([λ,β,R],
+ApparentVSOP87(e,jde):=block([λ:default(unit@Angle),β:default(unit@Angle),R:0],
                returning(block([R,β,s,_,Δψ,a],[s,β,R]:TrueVSOP87(e,jde),[Δψ,_]:nutation@Nutation(jde),a:aberration(R),
                                throw('return([Δψ+s+a,β,R])))),if %% # null then %% else [λ,β,R])$
  
  
-ApparentEquatorialVSOP87(e,jde):=block([α,δ,R],
+ApparentEquatorialVSOP87(e,jde):=block([α:default(unit@RA),δ:default(unit@Angle),R:0],
                          returning(block([R,β,s,Δε,Δψ,a,λ,ε,cε,sε],[s,β,R]:TrueVSOP87(e,jde),[Δψ,Δε]:nutation@Nutation(jde),
                                          a:aberration(R),λ:Δψ+s+a,ε:Δε+nutation@MeanObliquity(jde),[sε,cε]:Sincos[go_type_of(ε)](ε)(),
                                          [α,δ]:coord@EclToEq(λ,β,sε,cε),throw('return(null)))),if %% # null then %% else [α,δ,R])$

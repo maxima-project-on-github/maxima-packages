@@ -1,5 +1,5 @@
  
-General(φ,D,a,z):=block([lines,center,u,ψ],
+General(φ,D,a,z):=block([lines:[],center:new(Point),u:0,ψ:default(unit@Angle)],
         returning(block([cφ,sφ,tφ,cD,sD,cz,sz,P,aP],[sφ,cφ]:Sincos[go_type_of(φ)](φ)(),tφ:sφ/cφ,[sD,cD]:Sincos[go_type_of(D)](D)(),
                         [sz,cz]:Sincos[go_type_of(z)](z)(),P:cz*sφ-cD*cφ*sz,
                         for i from 0 unless i >= 24 do
@@ -18,7 +18,7 @@ General(φ,D,a,z):=block([lines,center,u,ψ],
         if %% # null then %% else [lines,center,u,ψ])$
  
  
-Equatorial(φ,a):=block([n,s],
+Equatorial(φ,a):=block([n:[],s:[]],
            returning(block([tφ],tφ:Tan[go_type_of(φ)](φ)(),
                            for i from 0 unless i >= 24 do
                                continuing(block([nl,sl,H,aH,cH,sH],nl:block([x:new(Line)],x@Hour:i,x),sl:block([x:new(Line)],x@Hour:i,x),
@@ -37,7 +37,7 @@ Equatorial(φ,a):=block([n,s],
            if %% # null then %% else [n,s])$
  
  
-Horizontal(φ,a):=block([lines,center,u],
+Horizontal(φ,a):=block([lines:[],center:new(Point),u:0],
            returning(block([cφ,sφ,tφ],[sφ,cφ]:Sincos[go_type_of(φ)](φ)(),tφ:sφ/cφ,
                            for i from 0 unless i >= 24 do
                                continuing(block([l,H,aH,cH,sH],l:block([x:new(Line)],x@Hour:i,x),H:(float64(i-12)*math@Pi)/12,
@@ -52,7 +52,7 @@ Horizontal(φ,a):=block([lines,center,u],
                            u:a/math@Abs(sφ),throw('return(null)))),if %% # null then %% else [lines,center,u])$
  
  
-HorizontalByDeclination(φ,a):=block([lines,center,u],
+HorizontalByDeclination(φ,a):=block([lines:[],center:new(Point),u:0],
                         returning(block([cφ,sφ,tφ],[sφ,cφ]:Sincos[go_type_of(φ)](φ)(),tφ:sφ/cφ,
                                         for j from 0 thru length(m)-1 do
                                             continuing(block([d:m[j+1]],
@@ -72,7 +72,7 @@ HorizontalByDeclination(φ,a):=block([lines,center,u],
                         if %% # null then %% else [lines,center,u])$
  
  
-Vertical(φ,D,a):=block([lines,center,u],
+Vertical(φ,D,a):=block([lines:[],center:new(Point),u:0],
          returning(block([cφ,sφ,tφ,cD,sD],[sφ,cφ]:Sincos[go_type_of(φ)](φ)(),tφ:sφ/cφ,[sD,cD]:Sincos[go_type_of(D)](D)(),
                          for i from 0 unless i >= 24 do
                              continuing(block([l,H,aH,cH,sH],l:block([x:new(Line)],x@Hour:i,x),H:(float64(i-12)*math@Pi)/12,aH:math@Abs(H),

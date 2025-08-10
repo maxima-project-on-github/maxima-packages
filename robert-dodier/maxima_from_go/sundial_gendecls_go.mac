@@ -12,7 +12,7 @@ defstruct(Line(Hour = 0,Points = []))$
 defstruct(PointWithHour(H = 0,X = 0,Y = 0))$
  
  
-defstruct(LineWithDeclination(Declination = false,Description = "",Points = []))$
+defstruct(LineWithDeclination(Declination = default(unit@Angle),Description = "",Points = []))$
  
  
 m:[-23.44,-20.15,-11.47,0,11.47,20.15,23.44]$

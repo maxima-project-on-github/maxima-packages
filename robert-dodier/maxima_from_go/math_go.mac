@@ -38,3 +38,7 @@ math@Acos: acos;
 math@Atan2: atan2;
 
 math@Abs: abs;
+
+/* may need a bunch of other Foo[float64] functions here ... !! */
+
+Sincos[float64]: lambda ([x], buildq ([y: math@Sincos (x)], lambda ([], y)));
