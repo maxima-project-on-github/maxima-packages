@@ -1,0 +1,188 @@
+      {
+         "Body" : {
+            "List" : [
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "s",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "NodeType" : "ParenExpr",
+                        "X" : {
+                           "NodeType" : "BinaryExpr",
+                           "Op" : "+",
+                           "X" : {
+                              "Args" : [
+                                 {
+                                    "NodeType" : "BinaryExpr",
+                                    "Op" : "*",
+                                    "X" : {
+                                       "NodeType" : "ParenExpr",
+                                       "X" : {
+                                          "NodeType" : "BinaryExpr",
+                                          "Op" : "+",
+                                          "X" : {
+                                             "NodeType" : "BinaryExpr",
+                                             "Op" : "*",
+                                             "X" : {
+                                                "Name" : "d",
+                                                "NodeType" : "Ident"
+                                             },
+                                             "Y" : {
+                                                "Kind" : "INT",
+                                                "NodeType" : "BasicLit",
+                                                "Value" : "60"
+                                             }
+                                          },
+                                          "Y" : {
+                                             "Name" : "m",
+                                             "NodeType" : "Ident"
+                                          }
+                                       }
+                                    },
+                                    "Y" : {
+                                       "Kind" : "INT",
+                                       "NodeType" : "BasicLit",
+                                       "Value" : "60"
+                                    }
+                                 }
+                              ],
+                              "Fun" : {
+                                 "Name" : "float64",
+                                 "NodeType" : "Ident"
+                              },
+                              "NodeType" : "CallExpr"
+                           },
+                           "Y" : {
+                              "Name" : "s",
+                              "NodeType" : "Ident"
+                           }
+                        }
+                     }
+                  ],
+                  "Tok" : "="
+               },
+               {
+                  "Body" : {
+                     "List" : [
+                        {
+                           "NodeType" : "ReturnStmt",
+                           "Results" : [
+                              {
+                                 "NodeType" : "UnaryExpr",
+                                 "Op" : "-",
+                                 "X" : {
+                                    "Name" : "s",
+                                    "NodeType" : "Ident"
+                                 }
+                              }
+                           ]
+                        }
+                     ],
+                     "NodeType" : "BlockStmt"
+                  },
+                  "Cond" : {
+                     "NodeType" : "BinaryExpr",
+                     "Op" : "==",
+                     "X" : {
+                        "Name" : "neg",
+                        "NodeType" : "Ident"
+                     },
+                     "Y" : {
+                        "Kind" : "CHAR",
+                        "NodeType" : "BasicLit",
+                        "Value" : "'-'"
+                     }
+                  },
+                  "Else" : null,
+                  "Init" : null,
+                  "NodeType" : "IfStmt"
+               },
+               {
+                  "NodeType" : "ReturnStmt",
+                  "Results" : [
+                     {
+                        "Name" : "s",
+                        "NodeType" : "Ident"
+                     }
+                  ]
+               }
+            ],
+            "NodeType" : "BlockStmt"
+         },
+         "Name" : {
+            "Name" : "FromSexaSec",
+            "NodeType" : "Ident"
+         },
+         "NodeType" : "FuncDecl",
+         "Recv" : null,
+         "Type" : {
+            "NodeType" : "FuncType",
+            "Params" : {
+               "List" : [
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "neg",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "Name" : "byte",
+                        "NodeType" : "Ident"
+                     }
+                  },
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "d",
+                           "NodeType" : "Ident"
+                        },
+                        {
+                           "Name" : "m",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "Name" : "int",
+                        "NodeType" : "Ident"
+                     }
+                  },
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "s",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "Name" : "float64",
+                        "NodeType" : "Ident"
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "Results" : {
+               "List" : [
+                  {
+                     "Names" : null,
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "Name" : "float64",
+                        "NodeType" : "Ident"
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "TypeParams" : null
+         }
+      }

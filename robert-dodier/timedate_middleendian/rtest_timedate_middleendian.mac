@@ -1,0 +1,405 @@
+(if ?get ('parse_timedate_middleendian, 'mfexpr) = false
+     then load ("timedate_middleendian.mac"),
+ test_parse_timedate_middleendian (y, mo, d, h, mi, s, tz_offset, S) :=
+     block ([expected, actual],
+            actual: parse_timedate_middleendian (S),
+            if tz_offset # false
+                then expected: encode_time (y, mo, d, h, mi, s, tz_offset)
+                else expected: encode_time (y, mo, d, h, mi, s),
+            if actual = expected
+                then true
+                else ['input = [y, mo, d, h, mi, s, tz_offset, S], 'expected = expected, 'actual = actual]),
+ 0);
+0;
+
+(trace (parse_timedate_middleendian), 0);
+0;
+
+block ([y: 2025, mo: 3, d: 23],
+       test_parse_timedate_middleendian (y, mo, d, 0, 0, 0, false, printf (false, "~d/~d/~d", mo, d, y)));
+true;
+
+block ([y: 1975, mo: 3, d: 23],
+       test_parse_timedate_middleendian (y, mo, d, 0, 0, 0, false, printf (false, "~d/~d/~d", mo, d, y)));
+true;
+
+block ([y: 1975, mo: 12, d: 23],
+       test_parse_timedate_middleendian (y, mo, d, 0, 0, 0, false, printf (false, "~d/~d/~d", mo, d, y)));
+true;
+
+block ([y: 1975, mo: 12, d: 31],
+       test_parse_timedate_middleendian (y, mo, d, 0, 0, 0, false, printf (false, "~d/~d/~d", mo, d, y)));
+true;
+
+block ([y: 2008, mo: 12, d: 31],
+       test_parse_timedate_middleendian (y, mo, d, 0, 0, 0, false, printf (false, "~d/~d/~d", mo, d, y)));
+true;
+
+block ([y: 2008, mo: 1, d: 31],
+       test_parse_timedate_middleendian (y, mo, d, 0, 0, 0, false, printf (false, "~d/~d/~d", mo, d, y)));
+true;
+
+block ([y: 2008, mo: 1, d: 1],
+       test_parse_timedate_middleendian (y, mo, d, 0, 0, 0, false, printf (false, "~d/~d/~d", mo, d, y)));
+true;
+
+
+block ([y: 2025, mo: 3, d: 23, h: 0, mi: 0],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, 0, false, printf (false, "~d/~d/~d ~2,'0d:~2,'0d", mo, d, y, h, mi)));
+true;
+
+block ([y: 2025, mo: 3, d: 23, h: 4, mi: 8],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, 0, false, printf (false, "~d/~d/~d ~2,'0d:~2,'0d", mo, d, y, h, mi)));
+true;
+
+block ([y: 1975, mo: 3, d: 23, h: 14, mi: 18],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, 0, false, printf (false, "~d/~d/~d ~2,'0d:~2,'0d", mo, d, y, h, mi)));
+true;
+
+block ([y: 1975, mo: 12, d: 23, h: 0, mi: 32],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, 0, false, printf (false, "~d/~d/~d ~2,'0d:~2,'0d", mo, d, y, h, mi)));
+true;
+
+block ([y: 1975, mo: 12, d: 31, h: 23, mi: 0],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, 0, false, printf (false, "~d/~d/~d ~2,'0d:~2,'0d", mo, d, y, h, mi)));
+true;
+
+block ([y: 2008, mo: 12, d: 31, h: 12, mi: 21],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, 0, false, printf (false, "~d/~d/~d ~2,'0d:~2,'0d", mo, d, y, h, mi)));
+true;
+
+block ([y: 2008, mo: 1, d: 31, h: 17, mi: 9],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, 0, false, printf (false, "~d/~d/~d ~2,'0d:~2,'0d", mo, d, y, h, mi)));
+true;
+
+block ([y: 2008, mo: 1, d: 1, h: 4, mi: 2],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, 0, false, printf (false, "~d/~d/~d ~2,'0d:~2,'0d", mo, d, y, h, mi)));
+true;
+
+
+block ([y: 2025, mo: 3, d: 23, h: 0, mi: 0, s: 0],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, false, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d", mo, d, y, h, mi, s)));
+true;
+
+block ([y: 2025, mo: 3, d: 23, h: 4, mi: 8, s: 34],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, false, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d", mo, d, y, h, mi, s)));
+true;
+
+block ([y: 1975, mo: 3, d: 23, h: 14, mi: 18, s: 4],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, false, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d", mo, d, y, h, mi, s)));
+true;
+
+block ([y: 1975, mo: 12, d: 23, h: 0, mi: 32, s: 0],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, false, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d", mo, d, y, h, mi, s)));
+true;
+
+block ([y: 1975, mo: 12, d: 31, h: 23, mi: 0, s: 19],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, false, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d", mo, d, y, h, mi, s)));
+true;
+
+block ([y: 2008, mo: 12, d: 31, h: 12, mi: 21, s: 59],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, false, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d", mo, d, y, h, mi, s)));
+true;
+
+block ([y: 2008, mo: 1, d: 31, h: 17, mi: 9, s: 11],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, false, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d", mo, d, y, h, mi, s)));
+true;
+
+block ([y: 2008, mo: 1, d: 1, h: 4, mi: 2, s: 48],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, false, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d", mo, d, y, h, mi, s)));
+true;
+
+
+(format_zz (zz) :=
+     if zz < 0
+         then printf (false, "-~2,'0d~2,'0d", floor (- zz), mod (- zz, 1) * 60)
+         else printf (false, "+~2,'0d~2,'0d", floor (zz), mod (zz, 1) * 60),
+ 0);
+0;
+
+block ([y: 2025, mo: 3, d: 23, h: 0, mi: 0, s: 0, zz: -7],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, y, h, mi, s, format_zz (zz))));
+true;
+
+block ([y: 2025, mo: 3, d: 23, h: 4, mi: 8, s: 34, zz: -7],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, y, h, mi, s, format_zz (zz))));
+true;
+
+block ([y: 1975, mo: 3, d: 23, h: 14, mi: 18, s: 4, zz: +7],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, y, h, mi, s, format_zz (zz))));
+true;
+
+block ([y: 1975, mo: 12, d: 23, h: 0, mi: 32, s: 0, zz: -8.5],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, y, h, mi, s, format_zz (zz))));
+true;
+
+block ([y: 1975, mo: 12, d: 31, h: 23, mi: 0, s: 19, zz: 15.5],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, y, h, mi, s, format_zz (zz))));
+true;
+
+block ([y: 2008, mo: 12, d: 31, h: 12, mi: 21, s: 59, zz: -4],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, y, h, mi, s, format_zz (zz))));
+true;
+
+block ([y: 2008, mo: 1, d: 31, h: 17, mi: 9, s: 11, zz: 0],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, y, h, mi, s, format_zz (zz))));
+true;
+
+block ([y: 2008, mo: 1, d: 1, h: 4, mi: 2, s: 48, zz: 10],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, y, h, mi, s, format_zz (zz))));
+true;
+
+
+(format_z_colon_z (zz) :=
+     if zz < 0
+         then printf (false, "-~2,'0d:~2,'0d", floor (- zz), mod (- zz, 1) * 60)
+         else printf (false, "+~2,'0d:~2,'0d", floor (zz), mod (zz, 1) * 60),
+ 0);
+0;
+
+block ([y: 2025, mo: 3, d: 23, h: 0, mi: 0, s: 0, zz: -7],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, y, h, mi, s, format_z_colon_z (zz))));
+true;
+
+block ([y: 2025, mo: 3, d: 23, h: 4, mi: 8, s: 34, zz: -7],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, y, h, mi, s, format_z_colon_z (zz))));
+true;
+
+block ([y: 1975, mo: 3, d: 23, h: 14, mi: 18, s: 4, zz: +7],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, y, h, mi, s, format_z_colon_z (zz))));
+true;
+
+block ([y: 1975, mo: 12, d: 23, h: 0, mi: 32, s: 0, zz: -8.5],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, y, h, mi, s, format_z_colon_z (zz))));
+true;
+
+block ([y: 1975, mo: 12, d: 31, h: 23, mi: 0, s: 19, zz: 15.5],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, y, h, mi, s, format_z_colon_z (zz))));
+true;
+
+block ([y: 2008, mo: 12, d: 31, h: 12, mi: 21, s: 59, zz: -4],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, y, h, mi, s, format_z_colon_z (zz))));
+true;
+
+block ([y: 2008, mo: 1, d: 31, h: 17, mi: 9, s: 11, zz: 0],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, y, h, mi, s, format_z_colon_z (zz))));
+true;
+
+block ([y: 2008, mo: 1, d: 1, h: 4, mi: 2, s: 48, zz: 10],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, y, h, mi, s, format_z_colon_z (zz))));
+true;
+
+
+block ([y: 2025, mo: 3, d: 23],
+       test_parse_timedate_middleendian (y, mo, d, 0, 0, 0, false, printf (false, "~d/~d/~d", mo, d, mod (y, 100))));
+true;
+
+block ([y: 1975, mo: 3, d: 23],
+       test_parse_timedate_middleendian (y, mo, d, 0, 0, 0, false, printf (false, "~d/~d/~d", mo, d, mod (y, 100))));
+true;
+
+block ([y: 1975, mo: 12, d: 23],
+       test_parse_timedate_middleendian (y, mo, d, 0, 0, 0, false, printf (false, "~d/~d/~d", mo, d, mod (y, 100))));
+true;
+
+block ([y: 1975, mo: 12, d: 31],
+       test_parse_timedate_middleendian (y, mo, d, 0, 0, 0, false, printf (false, "~d/~d/~d", mo, d, mod (y, 100))));
+true;
+
+block ([y: 2008, mo: 12, d: 31],
+       test_parse_timedate_middleendian (y, mo, d, 0, 0, 0, false, printf (false, "~d/~d/~d", mo, d, mod (y, 100))));
+true;
+
+block ([y: 2008, mo: 1, d: 31],
+       test_parse_timedate_middleendian (y, mo, d, 0, 0, 0, false, printf (false, "~d/~d/~d", mo, d, mod (y, 100))));
+true;
+
+block ([y: 2008, mo: 1, d: 1],
+       test_parse_timedate_middleendian (y, mo, d, 0, 0, 0, false, printf (false, "~d/~d/~d", mo, d, mod (y, 100))));
+true;
+
+
+block ([y: 2025, mo: 3, d: 23, h: 0, mi: 0],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, 0, false, printf (false, "~d/~d/~d ~2,'0d:~2,'0d", mo, d, mod (y, 100), h, mi)));
+true;
+
+block ([y: 2025, mo: 3, d: 23, h: 4, mi: 8],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, 0, false, printf (false, "~d/~d/~d ~2,'0d:~2,'0d", mo, d, mod (y, 100), h, mi)));
+true;
+
+block ([y: 1975, mo: 3, d: 23, h: 14, mi: 18],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, 0, false, printf (false, "~d/~d/~d ~2,'0d:~2,'0d", mo, d, mod (y, 100), h, mi)));
+true;
+
+block ([y: 1975, mo: 12, d: 23, h: 0, mi: 32],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, 0, false, printf (false, "~d/~d/~d ~2,'0d:~2,'0d", mo, d, mod (y, 100), h, mi)));
+true;
+
+block ([y: 1975, mo: 12, d: 31, h: 23, mi: 0],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, 0, false, printf (false, "~d/~d/~d ~2,'0d:~2,'0d", mo, d, mod (y, 100), h, mi)));
+true;
+
+block ([y: 2008, mo: 12, d: 31, h: 12, mi: 21],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, 0, false, printf (false, "~d/~d/~d ~2,'0d:~2,'0d", mo, d, mod (y, 100), h, mi)));
+true;
+
+block ([y: 2008, mo: 1, d: 31, h: 17, mi: 9],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, 0, false, printf (false, "~d/~d/~d ~2,'0d:~2,'0d", mo, d, mod (y, 100), h, mi)));
+true;
+
+block ([y: 2008, mo: 1, d: 1, h: 4, mi: 2],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, 0, false, printf (false, "~d/~d/~d ~2,'0d:~2,'0d", mo, d, mod (y, 100), h, mi)));
+true;
+
+
+block ([y: 2025, mo: 3, d: 23, h: 0, mi: 0, s: 0],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, false, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d", mo, d, mod (y, 100), h, mi, s)));
+true;
+
+block ([y: 2025, mo: 3, d: 23, h: 4, mi: 8, s: 34],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, false, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d", mo, d, mod (y, 100), h, mi, s)));
+true;
+
+block ([y: 1975, mo: 3, d: 23, h: 14, mi: 18, s: 4],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, false, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d", mo, d, mod (y, 100), h, mi, s)));
+true;
+
+block ([y: 1975, mo: 12, d: 23, h: 0, mi: 32, s: 0],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, false, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d", mo, d, mod (y, 100), h, mi, s)));
+true;
+
+block ([y: 1975, mo: 12, d: 31, h: 23, mi: 0, s: 19],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, false, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d", mo, d, mod (y, 100), h, mi, s)));
+true;
+
+block ([y: 2008, mo: 12, d: 31, h: 12, mi: 21, s: 59],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, false, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d", mo, d, mod (y, 100), h, mi, s)));
+true;
+
+block ([y: 2008, mo: 1, d: 31, h: 17, mi: 9, s: 11],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, false, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d", mo, d, mod (y, 100), h, mi, s)));
+true;
+
+block ([y: 2008, mo: 1, d: 1, h: 4, mi: 2, s: 48],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, false, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d", mo, d, mod (y, 100), h, mi, s)));
+true;
+
+
+block ([y: 2025, mo: 3, d: 23, h: 0, mi: 0, s: 0, zz: -7],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, mod (y, 100), h, mi, s, format_zz (zz))));
+true;
+
+block ([y: 2025, mo: 3, d: 23, h: 4, mi: 8, s: 34, zz: -7],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, mod (y, 100), h, mi, s, format_zz (zz))));
+true;
+
+block ([y: 1975, mo: 3, d: 23, h: 14, mi: 18, s: 4, zz: +7],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, mod (y, 100), h, mi, s, format_zz (zz))));
+true;
+
+block ([y: 1975, mo: 12, d: 23, h: 0, mi: 32, s: 0, zz: -8.5],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, mod (y, 100), h, mi, s, format_zz (zz))));
+true;
+
+block ([y: 1975, mo: 12, d: 31, h: 23, mi: 0, s: 19, zz: 15.5],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, mod (y, 100), h, mi, s, format_zz (zz))));
+true;
+
+block ([y: 2008, mo: 12, d: 31, h: 12, mi: 21, s: 59, zz: -4],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, mod (y, 100), h, mi, s, format_zz (zz))));
+true;
+
+block ([y: 2008, mo: 1, d: 31, h: 17, mi: 9, s: 11, zz: 0],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, mod (y, 100), h, mi, s, format_zz (zz))));
+true;
+
+block ([y: 2008, mo: 1, d: 1, h: 4, mi: 2, s: 48, zz: 10],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, mod (y, 100), h, mi, s, format_zz (zz))));
+true;
+
+
+block ([y: 2025, mo: 3, d: 23, h: 0, mi: 0, s: 0, zz: -7],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, mod (y, 100), h, mi, s, format_z_colon_z (zz))));
+true;
+
+block ([y: 2025, mo: 3, d: 23, h: 4, mi: 8, s: 34, zz: -7],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, mod (y, 100), h, mi, s, format_z_colon_z (zz))));
+true;
+
+block ([y: 1975, mo: 3, d: 23, h: 14, mi: 18, s: 4, zz: +7],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, mod (y, 100), h, mi, s, format_z_colon_z (zz))));
+true;
+
+block ([y: 1975, mo: 12, d: 23, h: 0, mi: 32, s: 0, zz: -8.5],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, mod (y, 100), h, mi, s, format_z_colon_z (zz))));
+true;
+
+block ([y: 1975, mo: 12, d: 31, h: 23, mi: 0, s: 19, zz: 15.5],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, mod (y, 100), h, mi, s, format_z_colon_z (zz))));
+true;
+
+block ([y: 2008, mo: 12, d: 31, h: 12, mi: 21, s: 59, zz: -4],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, mod (y, 100), h, mi, s, format_z_colon_z (zz))));
+true;
+
+block ([y: 2008, mo: 1, d: 31, h: 17, mi: 9, s: 11, zz: 0],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, mod (y, 100), h, mi, s, format_z_colon_z (zz))));
+true;
+
+block ([y: 2008, mo: 1, d: 1, h: 4, mi: 2, s: 48, zz: 10],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, mod (y, 100), h, mi, s, format_z_colon_z (zz))));
+true;
+
+
+block ([y: 2008, mo: 12, d: 31],
+       test_parse_timedate_middleendian (y, mo, d, 0, 0, 0, false, printf (false, "~d/~d/~2,'0d", mo, d, mod (y, 100))));
+true;
+
+block ([y: 2008, mo: 1, d: 31],
+       test_parse_timedate_middleendian (y, mo, d, 0, 0, 0, false, printf (false, "~d/~d/~2,'0d", mo, d, mod (y, 100))));
+true;
+
+block ([y: 2008, mo: 1, d: 1],
+       test_parse_timedate_middleendian (y, mo, d, 0, 0, 0, false, printf (false, "~d/~d/~2,'0d", mo, d, mod (y, 100))));
+true;
+
+
+block ([y: 2008, mo: 12, d: 31, h: 12, mi: 21, s: 59],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, false, printf (false, "~d/~d/~2,'0d ~2,'0d:~2,'0d:~2,'0d", mo, d, mod (y, 100), h, mi, s)));
+true;
+
+block ([y: 2008, mo: 1, d: 31, h: 17, mi: 9, s: 11],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, false, printf (false, "~d/~d/~2,'0d ~2,'0d:~2,'0d:~2,'0d", mo, d, mod (y, 100), h, mi, s)));
+true;
+
+block ([y: 2008, mo: 1, d: 1, h: 4, mi: 2, s: 48],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, false, printf (false, "~d/~d/~2,'0d ~2,'0d:~2,'0d:~2,'0d", mo, d, mod (y, 100), h, mi, s)));
+true;
+
+
+block ([y: 2008, mo: 12, d: 31, h: 12, mi: 21, s: 59, zz: -4],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~2,'0d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, mod (y, 100), h, mi, s, format_zz (zz))));
+true;
+
+block ([y: 2008, mo: 1, d: 31, h: 17, mi: 9, s: 11, zz: 0],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~2,'0d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, mod (y, 100), h, mi, s, format_zz (zz))));
+true;
+
+block ([y: 2008, mo: 1, d: 1, h: 4, mi: 2, s: 48, zz: 10],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~2,'0d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, mod (y, 100), h, mi, s, format_zz (zz))));
+true;
+
+
+block ([y: 2008, mo: 12, d: 31, h: 12, mi: 21, s: 59, zz: -4],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~2,'0d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, mod (y, 100), h, mi, s, format_z_colon_z (zz))));
+true;
+
+block ([y: 2008, mo: 1, d: 31, h: 17, mi: 9, s: 11, zz: 0],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~2,'0d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, mod (y, 100), h, mi, s, format_z_colon_z (zz))));
+true;
+
+block ([y: 2008, mo: 1, d: 1, h: 4, mi: 2, s: 48, zz: 10],
+       test_parse_timedate_middleendian (y, mo, d, h, mi, s, zz, printf (false, "~d/~d/~2,'0d ~2,'0d:~2,'0d:~2,'0d~a", mo, d, mod (y, 100), h, mi, s, format_z_colon_z (zz))));
+true;
+
+

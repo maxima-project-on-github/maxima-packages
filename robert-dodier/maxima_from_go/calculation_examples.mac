@@ -1,0 +1,45 @@
+/* expected results from foo.go:
+
+True (0.25) --> 4.896810933883877 6.234304499640338
+MeanAnomaly (0.25) --> 163.31554876144415
+Eccentricity (0.25) --> 0.01669811683125
+Radius (0.25) --> 0.9833221741414279
+ApparentLongitude (0.25) --> 4.896709432058603
+True2000 (0.25) --> 4.890715371471287 6.234304499640338
+jde := base.JulianYearToJDE (2025) --> 2.46067625e+06
+TrueEquatorial (jde) --> 4.912969120591808 -0.40169680227173005
+ApparentEquatorial (jde) --> 4.912862965283581 -0.40174861376992765
+
+ */
+
+load ("go_runtime.mac");
+load ("solar_go.mac");
+
+display (True (0.25));
+"expected: True (0.25) --> 4.896810933883877 6.234304499640338" $
+display (MeanAnomaly (0.25));
+"expected: MeanAnomaly (0.25) --> 163.31554876144415" $
+display (Eccentricity (0.25));
+"expected: Eccentricity (0.25) --> 0.01669811683125" $
+display (Radius (0.25));
+"expected: Radius (0.25) --> 0.9833221741414279" $
+display (ApparentLongitude (0.25));
+"expected: ApparentLongitude (0.25) --> 4.896709432058603" $
+display (True2000 (0.25));
+"expected: True2000 (0.25) --> 4.890715371471287 6.234304499640338" $
+
+/* just assign value to jde -- need to translate julian.go */
+jde: 2460676.25;
+
+display (TrueEquatorial (jde));
+"expected: TrueEquatorial (jde) --> 4.912969120591808 -0.40169680227173005" $
+display (ApparentEquatorial (jde));
+"expected: ApparentEquatorial (jde) --> 4.912862965283581 -0.40174861376992765" $
+
+true_equatorial_by_weeks: makelist (TrueEquatorial (jde + k*7), k, 0, 52) $
+
+for k:0 thru 52 do display (true_equatorial_by_weeks[1 + k]);
+
+apparent_equatorial_by_weeks: makelist (ApparentEquatorial (jde + k*7), k, 0, 52) $
+
+for k:0 thru 52 do display (apparent_equatorial_by_weeks[1 + k]);

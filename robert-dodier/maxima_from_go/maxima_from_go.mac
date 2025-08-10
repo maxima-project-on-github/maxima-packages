@@ -1,0 +1,318 @@
+load ("math_go.mac");
+load ("base_go.mac");
+
+/* need to extract these from package definitions in Go AST;
+ * this explicit list is a stopgap measure.
+ */
+
+go_packages_list: '[unit, solar, nutation];
+
+push("/home/dodier/github/github-forks/maxima-packages/**/*.mac",file_search_maxima);
+push("/home/dodier/github/github-forks/maxima-packages/**/*.lisp",file_search_lisp);
+load(json_tools);
+
+expr_from_blob(b):=if not atom(b) and op(b) = 'blob then funmake(parse_string(b // "NodeType"),other_fields(b)) else b;
+other_fields(b):=block([L:[]],for e in args(b) do if lhs(e) # "NodeType" then push(e,L),reverse(L));
+
+matchdeclare (ss, stringp, [ll, mm], listp, ff, symbolp, [aa, bb, cc], all);
+defrule (symbol_from_Ident, Ident("Name" = ss), parse_string(ss));
+defrule (string_from_BasicLit, BasicLit("Kind" = "STRING", "Value" = ss), parse_string(ss));
+defrule (integer_from_BasicLit, BasicLit("Kind" = "INT", "Value" = ss), parse_string(ss));
+defrule (float_from_BasicLit, BasicLit("Kind" = "FLOAT", "Value" = ss), parse_string (ss));
+defrule (character_from_BasicLit, BasicLit("Kind" = "CHAR", "Value" = ss), charat (ss, 2));
+defrule (list_from_null_List, "List" = null, []);
+defrule (list_from_List, "List" = ll, ll);
+defrule (list_from_FieldList, FieldList (ll), ll);
+defrule (list_from_CompositeLit_Type_null, CompositeLit ("Elts" = ll, "Incomplete" = false, "Type" = null), ll);
+defrule (list_from_CompositeLit_Type_ArrayType_StructType, CompositeLit ("Elts" = ll, "Incomplete" = false, "Type" = ArrayType ("Elt" = StructType ("Fields" = mm, "Incomplete" = false), "Len" = null)), construct_list_of_structs (ll, mm));
+
+construct_list_of_structs (elements_lists, fields_lists) :=
+    block ([fields_names: apply (append, map (lambda ([e], assoc ("Names", e)), fields_lists)),
+            struct_name: gensym ("struct"),
+            struct_expr],
+           struct_expr: funmake (struct_name, fields_names),
+           print ("/* defined new structure for StructType */", funmake (defstruct, [struct_expr])),
+           apply (defstruct, [struct_expr]),
+           map (lambda ([l], funmake (struct_name, l)), elements_lists));
+
+matchdeclare (tt, lambda ([e], symbolp (e) and e # null));
+
+defrule (list_from_CompositeLit_Type_ArrayType_simple,
+         CompositeLit ("Elts" = ll, "Incomplete" = false, "Type" = ArrayType ("Elt" = tt, "Len" = null)),
+         ll);
+
+matchdeclare (llkv, lambda ([e], listp (e) and every (lambda ([e1], not atom (e1) and op (e1) = KeyValueExpr), e)));
+
+defrule (struct_from_CompositeLit_Type_nonnull_key_value_elements,
+         CompositeLit ("Elts" = llkv, "Incomplete" = false, "Type" = tt),
+         block ([kk: map (lambda ([e], assoc ("Key", e)), llkv), vv: map (lambda ([e], assoc ("Value", e)), llkv)],
+                buildq ([tt, l: map (lambda ([y, z], buildq ([y, z], x@y : z)), kk, vv)],
+                        block ([x: new (tt)], splice (l), x))));
+
+/* This next rule has to be applied after the preceding one
+ * since it captures a nonspecific element type.
+ */
+ 
+defrule (struct_from_CompositeLit_Type_nonnull_simple_elements,
+         CompositeLit ("Elts" = ll, "Incomplete" = false, "Type" = tt),
+         buildq ([tt, ll], tt (splice (ll))));
+
+defrule (defstruct_from_TypeSpec_StructType,
+         GenDecl ("Specs" = [TypeSpec ("Name" = tt, "Type" = StructType ("Fields" = ll, "Incomplete" = false), "TypeParams" = null)], "Tok" = "type"),
+         buildq ([tt, vv: variables_and_default_values (ll)], defstruct (tt (splice (vv)))));
+
+variables_and_default_values (l) :=
+    apply (append, map (variables_and_default_values1, l));
+
+variables_and_default_values1 (field) :=
+    block ([names: assoc ("Names", field), type: assoc ("Type", field), value],
+           value: default_value_for (type),
+           map (lambda ([x], x = value), names));
+
+default_value_for (type) :=
+    if type = 'int then 0
+    elseif type = 'float64 then 0 /* 0.0 is also a plausible default here */
+    elseif type = 'string then ""
+    elseif not atom (type) and op (type) = 'ArrayType then []
+    elseif atom (type) then buildq ([type], new (type))
+    else default (type);
+
+/* would prefer to have funmake here instead of apply, but funmake barfs on aa being a general expression; that's a bug in funmake !! */
+defrule (funcall_no_args_from_CallExpr, CallExpr("Args" = null, "Fun" = aa), if mapatom (aa) then funmake (aa, []) else apply (aa, []));
+defrule (funcall_from_CallExpr, CallExpr("Args" = ll, "Fun" = aa), if mapatom (aa) then funmake (aa, ll) else apply (aa, ll));
+defrule (equality_from_BinaryExpr_with_equalsequals, BinaryExpr ("Op" = "==", "X" = aa, "Y" = bb), funmake ('equal, [aa, bb]));
+defrule (expr_from_BinaryExpr, BinaryExpr ("Op" = ss, "X" = aa, "Y" = bb), funmake (ss, [aa, bb]));
+defrule (expr_from_UnaryExpr, UnaryExpr ("Op" = ss, "X" = aa), funmake (ss, [aa]));
+
+/* return(...) in Go is a nonlocal return, so implement ReturnStmt as throw(...) in Maxima.
+ * The corresponding catch(...) appears in the implementation of FuncDecl.
+ * 
+ * Also, Go functions have multiple return values, with the first being the primary return value,
+ * as in Common Lisp. Returning a list in Maxima isn't quite the same.
+ * For now, return a single value as a non-list, otherwise return a list. !!
+ * Not sure how to handle multiple return values in general. !!
+ */
+
+defrule (throw_from_ReturnStmt,
+         ReturnStmt ("Results" = ll),
+         if length (ll) = 1 then buildq ([x: first (ll)], throw ('return (x))) else buildq ([ll], throw ('return (ll))));
+
+defrule (throw_from_ReturnStmt_null,
+         ReturnStmt ("Results" = null),
+         buildq ([], throw ('return (null))));
+
+/* assignment should take into account the stuff above about multiple return values ... !! */
+defrule (assignment_from_AssignStmt, AssignStmt ("Lhs" = ll, "Rhs" = mm, "Tok" = "="),
+         if length (ll) = 1 and length (mm) = 1
+             then buildq ([vv: ll[1], ee: mm[1]], vv : ee)
+             else if length (mm) = 1
+                      /* assume [a, b]: [foo] must mean [a, b]: foo -- not sure if that's always true !! */
+                      then buildq ([ll, ee: mm[1]], ll : ee)
+                      else buildq ([ll, mm], ll : mm));
+
+defrule (assignment_with_addition_from_AssignStmt, AssignStmt ("Lhs" = ll, "Rhs" = mm, "Tok" = "+="),
+         if length (ll) = 1 and length (mm) = 1
+             then buildq ([vv: ll[1], ee: mm[1]], vv : vv + ee)
+             else buildq ([ll, mm], ll : ll + mm));
+
+defrule (assignment_with_subtraction_from_AssignStmt, AssignStmt ("Lhs" = ll, "Rhs" = mm, "Tok" = "-="),
+         if length (ll) = 1 and length (mm) = 1
+             then buildq ([vv: ll[1], ee: mm[1]], vv : vv - ee)
+             else buildq ([ll, mm], ll : ll - mm));
+
+defrule (local_var_assignment_from_AssignStmt, AssignStmt ("Lhs" = ll, "Rhs" = mm, "Tok" = ":="),
+         buildq ([ll, mm], var (ll) : mm));
+
+matchdeclare (xx, symbolp);
+
+defrule (assignment_from_ValueSpec_Type_null_Values_nonnull,
+         GenDecl ("Specs" = [ValueSpec ("Names" = [xx], "Type" = null, "Values" = [ll])], "Tok" = "var"),
+         /* was: buildq ([xx, ll], var (xx) : ll));
+          * but then there is a var(foo): ... at the top level,
+          * not contained in any block, so it isn't processed by the var-lifting stuff below.
+          * dunno how to distinguish top-level ValueSpec from ones which are in a block. !!
+          */
+         buildq ([xx, ll], xx : ll));
+
+matchdeclare (yy, lambda ([e], e # null));
+
+defrule (assignment_from_ValueSpec_Type_nonnull_Values_null,
+         DeclStmt ("Decl" = GenDecl ("Specs" = [ValueSpec ("Names" = ll, "Type" = yy, "Values" = null)], "Tok" = "var")),
+         buildq ([ll, yy], var (ll) : yy (0)));
+
+defrule (block_from_BlockStmt, BlockStmt (ll), buildq ([ll], block (splice (ll))));
+
+defrule (expr_from_ParenExpr, ParenExpr ("X" = aa), aa);
+
+/* not sure how to handle method calls here -- handle at run time?? substitute f(x) for x@f when f is known to be a method?? */
+defrule (at_sign_from_SelectorExpr, SelectorExpr ("Sel" = aa, "X" = bb), buildq ([aa, bb], "@"(bb, aa)));
+
+defrule (if_then_from_IfStmt,
+         IfStmt ("Body" = aa, "Cond" = bb, "Else" = null, "Init" = null),
+         buildq ([aa, bb], if bb then aa));
+
+defrule (if_then_else_from_IfStmt,
+         IfStmt ("Body" = aa, "Cond" = bb, "Else" = cc, "Init" = null),
+         buildq ([aa, bb, cc], if bb then aa else cc));
+
+/* match FuncDecl with "Recv" = null; that's an ordinary function.
+ * Additionally match "TypeParams" = null; not sure yet what to do otherwise.
+ */
+
+defrule (function_from_FuncDecl_function,
+         FuncDecl ("Body" = aa, "Name" = ff, "Recv" = null, "Type" = FuncType ("Params" = ll, "Results" = cc, "TypeParams" = null)),
+         construct_function_definition (ff, aa, ll, cc));
+
+construct_function_definition (function_name, body, arguments, results) :=
+    block ([args_symbols: extract_arguments_symbols (arguments),
+            results_names_and_values: extract_results_names_and_initial_values (results)],
+           if results_names_and_values = []
+               then buildq ([function_name, args_symbols, body],
+                            function_name (splice (args_symbols)) := returning (body))
+               else buildq ([function_name, args_symbols, body, results_names_and_values, results_names_only: map (first, results_names_and_values)],
+                            function_name (splice (args_symbols)) := block (results_names_and_values, returning (body), if %% # null then %% else results_names_only)));
+
+extract_arguments_symbols (arguments) :=
+    (map (lambda ([e], assoc ("Names", e)), arguments),
+     apply (append, %%));
+
+extract_results_names_and_initial_values (results) :=
+    if results = null
+        then []
+        else block ([names: map (lambda ([e], assoc ("Names", e)), results),
+                     types: map (lambda ([e], assoc ("Type", e)), results),
+                     initial_values, names1],
+                    initial_values: map (default_value_for, types),
+                    names1: subst (null = [], names),
+                    if names = [] then []
+                        else (map (lambda ([a, b], map (lambda ([a1], buildq ([a1, b], a1 : b)), a)), names1, initial_values),
+                              apply (append, %%)));
+
+/* match FuncDecl with "Recv" # null; that's a method.
+ * Additionally match "TypeParams" = null; not sure yet what to do otherwise.
+ */
+
+defrule (function_from_FuncDecl_method,
+         FuncDecl ("Body" = aa, "Name" = ff, "Recv" = bb, "Type" = FuncType ("Params" = ll, "Results" = cc, "TypeParams" = null)),
+         construct_method_definition (ff, aa, bb, ll, cc));
+
+construct_method_definition (method_name, body, receiver, arguments, results) :=
+    block ([args_symbols: extract_arguments_symbols (arguments),
+            recv_symbol: extract_receiver_symbol (receiver),
+            recv_type: extract_receiver_type (receiver),
+            results_names_and_values: extract_results_names_and_initial_values (results)],
+           push (method_name [recv_type], methods_list),
+           if results_names_and_values = []
+               then buildq ([method_name, recv_symbol, recv_type, args_symbols, body],
+                            method_name [recv_type]:
+                            lambda ([recv_symbol], buildq ([recv_value: recv_symbol],
+                                                           lambda (args_symbols, block ([recv_symbol: recv_value], returning (body))))))
+               else buildq ([method_name, recv_symbol, recv_type, args_symbols, body, results_names_and_values, results_names_only: map (first, results_names_and_values)],
+                            method_name [recv_type]:
+                            lambda ([recv_symbol], buildq ([recv_value: recv_symbol],
+                                                           lambda (args_symbols,
+                                                                   block (results_names_and_values, block ([recv_symbol: recv_value], returning (body)), if %% # null then %% else results_names_only))))));
+
+extract_receiver_symbol (receiver) :=
+    /* receiver is apparently always a list of exactly one element,
+     * because, from what I can tell, Go does not allow two or more receivers.
+     * Given that, I don't know why the receiver is supplied as a list.
+     * Code here assumes a list of one element, containing a list of one element.
+     */
+    first (assoc ("Names", first (receiver)));
+
+extract_receiver_type (receiver) :=
+    /* "Type" is a single element, while "Names" is a list ... not sure what's going on there.
+     */
+    assoc ("Type", first (receiver));
+
+matchdeclare (mm, lambda ([e], symbolp (e) and member (e, methods_list_names_only)));
+matchdeclare (zz, lambda ([e], block ([v: ?meval (e)], (atom (v) and not member (v, go_packages_list)) or (not atom (v) and not member (op (v), map (op, structures))))));
+
+defrule (rewrite_method_calls_no_args, (zz@mm)(), mm[go_type_of (zz)](zz)());
+defrule (rewrite_method_calls_one_arg, (zz@mm)(bb), mm[go_type_of (zz)](zz)(bb));
+
+foo: '(returning (block (throw ('return (aa)))));
+defrule (collapse_returning_block_throw1, ''foo, aa);
+foo: '(returning (block ([], throw ('return (aa)))));
+defrule (collapse_returning_block_throw2, ''foo, aa);
+
+defrule (subscript_from_IndexExpr, IndexExpr ("Index" = aa, "X" = bb), arraymake (bb, [1 + aa]));
+
+matchdeclare ([uu, vv], symbolp);
+
+defrule (for_loop_from_ForStmt,
+         ForStmt ("Body" = aa, "Cond" = bb, "Init" = var([vv]):[cc], "Post" = IncDecStmt ("Tok" = ss, "X" = vv)),
+         if ss = "++"
+             then buildq ([aa, bb, cc, vv], for vv:cc while bb do continuing (aa))
+         elseif ss = "--"
+             then buildq ([aa, bb, cc, vv], for vv:cc step -1 while bb do continuing (aa))
+             /* dunno if this last case is possible; is ss guaranteed to be "++" or "--" ?? */
+             else buildq ([aa, bb, cc, vv], for vv:cc while bb do continuing (aa, IncDec (ss, vv))));
+
+defrule (for_loop_from_RangeStmt,
+         RangeStmt ("Body" = aa, "Key" = uu, "Tok" = ":=", "Value" = vv, "X" = bb),
+         /* would really prefer something like the following:
+          * for [uu, vv] in range (bb) do aa
+          * with range (bb) := makelist ([i, bb[1 + i]], i, 0, length (bb) - 1)
+          */
+         buildq ([uu, vv, bb, aa], for uu:0 thru length (bb) - 1 do continuing (block ([vv: bb[1 + uu]], aa))));
+
+defrule (throw_from_BranchStmt, BranchStmt("Label" = null,"Tok" = "continue"), '(throw (continue)));
+
+apply_all_rules (b) :=
+    block ([e1, e2, e3, e4, e4a, e4b, e5, e6, e7, e8, e9, e10],
+           e1: scanmap (expr_from_blob, b),
+           e2: apply1 (e1, symbol_from_Ident, string_from_BasicLit, integer_from_BasicLit, float_from_BasicLit, character_from_BasicLit, list_from_null_List, list_from_List, list_from_FieldList, list_from_CompositeLit_Type_null, list_from_CompositeLit_Type_ArrayType_StructType, list_from_CompositeLit_Type_ArrayType_simple, expr_from_ParenExpr, struct_from_CompositeLit_Type_nonnull_key_value_elements, struct_from_CompositeLit_Type_nonnull_simple_elements),
+           e3: apply1 (e2, funcall_no_args_from_CallExpr, funcall_from_CallExpr, equality_from_BinaryExpr_with_equalsequals, expr_from_BinaryExpr, expr_from_UnaryExpr, defstruct_from_TypeSpec_StructType),
+           e4: apply1 (e3, throw_from_ReturnStmt_null, throw_from_ReturnStmt, block_from_BlockStmt, local_var_assignment_from_AssignStmt),
+           e4a: apply1 (e4, assignment_from_AssignStmt, assignment_with_addition_from_AssignStmt, assignment_with_subtraction_from_AssignStmt, if_then_from_IfStmt, assignment_from_ValueSpec_Type_null_Values_nonnull, assignment_from_ValueSpec_Type_nonnull_Values_null),
+           e4b: lift_local_vars_into_block (e4a),
+           e5: apply1 (e4b, if_then_else_from_IfStmt, at_sign_from_SelectorExpr, for_loop_from_ForStmt, for_loop_from_RangeStmt),
+           e6: apply1 (e5, function_from_FuncDecl_function, function_from_FuncDecl_method),
+           methods_list_names_only: setify (map (op, methods_list)),
+           e7: apply1 (e6, rewrite_method_calls_no_args, rewrite_method_calls_one_arg),
+           e8: apply1 (e7, collapse_returning_block_throw1, collapse_returning_block_throw2),
+           e9: apply1 (e8, subscript_from_IndexExpr, throw_from_BranchStmt),
+           e10: substitute_builtins (e9),
+           [e1, e2, e3, e4, e4a, e4b, e5, e6, e7, e8, e9, e10]);
+
+lift_local_vars_into_block (e) :=
+    scanmap (lift_local_vars_into_block1, e);
+
+lift_local_vars_into_block1 (e) :=
+    if not atom(e) and op(e) = block
+        then block ([vars: [], exprs: [], existing_vars: []],
+                    for e1 in (if length (e) > 0 and listp (first (e)) then (existing_vars: first (e), rest (e)) else e)
+                        do (if match_local_var_assignment (e1) # false
+                                then (push (vv, vars),
+                                      if length (vv) = 1 and listp (xx) and length (xx) = 1
+                                          then buildq ([vv1: vv[1], xx1: xx[1]], vv1 : xx1)
+                                          else if listp (xx) and length (xx) = 1
+                                                   /* assume [a, b]: [foo] must mean [a, b]: foo -- not sure if that's always true !! */
+                                                   then buildq ([vv, xx1: xx[1]], vv : xx1)
+                                                   else buildq ([vv, xx], vv: xx),
+                                      push (%%, exprs))
+                                else push (e1, exprs)),
+                    if vars = []
+                        then e
+                        else buildq ([vars: append (existing_vars, reverse (apply (append, vars))), exprs: reverse (exprs)],
+                                     block (vars, splice (exprs))))
+        else e;
+
+matchdeclare (vv, lambda ([e], listp (e) and every (symbolp, e)), xx, all);
+defmatch (match_local_var_assignment, var (vv) : xx);
+
+substitute_builtins (e) :=
+    /* subst, psubst, and opsubst all complain about the following substitution; only sublis has the right behavior !! */
+    /* need to quote '(a@b), otherwise "@" gets nounified ... I wonder if that's a bug !! */
+    sublis ([append = '(builtin@append)], e);
+
+/* assuming here that throw(continue) and throw(return(...)) are the only possibilities */
+
+continuing ([e]) ::=
+    buildq ([e], (catch (splice (e)), if atom (%%) or op (%%) # nounify ('return) then %% else throw (%%)));
+
+returning ([e]) ::=
+    buildq ([e], (catch (splice (e)), if not atom (%%) and op (%%) = nounify ('return) then first (%%) else throw (%%)));
+

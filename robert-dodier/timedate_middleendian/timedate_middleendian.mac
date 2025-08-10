@@ -1,0 +1,70 @@
+parse_timedate_middleendian (s) :=
+    block ([x],
+           if (x: parse_timedate_middleendian_mdy (s)) # false
+               then encode_time (fix_up_two_digit_year (x@y), x@mo, x@d, 0, 0, 0)
+           elseif (x: parse_timedate_middleendian_mdy_hm (s)) # false
+               then encode_time (fix_up_two_digit_year (x@y), x@mo, x@d, x@h, x@mi, 0)
+           elseif (x: parse_timedate_middleendian_mdy_hms (s)) # false
+               then encode_time (fix_up_two_digit_year (x@y), x@mo, x@d, x@h, x@mi, x@s)
+           elseif (x: parse_timedate_middleendian_mdy_hms_z_colon_z (s)) # false
+               then encode_time (fix_up_two_digit_year (x@y), x@mo, x@d, x@h, x@mi, x@s, hours_from_tz_offset_zh_zmi (x@zh, x@zmi))
+           elseif (x: parse_timedate_middleendian_mdy_hms_zz (s)) # false
+               then encode_time (fix_up_two_digit_year (x@y), x@mo, x@d, x@h, x@mi, x@s, hours_from_tz_offset_zz (x@zz)));
+
+parse_timedate_middleendian_mdy (s) :=
+    block ([x: regex_match (re_mdy, s)],
+           if x # false
+               then apply (mdy, map (parse_string, rest (x))));
+
+parse_timedate_middleendian_mdy_hm (s) :=
+    block ([x: regex_match (re_mdy_hm, s)],
+           if x # false
+               then apply (mdy_hm, map (parse_string, rest (x))));
+
+parse_timedate_middleendian_mdy_hms (s) :=
+    block ([x: regex_match (re_mdy_hms, s)],
+           if x # false
+               then apply (mdy_hms, map (parse_string, rest (x))));
+
+parse_timedate_middleendian_mdy_hms_z_colon_z (s) :=
+    block ([x: regex_match (re_mdy_hms_z_colon_z, s)],
+           if x # false
+               then apply (mdy_hms_z_colon_z, map (parse_string, rest (x))));
+
+parse_timedate_middleendian_mdy_hms_zz (s) :=
+    block ([x: regex_match (re_mdy_hms_zz, s)],
+           if x # false
+               then apply (mdy_hms_zz, map (parse_string, rest (x))));
+
+hours_from_tz_offset_zh_zmi (zh, zmi) :=
+    if zh < 0
+        then - hours_from_tz_offset_zh_zmi (- zh, zmi)
+        else zh + zmi / 60;
+
+hours_from_tz_offset_zz (zz) :=
+    if zz < 0
+        then - hours_from_tz_offset_zz (- zz)
+        else floor (zz / 100) + mod (zz, 100) / 60;
+
+load ("sregex");
+
+defstruct (mdy (mo, d, y));
+defstruct (mdy_hm (mo, d, y, h, mi));
+defstruct (mdy_hms (mo, d, y, h, mi, s));
+defstruct (mdy_hms_zz (mo, d, y, h, mi, s, zz));
+defstruct (mdy_hms_z_colon_z (mo, d, y, h, mi, s, zh, zmi));
+
+re_mdy: regex_compile ("^([0-9][0-9]*)/([0-9][0-9]*)/([0-9][0-9]*)$");
+
+re_mdy_hm: regex_compile ("^([0-9][0-9]*)/([0-9][0-9]*)/([0-9][0-9]*)  *([0-9][0-9]*):([0-9][0-9]*)$");
+
+re_mdy_hms: regex_compile ("^([0-9][0-9]*)/([0-9][0-9]*)/([0-9][0-9]*)  *([0-9][0-9]*):([0-9][0-9]*):([0-9][0-9]*)$");
+
+re_mdy_hms_z_colon_z: regex_compile ("^([0-9][0-9]*)/([0-9][0-9]*)/([0-9][0-9]*)  *([0-9][0-9]*):([0-9][0-9]*):([0-9][0-9]*)([+-][0-9][0-9]):([0-9][0-9])$");
+
+re_mdy_hms_zz: regex_compile ("^([0-9][0-9]*)/([0-9][0-9]*)/([0-9][0-9]*)  *([0-9][0-9]*):([0-9][0-9]*):([0-9][0-9]*)([+-][0-9][0-9][0-9][0-9])$");
+
+fix_up_two_digit_year (y) :=
+    if y < 100
+        then if y >= 50 then 1900 + y else 2000 + y
+        else y;

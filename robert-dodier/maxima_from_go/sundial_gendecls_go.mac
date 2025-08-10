@@ -1,0 +1,23 @@
+ 
+GenDecl("Specs" = [ImportSpec("Name" = null,"Path" = "math"),ImportSpec("Name" = null,"Path" = "github.com/soniakeys/unit")],
+        "Tok" = "import")$
+ 
+ 
+defstruct(Point(X = 0,Y = 0))$
+ 
+ 
+defstruct(Line(Hour = 0,Points = []))$
+ 
+ 
+defstruct(PointWithHour(H = 0,X = 0,Y = 0))$
+ 
+ 
+defstruct(LineWithDeclination(Declination = default(unit@Angle),Description = "",Points = []))$
+ 
+ 
+m:[-23.44,-20.15,-11.47,0,11.47,20.15,23.44]$
+ 
+ 
+descriptions:["winter solstice","winter solstice + 1 month","equinox - 1 month","equinox","equinox + 1 month","summer solstice - 1 month",
+              "summer solstice"]$
+ 

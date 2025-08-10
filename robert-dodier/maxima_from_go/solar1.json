@@ -1,0 +1,3466 @@
+{
+   "Comments" : null,
+   "Decls" : [
+      {
+         "NodeType" : "GenDecl",
+         "Specs" : [
+            {
+               "Name" : null,
+               "NodeType" : "ImportSpec",
+               "Path" : {
+                  "Kind" : "STRING",
+                  "NodeType" : "BasicLit",
+                  "Value" : "\"math\""
+               }
+            },
+            {
+               "Name" : null,
+               "NodeType" : "ImportSpec",
+               "Path" : {
+                  "Kind" : "STRING",
+                  "NodeType" : "BasicLit",
+                  "Value" : "\"github.com/soniakeys/meeus/v3/base\""
+               }
+            },
+            {
+               "Name" : null,
+               "NodeType" : "ImportSpec",
+               "Path" : {
+                  "Kind" : "STRING",
+                  "NodeType" : "BasicLit",
+                  "Value" : "\"github.com/soniakeys/meeus/v3/coord\""
+               }
+            },
+            {
+               "Name" : null,
+               "NodeType" : "ImportSpec",
+               "Path" : {
+                  "Kind" : "STRING",
+                  "NodeType" : "BasicLit",
+                  "Value" : "\"github.com/soniakeys/meeus/v3/nutation\""
+               }
+            },
+            {
+               "Name" : {
+                  "Name" : "pp",
+                  "NodeType" : "Ident"
+               },
+               "NodeType" : "ImportSpec",
+               "Path" : {
+                  "Kind" : "STRING",
+                  "NodeType" : "BasicLit",
+                  "Value" : "\"github.com/soniakeys/meeus/v3/planetposition\""
+               }
+            },
+            {
+               "Name" : null,
+               "NodeType" : "ImportSpec",
+               "Path" : {
+                  "Kind" : "STRING",
+                  "NodeType" : "BasicLit",
+                  "Value" : "\"github.com/soniakeys/unit\""
+               }
+            }
+         ],
+         "Tok" : "import"
+      },
+      {
+         "Body" : {
+            "List" : [
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "L0",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "Args" : [
+                                 {
+                                    "Name" : "T",
+                                    "NodeType" : "Ident"
+                                 },
+                                 {
+                                    "Kind" : "FLOAT",
+                                    "NodeType" : "BasicLit",
+                                    "Value" : "280.46646"
+                                 },
+                                 {
+                                    "Kind" : "FLOAT",
+                                    "NodeType" : "BasicLit",
+                                    "Value" : "36000.76983"
+                                 },
+                                 {
+                                    "Kind" : "FLOAT",
+                                    "NodeType" : "BasicLit",
+                                    "Value" : "0.0003032"
+                                 }
+                              ],
+                              "Fun" : {
+                                 "NodeType" : "SelectorExpr",
+                                 "Sel" : {
+                                    "Name" : "Horner",
+                                    "NodeType" : "Ident"
+                                 },
+                                 "X" : {
+                                    "Name" : "base",
+                                    "NodeType" : "Ident"
+                                 }
+                              },
+                              "NodeType" : "CallExpr"
+                           }
+                        ],
+                        "Fun" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "AngleFromDeg",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "Name" : "unit",
+                              "NodeType" : "Ident"
+                           }
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "M",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "Name" : "T",
+                              "NodeType" : "Ident"
+                           }
+                        ],
+                        "Fun" : {
+                           "Name" : "MeanAnomaly",
+                           "NodeType" : "Ident"
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "C",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "NodeType" : "BinaryExpr",
+                              "Op" : "+",
+                              "X" : {
+                                 "NodeType" : "BinaryExpr",
+                                 "Op" : "+",
+                                 "X" : {
+                                    "NodeType" : "BinaryExpr",
+                                    "Op" : "*",
+                                    "X" : {
+                                       "Args" : [
+                                          {
+                                             "Name" : "T",
+                                             "NodeType" : "Ident"
+                                          },
+                                          {
+                                             "Kind" : "FLOAT",
+                                             "NodeType" : "BasicLit",
+                                             "Value" : "1.914602"
+                                          },
+                                          {
+                                             "NodeType" : "UnaryExpr",
+                                             "Op" : "-",
+                                             "X" : {
+                                                "Kind" : "FLOAT",
+                                                "NodeType" : "BasicLit",
+                                                "Value" : "0.004817"
+                                             }
+                                          },
+                                          {
+                                             "NodeType" : "UnaryExpr",
+                                             "Op" : "-",
+                                             "X" : {
+                                                "Kind" : "FLOAT",
+                                                "NodeType" : "BasicLit",
+                                                "Value" : ".000014"
+                                             }
+                                          }
+                                       ],
+                                       "Fun" : {
+                                          "NodeType" : "SelectorExpr",
+                                          "Sel" : {
+                                             "Name" : "Horner",
+                                             "NodeType" : "Ident"
+                                          },
+                                          "X" : {
+                                             "Name" : "base",
+                                             "NodeType" : "Ident"
+                                          }
+                                       },
+                                       "NodeType" : "CallExpr"
+                                    },
+                                    "Y" : {
+                                       "Args" : null,
+                                       "Fun" : {
+                                          "NodeType" : "SelectorExpr",
+                                          "Sel" : {
+                                             "Name" : "Sin",
+                                             "NodeType" : "Ident"
+                                          },
+                                          "X" : {
+                                             "Name" : "M",
+                                             "NodeType" : "Ident"
+                                          }
+                                       },
+                                       "NodeType" : "CallExpr"
+                                    }
+                                 },
+                                 "Y" : {
+                                    "NodeType" : "BinaryExpr",
+                                    "Op" : "*",
+                                    "X" : {
+                                       "NodeType" : "ParenExpr",
+                                       "X" : {
+                                          "NodeType" : "BinaryExpr",
+                                          "Op" : "-",
+                                          "X" : {
+                                             "Kind" : "FLOAT",
+                                             "NodeType" : "BasicLit",
+                                             "Value" : "0.019993"
+                                          },
+                                          "Y" : {
+                                             "NodeType" : "BinaryExpr",
+                                             "Op" : "*",
+                                             "X" : {
+                                                "Kind" : "FLOAT",
+                                                "NodeType" : "BasicLit",
+                                                "Value" : ".000101"
+                                             },
+                                             "Y" : {
+                                                "Name" : "T",
+                                                "NodeType" : "Ident"
+                                             }
+                                          }
+                                       }
+                                    },
+                                    "Y" : {
+                                       "Args" : null,
+                                       "Fun" : {
+                                          "NodeType" : "SelectorExpr",
+                                          "Sel" : {
+                                             "Name" : "Sin",
+                                             "NodeType" : "Ident"
+                                          },
+                                          "X" : {
+                                             "Args" : [
+                                                {
+                                                   "Kind" : "INT",
+                                                   "NodeType" : "BasicLit",
+                                                   "Value" : "2"
+                                                }
+                                             ],
+                                             "Fun" : {
+                                                "NodeType" : "SelectorExpr",
+                                                "Sel" : {
+                                                   "Name" : "Mul",
+                                                   "NodeType" : "Ident"
+                                                },
+                                                "X" : {
+                                                   "Name" : "M",
+                                                   "NodeType" : "Ident"
+                                                }
+                                             },
+                                             "NodeType" : "CallExpr"
+                                          }
+                                       },
+                                       "NodeType" : "CallExpr"
+                                    }
+                                 }
+                              },
+                              "Y" : {
+                                 "NodeType" : "BinaryExpr",
+                                 "Op" : "*",
+                                 "X" : {
+                                    "Kind" : "FLOAT",
+                                    "NodeType" : "BasicLit",
+                                    "Value" : "0.000289"
+                                 },
+                                 "Y" : {
+                                    "Args" : null,
+                                    "Fun" : {
+                                       "NodeType" : "SelectorExpr",
+                                       "Sel" : {
+                                          "Name" : "Sin",
+                                          "NodeType" : "Ident"
+                                       },
+                                       "X" : {
+                                          "Args" : [
+                                             {
+                                                "Kind" : "INT",
+                                                "NodeType" : "BasicLit",
+                                                "Value" : "3"
+                                             }
+                                          ],
+                                          "Fun" : {
+                                             "NodeType" : "SelectorExpr",
+                                             "Sel" : {
+                                                "Name" : "Mul",
+                                                "NodeType" : "Ident"
+                                             },
+                                             "X" : {
+                                                "Name" : "M",
+                                                "NodeType" : "Ident"
+                                             }
+                                          },
+                                          "NodeType" : "CallExpr"
+                                       }
+                                    },
+                                    "NodeType" : "CallExpr"
+                                 }
+                              }
+                           }
+                        ],
+                        "Fun" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "AngleFromDeg",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "Name" : "unit",
+                              "NodeType" : "Ident"
+                           }
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "NodeType" : "ReturnStmt",
+                  "Results" : [
+                     {
+                        "Args" : null,
+                        "Fun" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "Mod1",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "NodeType" : "ParenExpr",
+                              "X" : {
+                                 "NodeType" : "BinaryExpr",
+                                 "Op" : "+",
+                                 "X" : {
+                                    "Name" : "L0",
+                                    "NodeType" : "Ident"
+                                 },
+                                 "Y" : {
+                                    "Name" : "C",
+                                    "NodeType" : "Ident"
+                                 }
+                              }
+                           }
+                        },
+                        "NodeType" : "CallExpr"
+                     },
+                     {
+                        "Args" : null,
+                        "Fun" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "Mod1",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "NodeType" : "ParenExpr",
+                              "X" : {
+                                 "NodeType" : "BinaryExpr",
+                                 "Op" : "+",
+                                 "X" : {
+                                    "Name" : "M",
+                                    "NodeType" : "Ident"
+                                 },
+                                 "Y" : {
+                                    "Name" : "C",
+                                    "NodeType" : "Ident"
+                                 }
+                              }
+                           }
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ]
+               }
+            ],
+            "NodeType" : "BlockStmt"
+         },
+         "Name" : {
+            "Name" : "True",
+            "NodeType" : "Ident"
+         },
+         "NodeType" : "FuncDecl",
+         "Recv" : null,
+         "Type" : {
+            "NodeType" : "FuncType",
+            "Params" : {
+               "List" : [
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "T",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "Name" : "float64",
+                        "NodeType" : "Ident"
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "Results" : {
+               "List" : [
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "s",
+                           "NodeType" : "Ident"
+                        },
+                        {
+                           "Name" : "ν",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "NodeType" : "SelectorExpr",
+                        "Sel" : {
+                           "Name" : "Angle",
+                           "NodeType" : "Ident"
+                        },
+                        "X" : {
+                           "Name" : "unit",
+                           "NodeType" : "Ident"
+                        }
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "TypeParams" : null
+         }
+      },
+      {
+         "Body" : {
+            "List" : [
+               {
+                  "NodeType" : "ReturnStmt",
+                  "Results" : [
+                     {
+                        "Args" : [
+                           {
+                              "Args" : [
+                                 {
+                                    "Name" : "T",
+                                    "NodeType" : "Ident"
+                                 },
+                                 {
+                                    "Kind" : "FLOAT",
+                                    "NodeType" : "BasicLit",
+                                    "Value" : "357.52911"
+                                 },
+                                 {
+                                    "Kind" : "FLOAT",
+                                    "NodeType" : "BasicLit",
+                                    "Value" : "35999.05029"
+                                 },
+                                 {
+                                    "NodeType" : "UnaryExpr",
+                                    "Op" : "-",
+                                    "X" : {
+                                       "Kind" : "FLOAT",
+                                       "NodeType" : "BasicLit",
+                                       "Value" : "0.0001537"
+                                    }
+                                 }
+                              ],
+                              "Fun" : {
+                                 "NodeType" : "SelectorExpr",
+                                 "Sel" : {
+                                    "Name" : "Horner",
+                                    "NodeType" : "Ident"
+                                 },
+                                 "X" : {
+                                    "Name" : "base",
+                                    "NodeType" : "Ident"
+                                 }
+                              },
+                              "NodeType" : "CallExpr"
+                           }
+                        ],
+                        "Fun" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "AngleFromDeg",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "Name" : "unit",
+                              "NodeType" : "Ident"
+                           }
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ]
+               }
+            ],
+            "NodeType" : "BlockStmt"
+         },
+         "Name" : {
+            "Name" : "MeanAnomaly",
+            "NodeType" : "Ident"
+         },
+         "NodeType" : "FuncDecl",
+         "Recv" : null,
+         "Type" : {
+            "NodeType" : "FuncType",
+            "Params" : {
+               "List" : [
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "T",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "Name" : "float64",
+                        "NodeType" : "Ident"
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "Results" : {
+               "List" : [
+                  {
+                     "Names" : null,
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "NodeType" : "SelectorExpr",
+                        "Sel" : {
+                           "Name" : "Angle",
+                           "NodeType" : "Ident"
+                        },
+                        "X" : {
+                           "Name" : "unit",
+                           "NodeType" : "Ident"
+                        }
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "TypeParams" : null
+         }
+      },
+      {
+         "Body" : {
+            "List" : [
+               {
+                  "NodeType" : "ReturnStmt",
+                  "Results" : [
+                     {
+                        "Args" : [
+                           {
+                              "Name" : "T",
+                              "NodeType" : "Ident"
+                           },
+                           {
+                              "Kind" : "FLOAT",
+                              "NodeType" : "BasicLit",
+                              "Value" : "0.016708634"
+                           },
+                           {
+                              "NodeType" : "UnaryExpr",
+                              "Op" : "-",
+                              "X" : {
+                                 "Kind" : "FLOAT",
+                                 "NodeType" : "BasicLit",
+                                 "Value" : "0.000042037"
+                              }
+                           },
+                           {
+                              "NodeType" : "UnaryExpr",
+                              "Op" : "-",
+                              "X" : {
+                                 "Kind" : "FLOAT",
+                                 "NodeType" : "BasicLit",
+                                 "Value" : "0.0000001267"
+                              }
+                           }
+                        ],
+                        "Fun" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "Horner",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "Name" : "base",
+                              "NodeType" : "Ident"
+                           }
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ]
+               }
+            ],
+            "NodeType" : "BlockStmt"
+         },
+         "Name" : {
+            "Name" : "Eccentricity",
+            "NodeType" : "Ident"
+         },
+         "NodeType" : "FuncDecl",
+         "Recv" : null,
+         "Type" : {
+            "NodeType" : "FuncType",
+            "Params" : {
+               "List" : [
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "T",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "Name" : "float64",
+                        "NodeType" : "Ident"
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "Results" : {
+               "List" : [
+                  {
+                     "Names" : null,
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "Name" : "float64",
+                        "NodeType" : "Ident"
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "TypeParams" : null
+         }
+      },
+      {
+         "Body" : {
+            "List" : [
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "_",
+                        "NodeType" : "Ident"
+                     },
+                     {
+                        "Name" : "ν",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "Name" : "T",
+                              "NodeType" : "Ident"
+                           }
+                        ],
+                        "Fun" : {
+                           "Name" : "True",
+                           "NodeType" : "Ident"
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "e",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "Name" : "T",
+                              "NodeType" : "Ident"
+                           }
+                        ],
+                        "Fun" : {
+                           "Name" : "Eccentricity",
+                           "NodeType" : "Ident"
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "NodeType" : "ReturnStmt",
+                  "Results" : [
+                     {
+                        "NodeType" : "BinaryExpr",
+                        "Op" : "/",
+                        "X" : {
+                           "NodeType" : "BinaryExpr",
+                           "Op" : "*",
+                           "X" : {
+                              "Kind" : "FLOAT",
+                              "NodeType" : "BasicLit",
+                              "Value" : "1.000001018"
+                           },
+                           "Y" : {
+                              "NodeType" : "ParenExpr",
+                              "X" : {
+                                 "NodeType" : "BinaryExpr",
+                                 "Op" : "-",
+                                 "X" : {
+                                    "Kind" : "INT",
+                                    "NodeType" : "BasicLit",
+                                    "Value" : "1"
+                                 },
+                                 "Y" : {
+                                    "NodeType" : "BinaryExpr",
+                                    "Op" : "*",
+                                    "X" : {
+                                       "Name" : "e",
+                                       "NodeType" : "Ident"
+                                    },
+                                    "Y" : {
+                                       "Name" : "e",
+                                       "NodeType" : "Ident"
+                                    }
+                                 }
+                              }
+                           }
+                        },
+                        "Y" : {
+                           "NodeType" : "ParenExpr",
+                           "X" : {
+                              "NodeType" : "BinaryExpr",
+                              "Op" : "+",
+                              "X" : {
+                                 "Kind" : "INT",
+                                 "NodeType" : "BasicLit",
+                                 "Value" : "1"
+                              },
+                              "Y" : {
+                                 "NodeType" : "BinaryExpr",
+                                 "Op" : "*",
+                                 "X" : {
+                                    "Name" : "e",
+                                    "NodeType" : "Ident"
+                                 },
+                                 "Y" : {
+                                    "Args" : null,
+                                    "Fun" : {
+                                       "NodeType" : "SelectorExpr",
+                                       "Sel" : {
+                                          "Name" : "Cos",
+                                          "NodeType" : "Ident"
+                                       },
+                                       "X" : {
+                                          "Name" : "ν",
+                                          "NodeType" : "Ident"
+                                       }
+                                    },
+                                    "NodeType" : "CallExpr"
+                                 }
+                              }
+                           }
+                        }
+                     }
+                  ]
+               }
+            ],
+            "NodeType" : "BlockStmt"
+         },
+         "Name" : {
+            "Name" : "Radius",
+            "NodeType" : "Ident"
+         },
+         "NodeType" : "FuncDecl",
+         "Recv" : null,
+         "Type" : {
+            "NodeType" : "FuncType",
+            "Params" : {
+               "List" : [
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "T",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "Name" : "float64",
+                        "NodeType" : "Ident"
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "Results" : {
+               "List" : [
+                  {
+                     "Names" : null,
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "Name" : "float64",
+                        "NodeType" : "Ident"
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "TypeParams" : null
+         }
+      },
+      {
+         "Body" : {
+            "List" : [
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "Ω",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "Name" : "T",
+                              "NodeType" : "Ident"
+                           }
+                        ],
+                        "Fun" : {
+                           "Name" : "node",
+                           "NodeType" : "Ident"
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "s",
+                        "NodeType" : "Ident"
+                     },
+                     {
+                        "Name" : "_",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "Name" : "T",
+                              "NodeType" : "Ident"
+                           }
+                        ],
+                        "Fun" : {
+                           "Name" : "True",
+                           "NodeType" : "Ident"
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "NodeType" : "ReturnStmt",
+                  "Results" : [
+                     {
+                        "NodeType" : "BinaryExpr",
+                        "Op" : "-",
+                        "X" : {
+                           "NodeType" : "BinaryExpr",
+                           "Op" : "-",
+                           "X" : {
+                              "Name" : "s",
+                              "NodeType" : "Ident"
+                           },
+                           "Y" : {
+                              "Args" : [
+                                 {
+                                    "Kind" : "FLOAT",
+                                    "NodeType" : "BasicLit",
+                                    "Value" : ".00569"
+                                 }
+                              ],
+                              "Fun" : {
+                                 "NodeType" : "SelectorExpr",
+                                 "Sel" : {
+                                    "Name" : "AngleFromDeg",
+                                    "NodeType" : "Ident"
+                                 },
+                                 "X" : {
+                                    "Name" : "unit",
+                                    "NodeType" : "Ident"
+                                 }
+                              },
+                              "NodeType" : "CallExpr"
+                           }
+                        },
+                        "Y" : {
+                           "Args" : [
+                              {
+                                 "Args" : null,
+                                 "Fun" : {
+                                    "NodeType" : "SelectorExpr",
+                                    "Sel" : {
+                                       "Name" : "Sin",
+                                       "NodeType" : "Ident"
+                                    },
+                                    "X" : {
+                                       "Name" : "Ω",
+                                       "NodeType" : "Ident"
+                                    }
+                                 },
+                                 "NodeType" : "CallExpr"
+                              }
+                           ],
+                           "Fun" : {
+                              "NodeType" : "SelectorExpr",
+                              "Sel" : {
+                                 "Name" : "Mul",
+                                 "NodeType" : "Ident"
+                              },
+                              "X" : {
+                                 "Args" : [
+                                    {
+                                       "Kind" : "FLOAT",
+                                       "NodeType" : "BasicLit",
+                                       "Value" : ".00478"
+                                    }
+                                 ],
+                                 "Fun" : {
+                                    "NodeType" : "SelectorExpr",
+                                    "Sel" : {
+                                       "Name" : "AngleFromDeg",
+                                       "NodeType" : "Ident"
+                                    },
+                                    "X" : {
+                                       "Name" : "unit",
+                                       "NodeType" : "Ident"
+                                    }
+                                 },
+                                 "NodeType" : "CallExpr"
+                              }
+                           },
+                           "NodeType" : "CallExpr"
+                        }
+                     }
+                  ]
+               }
+            ],
+            "NodeType" : "BlockStmt"
+         },
+         "Name" : {
+            "Name" : "ApparentLongitude",
+            "NodeType" : "Ident"
+         },
+         "NodeType" : "FuncDecl",
+         "Recv" : null,
+         "Type" : {
+            "NodeType" : "FuncType",
+            "Params" : {
+               "List" : [
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "T",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "Name" : "float64",
+                        "NodeType" : "Ident"
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "Results" : {
+               "List" : [
+                  {
+                     "Names" : null,
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "NodeType" : "SelectorExpr",
+                        "Sel" : {
+                           "Name" : "Angle",
+                           "NodeType" : "Ident"
+                        },
+                        "X" : {
+                           "Name" : "unit",
+                           "NodeType" : "Ident"
+                        }
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "TypeParams" : null
+         }
+      },
+      {
+         "Body" : {
+            "List" : [
+               {
+                  "NodeType" : "ReturnStmt",
+                  "Results" : [
+                     {
+                        "Args" : [
+                           {
+                              "NodeType" : "BinaryExpr",
+                              "Op" : "-",
+                              "X" : {
+                                 "Kind" : "FLOAT",
+                                 "NodeType" : "BasicLit",
+                                 "Value" : "125.04"
+                              },
+                              "Y" : {
+                                 "NodeType" : "BinaryExpr",
+                                 "Op" : "*",
+                                 "X" : {
+                                    "Kind" : "FLOAT",
+                                    "NodeType" : "BasicLit",
+                                    "Value" : "1934.136"
+                                 },
+                                 "Y" : {
+                                    "Name" : "T",
+                                    "NodeType" : "Ident"
+                                 }
+                              }
+                           }
+                        ],
+                        "Fun" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "AngleFromDeg",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "Name" : "unit",
+                              "NodeType" : "Ident"
+                           }
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ]
+               }
+            ],
+            "NodeType" : "BlockStmt"
+         },
+         "Name" : {
+            "Name" : "node",
+            "NodeType" : "Ident"
+         },
+         "NodeType" : "FuncDecl",
+         "Recv" : null,
+         "Type" : {
+            "NodeType" : "FuncType",
+            "Params" : {
+               "List" : [
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "T",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "Name" : "float64",
+                        "NodeType" : "Ident"
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "Results" : {
+               "List" : [
+                  {
+                     "Names" : null,
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "NodeType" : "SelectorExpr",
+                        "Sel" : {
+                           "Name" : "Angle",
+                           "NodeType" : "Ident"
+                        },
+                        "X" : {
+                           "Name" : "unit",
+                           "NodeType" : "Ident"
+                        }
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "TypeParams" : null
+         }
+      },
+      {
+         "Body" : {
+            "List" : [
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "s",
+                        "NodeType" : "Ident"
+                     },
+                     {
+                        "Name" : "ν",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "Name" : "T",
+                              "NodeType" : "Ident"
+                           }
+                        ],
+                        "Fun" : {
+                           "Name" : "True",
+                           "NodeType" : "Ident"
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : "="
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "s",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "NodeType" : "BinaryExpr",
+                              "Op" : "*",
+                              "X" : {
+                                 "Name" : "T",
+                                 "NodeType" : "Ident"
+                              },
+                              "Y" : {
+                                 "Kind" : "INT",
+                                 "NodeType" : "BasicLit",
+                                 "Value" : "100"
+                              }
+                           }
+                        ],
+                        "Fun" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "Mul",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "Args" : [
+                                 {
+                                    "Kind" : "FLOAT",
+                                    "NodeType" : "BasicLit",
+                                    "Value" : ".01397"
+                                 }
+                              ],
+                              "Fun" : {
+                                 "NodeType" : "SelectorExpr",
+                                 "Sel" : {
+                                    "Name" : "AngleFromDeg",
+                                    "NodeType" : "Ident"
+                                 },
+                                 "X" : {
+                                    "Name" : "unit",
+                                    "NodeType" : "Ident"
+                                 }
+                              },
+                              "NodeType" : "CallExpr"
+                           }
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : "-="
+               },
+               {
+                  "NodeType" : "ReturnStmt",
+                  "Results" : null
+               }
+            ],
+            "NodeType" : "BlockStmt"
+         },
+         "Name" : {
+            "Name" : "True2000",
+            "NodeType" : "Ident"
+         },
+         "NodeType" : "FuncDecl",
+         "Recv" : null,
+         "Type" : {
+            "NodeType" : "FuncType",
+            "Params" : {
+               "List" : [
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "T",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "Name" : "float64",
+                        "NodeType" : "Ident"
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "Results" : {
+               "List" : [
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "s",
+                           "NodeType" : "Ident"
+                        },
+                        {
+                           "Name" : "ν",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "NodeType" : "SelectorExpr",
+                        "Sel" : {
+                           "Name" : "Angle",
+                           "NodeType" : "Ident"
+                        },
+                        "X" : {
+                           "Name" : "unit",
+                           "NodeType" : "Ident"
+                        }
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "TypeParams" : null
+         }
+      },
+      {
+         "Body" : {
+            "List" : [
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "s",
+                        "NodeType" : "Ident"
+                     },
+                     {
+                        "Name" : "_",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "Args" : [
+                                 {
+                                    "Name" : "jde",
+                                    "NodeType" : "Ident"
+                                 }
+                              ],
+                              "Fun" : {
+                                 "NodeType" : "SelectorExpr",
+                                 "Sel" : {
+                                    "Name" : "J2000Century",
+                                    "NodeType" : "Ident"
+                                 },
+                                 "X" : {
+                                    "Name" : "base",
+                                    "NodeType" : "Ident"
+                                 }
+                              },
+                              "NodeType" : "CallExpr"
+                           }
+                        ],
+                        "Fun" : {
+                           "Name" : "True",
+                           "NodeType" : "Ident"
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "ε",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "Name" : "jde",
+                              "NodeType" : "Ident"
+                           }
+                        ],
+                        "Fun" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "MeanObliquity",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "Name" : "nutation",
+                              "NodeType" : "Ident"
+                           }
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "ss",
+                        "NodeType" : "Ident"
+                     },
+                     {
+                        "Name" : "cs",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : null,
+                        "Fun" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "Sincos",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "Name" : "s",
+                              "NodeType" : "Ident"
+                           }
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "sε",
+                        "NodeType" : "Ident"
+                     },
+                     {
+                        "Name" : "cε",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : null,
+                        "Fun" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "Sincos",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "Name" : "ε",
+                              "NodeType" : "Ident"
+                           }
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "α",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "Args" : [
+                                 {
+                                    "NodeType" : "BinaryExpr",
+                                    "Op" : "*",
+                                    "X" : {
+                                       "Name" : "cε",
+                                       "NodeType" : "Ident"
+                                    },
+                                    "Y" : {
+                                       "Name" : "ss",
+                                       "NodeType" : "Ident"
+                                    }
+                                 },
+                                 {
+                                    "Name" : "cs",
+                                    "NodeType" : "Ident"
+                                 }
+                              ],
+                              "Fun" : {
+                                 "NodeType" : "SelectorExpr",
+                                 "Sel" : {
+                                    "Name" : "Atan2",
+                                    "NodeType" : "Ident"
+                                 },
+                                 "X" : {
+                                    "Name" : "math",
+                                    "NodeType" : "Ident"
+                                 }
+                              },
+                              "NodeType" : "CallExpr"
+                           }
+                        ],
+                        "Fun" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "RAFromRad",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "Name" : "unit",
+                              "NodeType" : "Ident"
+                           }
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : "="
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "δ",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "Args" : [
+                                 {
+                                    "NodeType" : "BinaryExpr",
+                                    "Op" : "*",
+                                    "X" : {
+                                       "Name" : "sε",
+                                       "NodeType" : "Ident"
+                                    },
+                                    "Y" : {
+                                       "Name" : "ss",
+                                       "NodeType" : "Ident"
+                                    }
+                                 }
+                              ],
+                              "Fun" : {
+                                 "NodeType" : "SelectorExpr",
+                                 "Sel" : {
+                                    "Name" : "Asin",
+                                    "NodeType" : "Ident"
+                                 },
+                                 "X" : {
+                                    "Name" : "math",
+                                    "NodeType" : "Ident"
+                                 }
+                              },
+                              "NodeType" : "CallExpr"
+                           }
+                        ],
+                        "Fun" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "Angle",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "Name" : "unit",
+                              "NodeType" : "Ident"
+                           }
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : "="
+               },
+               {
+                  "NodeType" : "ReturnStmt",
+                  "Results" : null
+               }
+            ],
+            "NodeType" : "BlockStmt"
+         },
+         "Name" : {
+            "Name" : "TrueEquatorial",
+            "NodeType" : "Ident"
+         },
+         "NodeType" : "FuncDecl",
+         "Recv" : null,
+         "Type" : {
+            "NodeType" : "FuncType",
+            "Params" : {
+               "List" : [
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "jde",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "Name" : "float64",
+                        "NodeType" : "Ident"
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "Results" : {
+               "List" : [
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "α",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "NodeType" : "SelectorExpr",
+                        "Sel" : {
+                           "Name" : "RA",
+                           "NodeType" : "Ident"
+                        },
+                        "X" : {
+                           "Name" : "unit",
+                           "NodeType" : "Ident"
+                        }
+                     }
+                  },
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "δ",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "NodeType" : "SelectorExpr",
+                        "Sel" : {
+                           "Name" : "Angle",
+                           "NodeType" : "Ident"
+                        },
+                        "X" : {
+                           "Name" : "unit",
+                           "NodeType" : "Ident"
+                        }
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "TypeParams" : null
+         }
+      },
+      {
+         "Body" : {
+            "List" : [
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "T",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "Name" : "jde",
+                              "NodeType" : "Ident"
+                           }
+                        ],
+                        "Fun" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "J2000Century",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "Name" : "base",
+                              "NodeType" : "Ident"
+                           }
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "λ",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "Name" : "T",
+                              "NodeType" : "Ident"
+                           }
+                        ],
+                        "Fun" : {
+                           "Name" : "ApparentLongitude",
+                           "NodeType" : "Ident"
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "ε",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "Name" : "jde",
+                              "NodeType" : "Ident"
+                           }
+                        ],
+                        "Fun" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "MeanObliquity",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "Name" : "nutation",
+                              "NodeType" : "Ident"
+                           }
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "sλ",
+                        "NodeType" : "Ident"
+                     },
+                     {
+                        "Name" : "cλ",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : null,
+                        "Fun" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "Sincos",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "Name" : "λ",
+                              "NodeType" : "Ident"
+                           }
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "ε",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "Args" : null,
+                              "Fun" : {
+                                 "NodeType" : "SelectorExpr",
+                                 "Sel" : {
+                                    "Name" : "Cos",
+                                    "NodeType" : "Ident"
+                                 },
+                                 "X" : {
+                                    "Args" : [
+                                       {
+                                          "Name" : "T",
+                                          "NodeType" : "Ident"
+                                       }
+                                    ],
+                                    "Fun" : {
+                                       "Name" : "node",
+                                       "NodeType" : "Ident"
+                                    },
+                                    "NodeType" : "CallExpr"
+                                 }
+                              },
+                              "NodeType" : "CallExpr"
+                           }
+                        ],
+                        "Fun" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "Mul",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "Args" : [
+                                 {
+                                    "Kind" : "FLOAT",
+                                    "NodeType" : "BasicLit",
+                                    "Value" : ".00256"
+                                 }
+                              ],
+                              "Fun" : {
+                                 "NodeType" : "SelectorExpr",
+                                 "Sel" : {
+                                    "Name" : "AngleFromDeg",
+                                    "NodeType" : "Ident"
+                                 },
+                                 "X" : {
+                                    "Name" : "unit",
+                                    "NodeType" : "Ident"
+                                 }
+                              },
+                              "NodeType" : "CallExpr"
+                           }
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : "+="
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "sε",
+                        "NodeType" : "Ident"
+                     },
+                     {
+                        "Name" : "cε",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : null,
+                        "Fun" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "Sincos",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "Name" : "ε",
+                              "NodeType" : "Ident"
+                           }
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "α",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "Args" : [
+                                 {
+                                    "NodeType" : "BinaryExpr",
+                                    "Op" : "*",
+                                    "X" : {
+                                       "Name" : "cε",
+                                       "NodeType" : "Ident"
+                                    },
+                                    "Y" : {
+                                       "Name" : "sλ",
+                                       "NodeType" : "Ident"
+                                    }
+                                 },
+                                 {
+                                    "Name" : "cλ",
+                                    "NodeType" : "Ident"
+                                 }
+                              ],
+                              "Fun" : {
+                                 "NodeType" : "SelectorExpr",
+                                 "Sel" : {
+                                    "Name" : "Atan2",
+                                    "NodeType" : "Ident"
+                                 },
+                                 "X" : {
+                                    "Name" : "math",
+                                    "NodeType" : "Ident"
+                                 }
+                              },
+                              "NodeType" : "CallExpr"
+                           }
+                        ],
+                        "Fun" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "RAFromRad",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "Name" : "unit",
+                              "NodeType" : "Ident"
+                           }
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : "="
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "δ",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "Args" : [
+                                 {
+                                    "NodeType" : "BinaryExpr",
+                                    "Op" : "*",
+                                    "X" : {
+                                       "Name" : "sε",
+                                       "NodeType" : "Ident"
+                                    },
+                                    "Y" : {
+                                       "Name" : "sλ",
+                                       "NodeType" : "Ident"
+                                    }
+                                 }
+                              ],
+                              "Fun" : {
+                                 "NodeType" : "SelectorExpr",
+                                 "Sel" : {
+                                    "Name" : "Asin",
+                                    "NodeType" : "Ident"
+                                 },
+                                 "X" : {
+                                    "Name" : "math",
+                                    "NodeType" : "Ident"
+                                 }
+                              },
+                              "NodeType" : "CallExpr"
+                           }
+                        ],
+                        "Fun" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "Angle",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "Name" : "unit",
+                              "NodeType" : "Ident"
+                           }
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : "="
+               },
+               {
+                  "NodeType" : "ReturnStmt",
+                  "Results" : null
+               }
+            ],
+            "NodeType" : "BlockStmt"
+         },
+         "Name" : {
+            "Name" : "ApparentEquatorial",
+            "NodeType" : "Ident"
+         },
+         "NodeType" : "FuncDecl",
+         "Recv" : null,
+         "Type" : {
+            "NodeType" : "FuncType",
+            "Params" : {
+               "List" : [
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "jde",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "Name" : "float64",
+                        "NodeType" : "Ident"
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "Results" : {
+               "List" : [
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "α",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "NodeType" : "SelectorExpr",
+                        "Sel" : {
+                           "Name" : "RA",
+                           "NodeType" : "Ident"
+                        },
+                        "X" : {
+                           "Name" : "unit",
+                           "NodeType" : "Ident"
+                        }
+                     }
+                  },
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "δ",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "NodeType" : "SelectorExpr",
+                        "Sel" : {
+                           "Name" : "Angle",
+                           "NodeType" : "Ident"
+                        },
+                        "X" : {
+                           "Name" : "unit",
+                           "NodeType" : "Ident"
+                        }
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "TypeParams" : null
+         }
+      },
+      {
+         "Body" : {
+            "List" : [
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "l",
+                        "NodeType" : "Ident"
+                     },
+                     {
+                        "Name" : "b",
+                        "NodeType" : "Ident"
+                     },
+                     {
+                        "Name" : "r",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "Name" : "jde",
+                              "NodeType" : "Ident"
+                           }
+                        ],
+                        "Fun" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "Position",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "Name" : "e",
+                              "NodeType" : "Ident"
+                           }
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "s",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "NodeType" : "BinaryExpr",
+                        "Op" : "+",
+                        "X" : {
+                           "Name" : "l",
+                           "NodeType" : "Ident"
+                        },
+                        "Y" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "Pi",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "Name" : "math",
+                              "NodeType" : "Ident"
+                           }
+                        }
+                     }
+                  ],
+                  "Tok" : "="
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "λp",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "Args" : [
+                                 {
+                                    "Name" : "jde",
+                                    "NodeType" : "Ident"
+                                 }
+                              ],
+                              "Fun" : {
+                                 "NodeType" : "SelectorExpr",
+                                 "Sel" : {
+                                    "Name" : "J2000Century",
+                                    "NodeType" : "Ident"
+                                 },
+                                 "X" : {
+                                    "Name" : "base",
+                                    "NodeType" : "Ident"
+                                 }
+                              },
+                              "NodeType" : "CallExpr"
+                           },
+                           {
+                              "Args" : null,
+                              "Fun" : {
+                                 "NodeType" : "SelectorExpr",
+                                 "Sel" : {
+                                    "Name" : "Rad",
+                                    "NodeType" : "Ident"
+                                 },
+                                 "X" : {
+                                    "Name" : "s",
+                                    "NodeType" : "Ident"
+                                 }
+                              },
+                              "NodeType" : "CallExpr"
+                           },
+                           {
+                              "NodeType" : "BinaryExpr",
+                              "Op" : "/",
+                              "X" : {
+                                 "NodeType" : "BinaryExpr",
+                                 "Op" : "*",
+                                 "X" : {
+                                    "NodeType" : "UnaryExpr",
+                                    "Op" : "-",
+                                    "X" : {
+                                       "Kind" : "FLOAT",
+                                       "NodeType" : "BasicLit",
+                                       "Value" : "1.397"
+                                    }
+                                 },
+                                 "Y" : {
+                                    "NodeType" : "SelectorExpr",
+                                    "Sel" : {
+                                       "Name" : "Pi",
+                                       "NodeType" : "Ident"
+                                    },
+                                    "X" : {
+                                       "Name" : "math",
+                                       "NodeType" : "Ident"
+                                    }
+                                 }
+                              },
+                              "Y" : {
+                                 "Kind" : "INT",
+                                 "NodeType" : "BasicLit",
+                                 "Value" : "180"
+                              }
+                           },
+                           {
+                              "NodeType" : "BinaryExpr",
+                              "Op" : "/",
+                              "X" : {
+                                 "NodeType" : "BinaryExpr",
+                                 "Op" : "*",
+                                 "X" : {
+                                    "NodeType" : "UnaryExpr",
+                                    "Op" : "-",
+                                    "X" : {
+                                       "Kind" : "FLOAT",
+                                       "NodeType" : "BasicLit",
+                                       "Value" : ".00031"
+                                    }
+                                 },
+                                 "Y" : {
+                                    "NodeType" : "SelectorExpr",
+                                    "Sel" : {
+                                       "Name" : "Pi",
+                                       "NodeType" : "Ident"
+                                    },
+                                    "X" : {
+                                       "Name" : "math",
+                                       "NodeType" : "Ident"
+                                    }
+                                 }
+                              },
+                              "Y" : {
+                                 "Kind" : "INT",
+                                 "NodeType" : "BasicLit",
+                                 "Value" : "180"
+                              }
+                           }
+                        ],
+                        "Fun" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "Horner",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "Name" : "base",
+                              "NodeType" : "Ident"
+                           }
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "sλp",
+                        "NodeType" : "Ident"
+                     },
+                     {
+                        "Name" : "cλp",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "Name" : "λp",
+                              "NodeType" : "Ident"
+                           }
+                        ],
+                        "Fun" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "Sincos",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "Name" : "math",
+                              "NodeType" : "Ident"
+                           }
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "Δβ",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "NodeType" : "BinaryExpr",
+                              "Op" : "-",
+                              "X" : {
+                                 "Name" : "cλp",
+                                 "NodeType" : "Ident"
+                              },
+                              "Y" : {
+                                 "Name" : "sλp",
+                                 "NodeType" : "Ident"
+                              }
+                           }
+                        ],
+                        "Fun" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "Mul",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "Args" : [
+                                 {
+                                    "Kind" : "FLOAT",
+                                    "NodeType" : "BasicLit",
+                                    "Value" : ".03916"
+                                 }
+                              ],
+                              "Fun" : {
+                                 "NodeType" : "SelectorExpr",
+                                 "Sel" : {
+                                    "Name" : "AngleFromSec",
+                                    "NodeType" : "Ident"
+                                 },
+                                 "X" : {
+                                    "Name" : "unit",
+                                    "NodeType" : "Ident"
+                                 }
+                              },
+                              "NodeType" : "CallExpr"
+                           }
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "s",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "Kind" : "FLOAT",
+                              "NodeType" : "BasicLit",
+                              "Value" : ".09033"
+                           }
+                        ],
+                        "Fun" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "AngleFromSec",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "Name" : "unit",
+                              "NodeType" : "Ident"
+                           }
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : "-="
+               },
+               {
+                  "NodeType" : "ReturnStmt",
+                  "Results" : [
+                     {
+                        "Args" : null,
+                        "Fun" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "Mod1",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "Name" : "s",
+                              "NodeType" : "Ident"
+                           }
+                        },
+                        "NodeType" : "CallExpr"
+                     },
+                     {
+                        "NodeType" : "BinaryExpr",
+                        "Op" : "-",
+                        "X" : {
+                           "Name" : "Δβ",
+                           "NodeType" : "Ident"
+                        },
+                        "Y" : {
+                           "Name" : "b",
+                           "NodeType" : "Ident"
+                        }
+                     },
+                     {
+                        "Name" : "r",
+                        "NodeType" : "Ident"
+                     }
+                  ]
+               }
+            ],
+            "NodeType" : "BlockStmt"
+         },
+         "Name" : {
+            "Name" : "TrueVSOP87",
+            "NodeType" : "Ident"
+         },
+         "NodeType" : "FuncDecl",
+         "Recv" : null,
+         "Type" : {
+            "NodeType" : "FuncType",
+            "Params" : {
+               "List" : [
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "e",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "NodeType" : "StarExpr",
+                        "X" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "V87Planet",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "Name" : "pp",
+                              "NodeType" : "Ident"
+                           }
+                        }
+                     }
+                  },
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "jde",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "Name" : "float64",
+                        "NodeType" : "Ident"
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "Results" : {
+               "List" : [
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "s",
+                           "NodeType" : "Ident"
+                        },
+                        {
+                           "Name" : "β",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "NodeType" : "SelectorExpr",
+                        "Sel" : {
+                           "Name" : "Angle",
+                           "NodeType" : "Ident"
+                        },
+                        "X" : {
+                           "Name" : "unit",
+                           "NodeType" : "Ident"
+                        }
+                     }
+                  },
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "R",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "Name" : "float64",
+                        "NodeType" : "Ident"
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "TypeParams" : null
+         }
+      },
+      {
+         "Body" : {
+            "List" : [
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "s",
+                        "NodeType" : "Ident"
+                     },
+                     {
+                        "Name" : "β",
+                        "NodeType" : "Ident"
+                     },
+                     {
+                        "Name" : "R",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "Name" : "e",
+                              "NodeType" : "Ident"
+                           },
+                           {
+                              "Name" : "jde",
+                              "NodeType" : "Ident"
+                           }
+                        ],
+                        "Fun" : {
+                           "Name" : "TrueVSOP87",
+                           "NodeType" : "Ident"
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "Δψ",
+                        "NodeType" : "Ident"
+                     },
+                     {
+                        "Name" : "_",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "Name" : "jde",
+                              "NodeType" : "Ident"
+                           }
+                        ],
+                        "Fun" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "Nutation",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "Name" : "nutation",
+                              "NodeType" : "Ident"
+                           }
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "a",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "Name" : "R",
+                              "NodeType" : "Ident"
+                           }
+                        ],
+                        "Fun" : {
+                           "Name" : "aberration",
+                           "NodeType" : "Ident"
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "NodeType" : "ReturnStmt",
+                  "Results" : [
+                     {
+                        "NodeType" : "BinaryExpr",
+                        "Op" : "+",
+                        "X" : {
+                           "NodeType" : "BinaryExpr",
+                           "Op" : "+",
+                           "X" : {
+                              "Name" : "s",
+                              "NodeType" : "Ident"
+                           },
+                           "Y" : {
+                              "Name" : "Δψ",
+                              "NodeType" : "Ident"
+                           }
+                        },
+                        "Y" : {
+                           "Name" : "a",
+                           "NodeType" : "Ident"
+                        }
+                     },
+                     {
+                        "Name" : "β",
+                        "NodeType" : "Ident"
+                     },
+                     {
+                        "Name" : "R",
+                        "NodeType" : "Ident"
+                     }
+                  ]
+               }
+            ],
+            "NodeType" : "BlockStmt"
+         },
+         "Name" : {
+            "Name" : "ApparentVSOP87",
+            "NodeType" : "Ident"
+         },
+         "NodeType" : "FuncDecl",
+         "Recv" : null,
+         "Type" : {
+            "NodeType" : "FuncType",
+            "Params" : {
+               "List" : [
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "e",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "NodeType" : "StarExpr",
+                        "X" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "V87Planet",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "Name" : "pp",
+                              "NodeType" : "Ident"
+                           }
+                        }
+                     }
+                  },
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "jde",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "Name" : "float64",
+                        "NodeType" : "Ident"
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "Results" : {
+               "List" : [
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "λ",
+                           "NodeType" : "Ident"
+                        },
+                        {
+                           "Name" : "β",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "NodeType" : "SelectorExpr",
+                        "Sel" : {
+                           "Name" : "Angle",
+                           "NodeType" : "Ident"
+                        },
+                        "X" : {
+                           "Name" : "unit",
+                           "NodeType" : "Ident"
+                        }
+                     }
+                  },
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "R",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "Name" : "float64",
+                        "NodeType" : "Ident"
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "TypeParams" : null
+         }
+      },
+      {
+         "Body" : {
+            "List" : [
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "s",
+                        "NodeType" : "Ident"
+                     },
+                     {
+                        "Name" : "β",
+                        "NodeType" : "Ident"
+                     },
+                     {
+                        "Name" : "R",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "Name" : "e",
+                              "NodeType" : "Ident"
+                           },
+                           {
+                              "Name" : "jde",
+                              "NodeType" : "Ident"
+                           }
+                        ],
+                        "Fun" : {
+                           "Name" : "TrueVSOP87",
+                           "NodeType" : "Ident"
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "Δψ",
+                        "NodeType" : "Ident"
+                     },
+                     {
+                        "Name" : "Δε",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "Name" : "jde",
+                              "NodeType" : "Ident"
+                           }
+                        ],
+                        "Fun" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "Nutation",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "Name" : "nutation",
+                              "NodeType" : "Ident"
+                           }
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "a",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "Name" : "R",
+                              "NodeType" : "Ident"
+                           }
+                        ],
+                        "Fun" : {
+                           "Name" : "aberration",
+                           "NodeType" : "Ident"
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "λ",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "NodeType" : "BinaryExpr",
+                        "Op" : "+",
+                        "X" : {
+                           "NodeType" : "BinaryExpr",
+                           "Op" : "+",
+                           "X" : {
+                              "Name" : "s",
+                              "NodeType" : "Ident"
+                           },
+                           "Y" : {
+                              "Name" : "Δψ",
+                              "NodeType" : "Ident"
+                           }
+                        },
+                        "Y" : {
+                           "Name" : "a",
+                           "NodeType" : "Ident"
+                        }
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "ε",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "NodeType" : "BinaryExpr",
+                        "Op" : "+",
+                        "X" : {
+                           "Args" : [
+                              {
+                                 "Name" : "jde",
+                                 "NodeType" : "Ident"
+                              }
+                           ],
+                           "Fun" : {
+                              "NodeType" : "SelectorExpr",
+                              "Sel" : {
+                                 "Name" : "MeanObliquity",
+                                 "NodeType" : "Ident"
+                              },
+                              "X" : {
+                                 "Name" : "nutation",
+                                 "NodeType" : "Ident"
+                              }
+                           },
+                           "NodeType" : "CallExpr"
+                        },
+                        "Y" : {
+                           "Name" : "Δε",
+                           "NodeType" : "Ident"
+                        }
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "sε",
+                        "NodeType" : "Ident"
+                     },
+                     {
+                        "Name" : "cε",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : null,
+                        "Fun" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "Sincos",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "Name" : "ε",
+                              "NodeType" : "Ident"
+                           }
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "α",
+                        "NodeType" : "Ident"
+                     },
+                     {
+                        "Name" : "δ",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "Name" : "λ",
+                              "NodeType" : "Ident"
+                           },
+                           {
+                              "Name" : "β",
+                              "NodeType" : "Ident"
+                           },
+                           {
+                              "Name" : "sε",
+                              "NodeType" : "Ident"
+                           },
+                           {
+                              "Name" : "cε",
+                              "NodeType" : "Ident"
+                           }
+                        ],
+                        "Fun" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "EclToEq",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "Name" : "coord",
+                              "NodeType" : "Ident"
+                           }
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : "="
+               },
+               {
+                  "NodeType" : "ReturnStmt",
+                  "Results" : null
+               }
+            ],
+            "NodeType" : "BlockStmt"
+         },
+         "Name" : {
+            "Name" : "ApparentEquatorialVSOP87",
+            "NodeType" : "Ident"
+         },
+         "NodeType" : "FuncDecl",
+         "Recv" : null,
+         "Type" : {
+            "NodeType" : "FuncType",
+            "Params" : {
+               "List" : [
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "e",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "NodeType" : "StarExpr",
+                        "X" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "V87Planet",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "Name" : "pp",
+                              "NodeType" : "Ident"
+                           }
+                        }
+                     }
+                  },
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "jde",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "Name" : "float64",
+                        "NodeType" : "Ident"
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "Results" : {
+               "List" : [
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "α",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "NodeType" : "SelectorExpr",
+                        "Sel" : {
+                           "Name" : "RA",
+                           "NodeType" : "Ident"
+                        },
+                        "X" : {
+                           "Name" : "unit",
+                           "NodeType" : "Ident"
+                        }
+                     }
+                  },
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "δ",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "NodeType" : "SelectorExpr",
+                        "Sel" : {
+                           "Name" : "Angle",
+                           "NodeType" : "Ident"
+                        },
+                        "X" : {
+                           "Name" : "unit",
+                           "NodeType" : "Ident"
+                        }
+                     }
+                  },
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "R",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "Name" : "float64",
+                        "NodeType" : "Ident"
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "TypeParams" : null
+         }
+      },
+      {
+         "Body" : {
+            "List" : [
+               {
+                  "NodeType" : "ReturnStmt",
+                  "Results" : [
+                     {
+                        "Args" : [
+                           {
+                              "Name" : "R",
+                              "NodeType" : "Ident"
+                           }
+                        ],
+                        "Fun" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "Div",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "Args" : [
+                                 {
+                                    "NodeType" : "UnaryExpr",
+                                    "Op" : "-",
+                                    "X" : {
+                                       "Kind" : "FLOAT",
+                                       "NodeType" : "BasicLit",
+                                       "Value" : "20.4898"
+                                    }
+                                 }
+                              ],
+                              "Fun" : {
+                                 "NodeType" : "SelectorExpr",
+                                 "Sel" : {
+                                    "Name" : "AngleFromSec",
+                                    "NodeType" : "Ident"
+                                 },
+                                 "X" : {
+                                    "Name" : "unit",
+                                    "NodeType" : "Ident"
+                                 }
+                              },
+                              "NodeType" : "CallExpr"
+                           }
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ]
+               }
+            ],
+            "NodeType" : "BlockStmt"
+         },
+         "Name" : {
+            "Name" : "aberration",
+            "NodeType" : "Ident"
+         },
+         "NodeType" : "FuncDecl",
+         "Recv" : null,
+         "Type" : {
+            "NodeType" : "FuncType",
+            "Params" : {
+               "List" : [
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "R",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "Name" : "float64",
+                        "NodeType" : "Ident"
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "Results" : {
+               "List" : [
+                  {
+                     "Names" : null,
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "NodeType" : "SelectorExpr",
+                        "Sel" : {
+                           "Name" : "Angle",
+                           "NodeType" : "Ident"
+                        },
+                        "X" : {
+                           "Name" : "unit",
+                           "NodeType" : "Ident"
+                        }
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "TypeParams" : null
+         }
+      }
+   ],
+   "Doc" : null,
+   "FileSet" : {
+      "Base" : 6731,
+      "Files" : [
+         {
+            "Base" : 1,
+            "Infos" : null,
+            "Lines" : [
+               0,
+               29,
+               45,
+               46,
+               87,
+               90,
+               117,
+               120,
+               196,
+               253,
+               256,
+               327,
+               402,
+               479,
+               556,
+               634,
+               680,
+               694,
+               695,
+               704,
+               712,
+               713,
+               751,
+               790,
+               832,
+               883,
+               912,
+               914,
+               915,
+               1019,
+               1022,
+               1083,
+               1109,
+               1112,
+               1124,
+               1161,
+               1182,
+               1224,
+               1242,
+               1318,
+               1339,
+               1410,
+               1422,
+               1462,
+               1489,
+               1529,
+               1531,
+               1532,
+               1597,
+               1600,
+               1661,
+               1687,
+               1690,
+               1739,
+               1780,
+               1798,
+               1876,
+               1878,
+               1879,
+               1953,
+               1956,
+               2017,
+               2043,
+               2082,
+               2100,
+               2165,
+               2167,
+               2168,
+               2216,
+               2219,
+               2280,
+               2306,
+               2339,
+               2357,
+               2379,
+               2397,
+               2448,
+               2450,
+               2451,
+               2521,
+               2553,
+               2556,
+               2617,
+               2643,
+               2646,
+               2705,
+               2752,
+               2767,
+               2784,
+               2824,
+               2866,
+               2868,
+               2869,
+               2903,
+               2950,
+               2952,
+               2953,
+               3050,
+               3053,
+               3114,
+               3140,
+               3143,
+               3205,
+               3208,
+               3220,
+               3257,
+               3278,
+               3324,
+               3341,
+               3386,
+               3394,
+               3396,
+               3397,
+               3489,
+               3552,
+               3590,
+               3625,
+               3647,
+               3672,
+               3696,
+               3741,
+               3779,
+               3787,
+               3789,
+               3790,
+               3880,
+               3883,
+               3917,
+               3947,
+               4014,
+               4043,
+               4071,
+               4106,
+               4131,
+               4149,
+               4201,
+               4226,
+               4273,
+               4312,
+               4320,
+               4322,
+               4323,
+               4409,
+               4412,
+               4488,
+               4562,
+               4565,
+               4590,
+               4615,
+               4633,
+               4711,
+               4739,
+               4756,
+               4776,
+               4820,
+               4872,
+               4904,
+               4956,
+               4974,
+               5006,
+               5036,
+               5038,
+               5039,
+               5123,
+               5126,
+               5205,
+               5257,
+               5260,
+               5287,
+               5313,
+               5332,
+               5415,
+               5474,
+               5506,
+               5541,
+               5561,
+               5589,
+               5591,
+               5592,
+               5688,
+               5691,
+               5770,
+               5822,
+               5825,
+               5848,
+               5867,
+               5885,
+               5986,
+               6052,
+               6093,
+               6125,
+               6163,
+               6183,
+               6203,
+               6245,
+               6270,
+               6312,
+               6320,
+               6322,
+               6323,
+               6396,
+               6471,
+               6548,
+               6625,
+               6665,
+               6684,
+               6727
+            ],
+            "Name" : "v3/solar/solar.go",
+            "Size" : 6729
+         }
+      ]
+   },
+   "Imports" : null,
+   "Name" : {
+      "Name" : "solar",
+      "NodeType" : "Ident"
+   },
+   "NodeType" : "File",
+   "Package" : null,
+   "Unresolved" : null
+}

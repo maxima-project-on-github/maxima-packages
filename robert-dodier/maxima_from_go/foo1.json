@@ -1,0 +1,961 @@
+{
+   "Comments" : null,
+   "Decls" : [
+      {
+         "NodeType" : "GenDecl",
+         "Specs" : [
+            {
+               "Name" : null,
+               "NodeType" : "ImportSpec",
+               "Path" : {
+                  "Kind" : "STRING",
+                  "NodeType" : "BasicLit",
+                  "Value" : "\"math\""
+               }
+            }
+         ],
+         "Tok" : "import"
+      },
+      {
+         "Body" : {
+            "List" : [
+               {
+                  "NodeType" : "ReturnStmt",
+                  "Results" : [
+                     {
+                        "Kind" : "FLOAT",
+                        "NodeType" : "BasicLit",
+                        "Value" : "123.0"
+                     }
+                  ]
+               }
+            ],
+            "NodeType" : "BlockStmt"
+         },
+         "Name" : {
+            "Name" : "foo0",
+            "NodeType" : "Ident"
+         },
+         "NodeType" : "FuncDecl",
+         "Recv" : null,
+         "Type" : {
+            "NodeType" : "FuncType",
+            "Params" : {
+               "List" : null,
+               "NodeType" : "FieldList"
+            },
+            "Results" : {
+               "List" : [
+                  {
+                     "Names" : null,
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "Name" : "float64",
+                        "NodeType" : "Ident"
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "TypeParams" : null
+         }
+      },
+      {
+         "Body" : {
+            "List" : [
+               {
+                  "NodeType" : "ReturnStmt",
+                  "Results" : [
+                     {
+                        "NodeType" : "BinaryExpr",
+                        "Op" : "+",
+                        "X" : {
+                           "Name" : "x",
+                           "NodeType" : "Ident"
+                        },
+                        "Y" : {
+                           "Kind" : "FLOAT",
+                           "NodeType" : "BasicLit",
+                           "Value" : "123.0"
+                        }
+                     }
+                  ]
+               }
+            ],
+            "NodeType" : "BlockStmt"
+         },
+         "Name" : {
+            "Name" : "foo1",
+            "NodeType" : "Ident"
+         },
+         "NodeType" : "FuncDecl",
+         "Recv" : null,
+         "Type" : {
+            "NodeType" : "FuncType",
+            "Params" : {
+               "List" : [
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "x",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "Name" : "float64",
+                        "NodeType" : "Ident"
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "Results" : {
+               "List" : [
+                  {
+                     "Names" : null,
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "Name" : "float64",
+                        "NodeType" : "Ident"
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "TypeParams" : null
+         }
+      },
+      {
+         "Body" : {
+            "List" : [
+               {
+                  "NodeType" : "ReturnStmt",
+                  "Results" : [
+                     {
+                        "NodeType" : "BinaryExpr",
+                        "Op" : "+",
+                        "X" : {
+                           "Name" : "x",
+                           "NodeType" : "Ident"
+                        },
+                        "Y" : {
+                           "Name" : "y",
+                           "NodeType" : "Ident"
+                        }
+                     }
+                  ]
+               }
+            ],
+            "NodeType" : "BlockStmt"
+         },
+         "Name" : {
+            "Name" : "foo2",
+            "NodeType" : "Ident"
+         },
+         "NodeType" : "FuncDecl",
+         "Recv" : null,
+         "Type" : {
+            "NodeType" : "FuncType",
+            "Params" : {
+               "List" : [
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "x",
+                           "NodeType" : "Ident"
+                        },
+                        {
+                           "Name" : "y",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "Name" : "float64",
+                        "NodeType" : "Ident"
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "Results" : {
+               "List" : [
+                  {
+                     "Names" : null,
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "Name" : "float64",
+                        "NodeType" : "Ident"
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "TypeParams" : null
+         }
+      },
+      {
+         "Body" : {
+            "List" : [
+               {
+                  "NodeType" : "ReturnStmt",
+                  "Results" : [
+                     {
+                        "NodeType" : "BinaryExpr",
+                        "Op" : "+",
+                        "X" : {
+                           "NodeType" : "BinaryExpr",
+                           "Op" : "*",
+                           "X" : {
+                              "Name" : "n",
+                              "NodeType" : "Ident"
+                           },
+                           "Y" : {
+                              "Name" : "x",
+                              "NodeType" : "Ident"
+                           }
+                        },
+                        "Y" : {
+                           "Name" : "y",
+                           "NodeType" : "Ident"
+                        }
+                     }
+                  ]
+               }
+            ],
+            "NodeType" : "BlockStmt"
+         },
+         "Name" : {
+            "Name" : "foo3",
+            "NodeType" : "Ident"
+         },
+         "NodeType" : "FuncDecl",
+         "Recv" : null,
+         "Type" : {
+            "NodeType" : "FuncType",
+            "Params" : {
+               "List" : [
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "n",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "Name" : "int",
+                        "NodeType" : "Ident"
+                     }
+                  },
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "x",
+                           "NodeType" : "Ident"
+                        },
+                        {
+                           "Name" : "y",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "Name" : "float64",
+                        "NodeType" : "Ident"
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "Results" : {
+               "List" : [
+                  {
+                     "Names" : null,
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "Name" : "float64",
+                        "NodeType" : "Ident"
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "TypeParams" : null
+         }
+      },
+      {
+         "Body" : {
+            "List" : [
+               {
+                  "NodeType" : "ReturnStmt",
+                  "Results" : [
+                     {
+                        "NodeType" : "BinaryExpr",
+                        "Op" : "+",
+                        "X" : {
+                           "Name" : "x",
+                           "NodeType" : "Ident"
+                        },
+                        "Y" : {
+                           "Kind" : "FLOAT",
+                           "NodeType" : "BasicLit",
+                           "Value" : "123.0"
+                        }
+                     }
+                  ]
+               }
+            ],
+            "NodeType" : "BlockStmt"
+         },
+         "Name" : {
+            "Name" : "bar1",
+            "NodeType" : "Ident"
+         },
+         "NodeType" : "FuncDecl",
+         "Recv" : {
+            "List" : [
+               {
+                  "Names" : [
+                     {
+                        "Name" : "x",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "Field",
+                  "Type" : {
+                     "Name" : "float64",
+                     "NodeType" : "Ident"
+                  }
+               }
+            ],
+            "NodeType" : "FieldList"
+         },
+         "Type" : {
+            "NodeType" : "FuncType",
+            "Params" : {
+               "List" : null,
+               "NodeType" : "FieldList"
+            },
+            "Results" : {
+               "List" : [
+                  {
+                     "Names" : null,
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "Name" : "float64",
+                        "NodeType" : "Ident"
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "TypeParams" : null
+         }
+      },
+      {
+         "Body" : {
+            "List" : [
+               {
+                  "NodeType" : "ReturnStmt",
+                  "Results" : [
+                     {
+                        "NodeType" : "BinaryExpr",
+                        "Op" : "+",
+                        "X" : {
+                           "Name" : "x",
+                           "NodeType" : "Ident"
+                        },
+                        "Y" : {
+                           "Name" : "y",
+                           "NodeType" : "Ident"
+                        }
+                     }
+                  ]
+               }
+            ],
+            "NodeType" : "BlockStmt"
+         },
+         "Name" : {
+            "Name" : "bar2",
+            "NodeType" : "Ident"
+         },
+         "NodeType" : "FuncDecl",
+         "Recv" : {
+            "List" : [
+               {
+                  "Names" : [
+                     {
+                        "Name" : "x",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "Field",
+                  "Type" : {
+                     "Name" : "float64",
+                     "NodeType" : "Ident"
+                  }
+               }
+            ],
+            "NodeType" : "FieldList"
+         },
+         "Type" : {
+            "NodeType" : "FuncType",
+            "Params" : {
+               "List" : [
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "y",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "Name" : "float64",
+                        "NodeType" : "Ident"
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "Results" : {
+               "List" : [
+                  {
+                     "Names" : null,
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "Name" : "float64",
+                        "NodeType" : "Ident"
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "TypeParams" : null
+         }
+      },
+      {
+         "Body" : {
+            "List" : [
+               {
+                  "NodeType" : "ReturnStmt",
+                  "Results" : [
+                     {
+                        "NodeType" : "BinaryExpr",
+                        "Op" : "+",
+                        "X" : {
+                           "NodeType" : "BinaryExpr",
+                           "Op" : "*",
+                           "X" : {
+                              "Name" : "n",
+                              "NodeType" : "Ident"
+                           },
+                           "Y" : {
+                              "Name" : "x",
+                              "NodeType" : "Ident"
+                           }
+                        },
+                        "Y" : {
+                           "Name" : "y",
+                           "NodeType" : "Ident"
+                        }
+                     }
+                  ]
+               }
+            ],
+            "NodeType" : "BlockStmt"
+         },
+         "Name" : {
+            "Name" : "bar3",
+            "NodeType" : "Ident"
+         },
+         "NodeType" : "FuncDecl",
+         "Recv" : {
+            "List" : [
+               {
+                  "Names" : [
+                     {
+                        "Name" : "n",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "Field",
+                  "Type" : {
+                     "Name" : "int",
+                     "NodeType" : "Ident"
+                  }
+               }
+            ],
+            "NodeType" : "FieldList"
+         },
+         "Type" : {
+            "NodeType" : "FuncType",
+            "Params" : {
+               "List" : [
+                  {
+                     "Names" : [
+                        {
+                           "Name" : "x",
+                           "NodeType" : "Ident"
+                        },
+                        {
+                           "Name" : "y",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "Name" : "float64",
+                        "NodeType" : "Ident"
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "Results" : {
+               "List" : [
+                  {
+                     "Names" : null,
+                     "NodeType" : "Field",
+                     "Type" : {
+                        "Name" : "float64",
+                        "NodeType" : "Ident"
+                     }
+                  }
+               ],
+               "NodeType" : "FieldList"
+            },
+            "TypeParams" : null
+         }
+      },
+      {
+         "Body" : {
+            "List" : [
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "a0",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : null,
+                        "Fun" : {
+                           "Name" : "foo0",
+                           "NodeType" : "Ident"
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "NodeType" : "ExprStmt",
+                  "X" : {
+                     "Args" : [
+                        {
+                           "Name" : "a0",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "Fun" : {
+                        "Name" : "print",
+                        "NodeType" : "Ident"
+                     },
+                     "NodeType" : "CallExpr"
+                  }
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "a1",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "Kind" : "FLOAT",
+                              "NodeType" : "BasicLit",
+                              "Value" : "111.0"
+                           }
+                        ],
+                        "Fun" : {
+                           "Name" : "foo1",
+                           "NodeType" : "Ident"
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "NodeType" : "ExprStmt",
+                  "X" : {
+                     "Args" : [
+                        {
+                           "Name" : "a1",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "Fun" : {
+                        "Name" : "print",
+                        "NodeType" : "Ident"
+                     },
+                     "NodeType" : "CallExpr"
+                  }
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "a2",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "Kind" : "FLOAT",
+                              "NodeType" : "BasicLit",
+                              "Value" : "111.0"
+                           },
+                           {
+                              "Kind" : "FLOAT",
+                              "NodeType" : "BasicLit",
+                              "Value" : "222.0"
+                           }
+                        ],
+                        "Fun" : {
+                           "Name" : "foo2",
+                           "NodeType" : "Ident"
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "NodeType" : "ExprStmt",
+                  "X" : {
+                     "Args" : [
+                        {
+                           "Name" : "a2",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "Fun" : {
+                        "Name" : "print",
+                        "NodeType" : "Ident"
+                     },
+                     "NodeType" : "CallExpr"
+                  }
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "a3",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "Kind" : "INT",
+                              "NodeType" : "BasicLit",
+                              "Value" : "2"
+                           },
+                           {
+                              "Kind" : "FLOAT",
+                              "NodeType" : "BasicLit",
+                              "Value" : "222.0"
+                           },
+                           {
+                              "Kind" : "FLOAT",
+                              "NodeType" : "BasicLit",
+                              "Value" : "333.0"
+                           }
+                        ],
+                        "Fun" : {
+                           "Name" : "foo3",
+                           "NodeType" : "Ident"
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "NodeType" : "ExprStmt",
+                  "X" : {
+                     "Args" : [
+                        {
+                           "Name" : "a3",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "Fun" : {
+                        "Name" : "print",
+                        "NodeType" : "Ident"
+                     },
+                     "NodeType" : "CallExpr"
+                  }
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "b1",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : null,
+                        "Fun" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "bar1",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "NodeType" : "ParenExpr",
+                              "X" : {
+                                 "Kind" : "FLOAT",
+                                 "NodeType" : "BasicLit",
+                                 "Value" : "444.0"
+                              }
+                           }
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "NodeType" : "ExprStmt",
+                  "X" : {
+                     "Args" : [
+                        {
+                           "Name" : "b1",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "Fun" : {
+                        "Name" : "print",
+                        "NodeType" : "Ident"
+                     },
+                     "NodeType" : "CallExpr"
+                  }
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "b2",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "Kind" : "FLOAT",
+                              "NodeType" : "BasicLit",
+                              "Value" : "666.0"
+                           }
+                        ],
+                        "Fun" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "bar2",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "NodeType" : "ParenExpr",
+                              "X" : {
+                                 "Kind" : "FLOAT",
+                                 "NodeType" : "BasicLit",
+                                 "Value" : "555.0"
+                              }
+                           }
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "NodeType" : "ExprStmt",
+                  "X" : {
+                     "Args" : [
+                        {
+                           "Name" : "b2",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "Fun" : {
+                        "Name" : "print",
+                        "NodeType" : "Ident"
+                     },
+                     "NodeType" : "CallExpr"
+                  }
+               },
+               {
+                  "Lhs" : [
+                     {
+                        "Name" : "b3",
+                        "NodeType" : "Ident"
+                     }
+                  ],
+                  "NodeType" : "AssignStmt",
+                  "Rhs" : [
+                     {
+                        "Args" : [
+                           {
+                              "Kind" : "FLOAT",
+                              "NodeType" : "BasicLit",
+                              "Value" : "777.0"
+                           },
+                           {
+                              "Kind" : "FLOAT",
+                              "NodeType" : "BasicLit",
+                              "Value" : "888.0"
+                           }
+                        ],
+                        "Fun" : {
+                           "NodeType" : "SelectorExpr",
+                           "Sel" : {
+                              "Name" : "bar3",
+                              "NodeType" : "Ident"
+                           },
+                           "X" : {
+                              "NodeType" : "ParenExpr",
+                              "X" : {
+                                 "Kind" : "INT",
+                                 "NodeType" : "BasicLit",
+                                 "Value" : "6"
+                              }
+                           }
+                        },
+                        "NodeType" : "CallExpr"
+                     }
+                  ],
+                  "Tok" : ":="
+               },
+               {
+                  "NodeType" : "ExprStmt",
+                  "X" : {
+                     "Args" : [
+                        {
+                           "Name" : "b3",
+                           "NodeType" : "Ident"
+                        }
+                     ],
+                     "Fun" : {
+                        "Name" : "print",
+                        "NodeType" : "Ident"
+                     },
+                     "NodeType" : "CallExpr"
+                  }
+               }
+            ],
+            "NodeType" : "BlockStmt"
+         },
+         "Name" : {
+            "Name" : "main",
+            "NodeType" : "Ident"
+         },
+         "NodeType" : "FuncDecl",
+         "Recv" : null,
+         "Type" : {
+            "NodeType" : "FuncType",
+            "Params" : {
+               "List" : null,
+               "NodeType" : "FieldList"
+            },
+            "Results" : null,
+            "TypeParams" : null
+         }
+      }
+   ],
+   "Doc" : null,
+   "FileSet" : {
+      "Base" : 754,
+      "Files" : [
+         {
+            "Base" : 1,
+            "Infos" : null,
+            "Lines" : [
+               0,
+               13,
+               14,
+               28,
+               29,
+               52,
+               69,
+               71,
+               72,
+               104,
+               125,
+               127,
+               128,
+               163,
+               180,
+               182,
+               183,
+               225,
+               244,
+               246,
+               247,
+               282,
+               303,
+               305,
+               306,
+               350,
+               367,
+               369,
+               370,
+               413,
+               432,
+               434,
+               435,
+               450,
+               468,
+               483,
+               506,
+               521,
+               551,
+               566,
+               599,
+               614,
+               640,
+               655,
+               686,
+               701,
+               735,
+               750
+            ],
+            "Name" : "foo.go",
+            "Size" : 752
+         }
+      ]
+   },
+   "Imports" : null,
+   "Name" : {
+      "Name" : "main",
+      "NodeType" : "Ident"
+   },
+   "NodeType" : "File",
+   "Package" : null,
+   "Unresolved" : null
+}
